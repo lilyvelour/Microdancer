@@ -85,6 +85,9 @@ namespace Microdancer
             {
                 var windowVisible = true;
                 var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible);
+                var windowSize = ImGui.GetWindowSize();
+                ImGui.SetWindowSize(Vector2.Max(windowSize, new(400, 600)));
+
                 SetVisiblityIfNeeded(windowVisible);
                 if (draw)
                 {
@@ -108,23 +111,25 @@ namespace Microdancer
                 _config.QueueSelection = Guid.Empty;
             }
 
+            ImGui.Columns(1);
+
             DrawLibraryPath();
 
             ImGui.Separator();
 
-            DrawMicroQueue();
-
-            ImGui.Separator();
-
-            ImGui.Columns(2);
+            ImGui.Columns(2, "LibraryContent", true);
 
             DrawLibrary();
 
             ImGui.NextColumn();
 
-            DrawCurrentMicro();
+            DrawContentArea();
 
             ImGui.Columns(1);
+
+            ImGui.Separator();
+
+            DrawMicroQueue();
 
             ImGui.End();
         }
@@ -141,9 +146,9 @@ namespace Microdancer
                 _library.MarkAsDirty();
             }
 
-            ImGui.SameLine();
-
             var hasLibrary = Directory.Exists(_config.LibraryPath);
+
+            ImGui.SameLine();
 
             if (ImGui.Button(hasLibrary ? "Open Library" : "Create New Library"))
             {
@@ -154,12 +159,14 @@ namespace Microdancer
 
         private void DrawLibrary()
         {
-            ImGui.Text("Library");
+            ImGui.BeginChildFrame(1, new(-1,ImGui.GetContentRegionAvail().Y - 200));
 
             foreach (var node in _library.GetNodes())
             {
                 DrawNode(node);
             }
+
+            ImGui.EndChildFrame();
         }
 
         private IEnumerable<INode> DrawNode(INode node, string idPrefix = "")
@@ -204,9 +211,7 @@ namespace Microdancer
             {
                 if (node is Micro micro)
                 {
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Run##context"))
+                    if (ImGui.Button("Play##context"))
                     {
                         RunMicro(micro);
                     }
@@ -217,11 +222,16 @@ namespace Microdancer
                     {
                         RunMicro(micro, multi: true);
                     }
+
+                    ImGui.SameLine();
+
+                    if (ImGui.Button("Open File##context"))
+                    {
+                        OpenNode(node);
+                    }
                 }
                 else
                 {
-                    ImGui.SameLine();
-
                     if (ImGui.Button("Open Folder##context"))
                     {
                         OpenNode(node);
@@ -249,8 +259,10 @@ namespace Microdancer
             return toRemove;
         }
 
-        private void DrawCurrentMicro()
+        private void DrawContentArea()
         {
+            ImGui.BeginChildFrame(2, new(-1,ImGui.GetContentRegionAvail().Y - 200), ImGuiWindowFlags.NoBackground);
+
             INode? node = null;
 
             if (_config.LibrarySelection != Guid.Empty)
@@ -270,6 +282,7 @@ namespace Microdancer
                     new(0.68f, 0.68f, 0.68f, 1.0f),
                     "To begin, please select a folder or Micro from the library on the left.");
 
+                ImGui.EndChildFrame();
                 return;
             }
 
@@ -315,30 +328,11 @@ namespace Microdancer
 
             if (node is Micro micro)
             {
-                ImGui.Separator();
-
                 var lines = micro.GetBody().ToArray();
-                var regions = lines
-                    .Where(l => l.Trim().StartsWith("#region "))
-                    .Select(l => l.Trim()[8..])
-                    .ToArray();
-                var len = lines.Length;
-                var maxChars = (len + 1).ToString().Length;
-
-                for (var i = 0; i < len; ++i)
-                {
-                    lines[i] = $"{(i + 1).ToString().PadLeft(maxChars)} | {lines[i]}";
-                }
-
-                var contents = string.Join('\n', lines);
-                ImGui.PushItemWidth(-1f);
-                ImGui.PushFont(UiBuilder.MonoFont);
-                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
-                ImGui.InputTextMultiline(
-                    $"##{micro.Id}-editor", ref contents, 10_000, new Vector2(0, 250), ImGuiInputTextFlags.ReadOnly);
-                ImGui.PopStyleColor();
-                ImGui.PopFont();
-                ImGui.PopItemWidth();
+                    var regions = lines
+                        .Where(l => l.Trim().StartsWith("#region "))
+                        .Select(l => l.Trim()[8..])
+                        .ToArray();
 
                 var inCombat = _condition[ConditionFlag.InCombat];
 
@@ -354,98 +348,123 @@ namespace Microdancer
                 {
                     if (_clientState.LocalPlayer != null)
                     {
-                        if (ImGui.Button("Play"))
+                        var sz = new Vector2(ImGui.GetColumnWidth(), ImGui.GetTextLineHeight() + 20);
+
+                        if (TintButton("Play All", sz, new(0.0f, 0.8f, 0.0f, 1.0f)))
                         {
                             RunMicro(micro);
                         }
 
-                        ImGui.SameLine();
-
-                        if (ImGui.Button("Queue"))
+                        if (ImGui.Button("Queue All", sz))
                         {
                             RunMicro(micro, multi: true);
                         }
-
-                        ImGui.SameLine();
                     }
                 }
-
-                if (ImGui.Button("Open File"))
-                {
-                    OpenNode(micro);
-                }
-
-                ImGui.SameLine();
-
-                DrawOpenButtons(node);
 
                 ImGui.Separator();
                 ImGui.Separator();
 
-                if (ImGui.TreeNodeEx("Regions", ImGuiTreeNodeFlags.DefaultOpen, "Regions"))
-                {
-                    var size = Vector2.Zero;
+                var size = Vector2.Zero;
 
-                    if (regions.Length == 0)
+                if (regions.Length == 0)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
+                    ImGui.TextWrapped(
+                        "Add a region to your file (using #region [name] and #endregion) to have it show up here.");
+                    ImGui.PopStyleColor();
+                }
+                else
+                {
+                    for (int i = 0; i < regions.Length; i++)
                     {
-                        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
-                        ImGui.TextWrapped(
-                            "Add a region to your file (using #region [name] and #endregion) to have it show up here.");
-                        ImGui.PopStyleColor();
-                    }
-                    else
-                    {
-                        foreach(var region in regions)
+                        var sz = ImGui.CalcTextSize($"{i + 1}");
+                        if (sz.X >= size.X)
                         {
-                            var sz = ImGui.CalcTextSize(region);
-                            if (sz.X >= size.X)
+                            size = sz;
+                        }
+                    }
+
+                    size.X += 40;
+                    size.Y += 20;
+
+                    var info = _microManager.Running.Values.Where(mi => mi.Micro.Id == micro.Id).ToArray();
+                    var running = info.Length > 0;
+
+                    var col = 0;
+                    for (int i = 0; i < regions.Length; i++)
+                    {
+                        col++;
+
+                        string? region = regions[i];
+                        if (_clientState.LocalPlayer != null && !inCombat)
+                        {
+                            var regionRunning = info.Any(mi => mi.CurrentRegion == region);
+
+                            if (regionRunning)
                             {
-                                size = sz;
+                                var progress = info.Max(mi => mi.CurrentRegionProgress);
+                                ImGui.ProgressBar(progress, size, string.Empty);
+                            }
+                            else if (ImGui.Button($"{i + 1}", size))
+                            {
+                                RunMicro(micro, region);
                             }
                         }
-
-                        size.X += 20;
-
-                        var info = _microManager.Running.Values.Where(mi => mi.Micro.Id == micro.Id).ToArray();
-                        var running = info.Length > 0;
-
-                        foreach(var region in regions)
+                        else
                         {
-                            if (_clientState.LocalPlayer != null && !inCombat)
-                            {
-                                size.Y = 0;
+                            ImGui.Selectable($"{i + 1}", false, ImGuiSelectableFlags.Disabled, size);
+                        }
 
-                                var regionRunning = info.Any(mi => mi.CurrentRegion == region);
+                        TextTooltip(region);
 
-                                if (regionRunning)
-                                {
-                                    var progress = info.Max(mi => mi.CurrentRegionProgress);
-                                    ImGui.ProgressBar(progress, size, region);
-                                }
-                                else if (ImGui.Button(region, size))
-                                {
-                                   RunMicro(micro, region);
-                                }
-                            }
-                            else
-                            {
-                                ImGui.Selectable(region, false, ImGuiSelectableFlags.Disabled, size);
-                            }
-
-
-                            ImGui.SameLine();
-
+                        if (ImGui.BeginPopupContextItem())
+                        {
                             if (IconButton(FontAwesomeIcon.Copy, $"Copy run command for {region}"))
                             {
                                 ImGui.SetClipboardText($"/runmicro {micro.Id} \"{region}\"");
                             }
+
+                            ImGui.EndPopup();
+                        }
+
+                        if (ImGui.GetContentRegionAvail().X - ((size.X + 2) * (col + 1)) > size.X
+                            && i < regions.Length - 1)
+                        {
+                            ImGui.SameLine();
+                        }
+                        else
+                        {
+                            col = 0;
                         }
                     }
                 }
-            }
-            else
-            {
-                DrawOpenButtons(node);
+
+                ImGui.Separator();
+
+                if (ImGui.TreeNode("Content"))
+                {
+                    var len = lines.Length;
+                    var maxChars = (len + 1).ToString().Length;
+
+                    for (var i = 0; i < len; ++i)
+                    {
+                        lines[i] = $"{(i + 1).ToString().PadLeft(maxChars)} | {lines[i]}";
+                    }
+
+                    var contents = string.Join('\n', lines);
+                    ImGui.PushItemWidth(-1f);
+                    ImGui.PushFont(UiBuilder.MonoFont);
+                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
+                    ImGui.InputTextMultiline(
+                        $"##{micro.Id}-editor", ref contents, 10_000, new Vector2(0, 250), ImGuiInputTextFlags.ReadOnly);
+                    ImGui.PopStyleColor();
+                    ImGui.PopFont();
+                    ImGui.PopItemWidth();
+
+
+                    ImGui.TreePop();
+                }
             }
 
             if (node is Folder)
@@ -460,32 +479,20 @@ namespace Microdancer
                     DrawNode(child, "right_column");
                 }
             }
-        }
 
-        private void DrawOpenButtons(INode node)
-        {
-            if (ImGui.Button("Open Folder"))
-            {
-                OpenNode(node, parent: node is Micro);
-            }
-
-            ImGui.SameLine();
-
-            if (IconButton(FontAwesomeIcon.Copy, node is Micro ? $"Copy run command" : "Copy ID"))
-            {
-                ImGui.SetClipboardText($"{(node is Micro ? "/runmicro " : string.Empty)}{node.Id}");
-            }
+            ImGui.EndChildFrame();
         }
 
         private void DrawMicroQueue()
         {
+            ImGui.Text("Micro Queue");
+
             if (_condition[ConditionFlag.InCombat])
             {
                 ImGui.TextColored(new(1.0f, 0.0f, 0.0f, 1.0f), "All Micros paused while in combat!");
                 return;
             }
 
-            ImGui.Text("Micro Queue");
             ImGui.PushItemWidth(-1f);
             if (ImGui.BeginListBox("##running-micros", new Vector2(0, 100)))
             {
@@ -502,11 +509,6 @@ namespace Microdancer
                         var microInfo = entry.Value;
                         var micro = entry.Value.Micro;
                         var name = micro.Name;
-
-                        if (_microManager.IsPaused(entry.Key))
-                        {
-                            name += " [paused]";
-                        }
 
                         if (!string.IsNullOrWhiteSpace(entry.Value.CurrentRegion))
                         {
@@ -571,11 +573,7 @@ namespace Microdancer
 
             var hasSelected = _microManager.IsRunning(_config.QueueSelection);
 
-            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.67f, 0.0f, 0.0f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-            if (ImGui.Button(hasSelected ? "Cancel Selected" : "Cancel All"))
+            if (TintButton(hasSelected ? "Cancel Selected" : "Cancel All", new(0.8f, 0.0f, 0.0f, 1.0f)))
             {
                 if (hasSelected)
                 {
@@ -586,10 +584,6 @@ namespace Microdancer
                     _microManager.CancelAllMicros();
                 }
             }
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
 
             if (hasSelected)
             {
@@ -639,6 +633,31 @@ namespace Microdancer
             }
 
             _microManager.SpawnMicro(micro, region);
+        }
+
+        private static bool TintButton(string label, Vector4 color)
+        {
+            return TintButtonImpl(() => ImGui.Button(label), color);
+        }
+
+        private static bool TintButton(string label, Vector2 size, Vector4 color)
+        {
+            return TintButtonImpl(() => ImGui.Button(label, size), color);
+        }
+
+        private static bool TintButtonImpl(Func<bool> button, Vector4 color)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(color.X * 0.67f, color.Y * 0.67f, color.Z * 0.67f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.Text, color.Length() > 0.5f ? Vector4.One : Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, color);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, color);
+            var pressed = button();
+            ImGui.PopStyleColor();
+            ImGui.PopStyleColor();
+            ImGui.PopStyleColor();
+            ImGui.PopStyleColor();
+
+            return pressed;
         }
 
         private static bool IconButton(FontAwesomeIcon icon, string tooltip)

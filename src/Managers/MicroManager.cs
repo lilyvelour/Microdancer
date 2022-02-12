@@ -229,7 +229,10 @@ namespace Microdancer
                                     {
                                         await Task.Delay(delay);
 
-                                        if (!isCancelled && end - DateTime.Now <= cdTime)
+                                        if (isCancelled)
+                                            return;
+
+                                        if (end - DateTime.Now <= cdTime)
                                         {
                                             await _commands.Writer.WriteAsync($"/cd 5");
                                         }
