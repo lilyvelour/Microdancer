@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Runtime.Intrinsics;
+using System.Linq;
 using System.IO;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
@@ -93,6 +94,8 @@ namespace Microdancer
                 {
                     DrawSettings();
                 }
+
+                ImGui.End();
             }
         }
         private void SetVisiblityIfNeeded(bool visible)
@@ -111,13 +114,23 @@ namespace Microdancer
                 _config.QueueSelection = Guid.Empty;
             }
 
+            if (!_clientState.IsLoggedIn)
+            {
+                ImGui.TextColored(new(1.0f, 0.0f, 0.0f, 1.0f), "Please log in to open Microdancer.");
+                return;
+            }
+            else if (_clientState.LocalPlayer == null)
+            {
+                ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
+            }
+
             ImGui.Columns(1);
 
             DrawLibraryPath();
 
             ImGui.Separator();
 
-            ImGui.Columns(2, "LibraryContent", true);
+            ImGui.Columns(2);
 
             DrawLibrary();
 
@@ -130,8 +143,6 @@ namespace Microdancer
             ImGui.Separator();
 
             DrawMicroQueue();
-
-            ImGui.End();
         }
 
         private void DrawLibraryPath()
@@ -167,6 +178,53 @@ namespace Microdancer
             }
 
             ImGui.EndChildFrame();
+
+            if (ImGui.IsItemClicked())
+            {
+                _config.LibrarySelection = Guid.Empty;
+            }
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            var buttonWidth = ImGui.CalcTextSize(FontAwesomeIcon.Plus.ToIconString()).X + 25.5f;
+            ImGui.PopFont();
+
+            ImGui.InvisibleButton("CreateButtonsSpacing", new(ImGui.GetColumnWidth() - buttonWidth * 2, 0));
+
+            ImGui.SameLine();
+
+            var path = _config.LibraryPath;
+            if (Directory.Exists(path))
+            {
+                INode? node = null;
+                if (_config.LibrarySelection != Guid.Empty)
+                {
+                    node = _library.Find<INode>(_config.LibrarySelection);
+                    if (node is Micro)
+                    {
+                        path = Path.GetDirectoryName(node.Path)!;
+                    }
+                    else if (node != null)
+                    {
+                        path = node.Path;
+                    }
+                }
+
+                if (IconButton(FontAwesomeIcon.Plus, "Create new Micro"))
+                {
+                    Directory.CreateDirectory(path);
+                    File.CreateText(IOUtility.MakeUniqueFile(path, "New Micro ({0}).micro", "New Micro.micro"));
+                    _library.MarkAsDirty();
+                }
+
+                ImGui.SameLine();
+
+                if (IconButton(FontAwesomeIcon.FolderPlus, "Create new Folder"))
+                {
+                    Directory.CreateDirectory(
+                        IOUtility.MakeUniqueDir(path, "New Folder ({0})", "New Folder"));
+                    _library.MarkAsDirty();
+                }
+            }
         }
 
         private IEnumerable<INode> DrawNode(INode node, string idPrefix = "")
@@ -207,7 +265,7 @@ namespace Microdancer
                 }
             }
 
-            if (ImGui.BeginPopupContextItem() && _clientState.LocalPlayer != null)
+            if (ImGui.BeginPopupContextItem())
             {
                 if (node is Micro micro)
                 {
@@ -340,25 +398,29 @@ namespace Microdancer
                 {
                     ImGui.TextColored(new(1.0f, 0.0f, 0.0f, 1.0f), "All Micros paused while in combat!");
                 }
-                else if (_clientState.LocalPlayer == null)
-                {
-                    ImGui.TextColored(new(1.0f, 0.0f, 0.0f, 1.0f), "Cannot run Micros while logged out!");
-                }
                 else
                 {
-                    if (_clientState.LocalPlayer != null)
+                    var sz = new Vector2(ImGui.GetColumnWidth(), (ImGui.GetTextLineHeight() + 20) * 2);
+
+                    ImGui.PushFont(UiBuilder.IconFont);
+                    if (TintButton(
+                        $"{FontAwesomeIcon.Play.ToIconString()}##Play All", sz, new(0.0f, 0.67f, 0.0f, 1.0f)))
                     {
-                        var sz = new Vector2(ImGui.GetColumnWidth(), ImGui.GetTextLineHeight() + 20);
+                        RunMicro(micro);
+                    }
+                    ImGui.PopFont();
 
-                        if (TintButton("Play All", sz, new(0.0f, 0.8f, 0.0f, 1.0f)))
-                        {
-                            RunMicro(micro);
-                        }
+                    TextTooltip("Play All");
 
-                        if (ImGui.Button("Queue All", sz))
+
+                    if (ImGui.BeginPopupContextItem())
+                    {
+                        if (ImGui.Button("Queue All"))
                         {
                             RunMicro(micro, multi: true);
                         }
+
+                        ImGui.EndPopup();
                     }
                 }
 
@@ -397,7 +459,7 @@ namespace Microdancer
                         col++;
 
                         string? region = regions[i];
-                        if (_clientState.LocalPlayer != null && !inCombat)
+                        if (!inCombat)
                         {
                             var regionRunning = info.Any(mi => mi.CurrentRegion == region);
 
@@ -547,7 +609,8 @@ namespace Microdancer
                         var changeBarColor = microInfo.CurrentCommandTimeLeft <= TimeSpan.FromMilliseconds(500);
                         if (changeBarColor)
                         {
-                            ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ImGui.GetColorU32(ImGuiCol.CheckMark));
+                            ImGui.PushStyleColor(
+                                ImGuiCol.PlotHistogram, ImGui.GetColorU32(ImGuiCol.PlotHistogramHovered));
                         }
 
                         ImGui.PushItemWidth(-1f);
@@ -573,7 +636,7 @@ namespace Microdancer
 
             var hasSelected = _microManager.IsRunning(_config.QueueSelection);
 
-            if (TintButton(hasSelected ? "Cancel Selected" : "Cancel All", new(0.8f, 0.0f, 0.0f, 1.0f)))
+            if (TintButton(hasSelected ? "Cancel Selected" : "Cancel All", new(0.67f, 0.0f, 0.0f, 1.0f)))
             {
                 if (hasSelected)
                 {
@@ -647,11 +710,26 @@ namespace Microdancer
 
         private static bool TintButtonImpl(Func<bool> button, Vector4 color)
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(color.X * 0.67f, color.Y * 0.67f, color.Z * 0.67f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.Text, color.Length() > 0.5f ? Vector4.One : Vector4.Zero);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, color);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, color);
+            var activeColor = new Vector4(color.X * 0.67f, color.Y * 0.67f, color.Z * 0.67f, color.W);
+            var hoveredColor = new Vector4(color.X * 1.33f, color.Y * 1.33f, color.Z * 1.33f, color.W);
+            var lightText = color + new Vector4(0.8f);
+            var darkText = color - new Vector4(0.8f);
+
+            var darkDiff = Vector4.DistanceSquared(darkText, activeColor * 0.67f);
+            var lightDiff = Vector4.DistanceSquared(lightText, hoveredColor);
+
+            lightText = Vector4.Min(lightText, Vector4.One);
+            darkText = Vector4.Max(darkText, Vector4.Zero);
+            lightText.W = color.W;
+            darkText.W = color.W;
+
+            ImGui.PushStyleColor(ImGuiCol.Button, color);
+            ImGui.PushStyleColor(ImGuiCol.Text, darkDiff > lightDiff ? darkText : lightText);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, activeColor);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, hoveredColor);
+
             var pressed = button();
+
             ImGui.PopStyleColor();
             ImGui.PopStyleColor();
             ImGui.PopStyleColor();

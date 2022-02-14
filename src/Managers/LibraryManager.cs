@@ -149,6 +149,13 @@ namespace Microdancer
                     Filter = "*.micro",
                     IncludeSubdirectories = true,
                     EnableRaisingEvents = true,
+                    NotifyFilter =
+                        NotifyFilters.FileName
+                        | NotifyFilters.DirectoryName
+                        | NotifyFilters.Size
+                        | NotifyFilters.LastWrite
+                        | NotifyFilters.CreationTime
+                        | NotifyFilters.Size,
                 };
 
                 _fileSystemWatcher.Changed += new FileSystemEventHandler(WatcherEvent);
