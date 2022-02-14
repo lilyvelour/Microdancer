@@ -30,6 +30,8 @@ namespace Microdancer
         private readonly ConcurrentDictionary<Guid, bool> _cancelled = new();
         private readonly ConcurrentDictionary<Guid, bool> _paused = new();
 
+        private bool? _autoBusy;
+
         public MicroManager(
             Framework framework,
             ClientState clientState,
@@ -100,7 +102,6 @@ namespace Microdancer
                 string? autoCountdown = null;
                 // keep track of the line we're at in the Micro
                 var i = 0;
-                var shouldExecute = string.IsNullOrWhiteSpace(region);
                 var isCancelled = false;
                 do
                 {
@@ -108,6 +109,7 @@ namespace Microdancer
                     if (_cancelled.TryRemove(id, out var cancel) && cancel)
                     {
                         isCancelled = true;
+                        if (_autoBusy != null) _autoBusy = false;
                         break;
                     }
 
@@ -132,6 +134,10 @@ namespace Microdancer
                     if (trimmedCommand == "/loop")
                     {
                         i = 0;
+                        if (_autoBusy == true)
+                        {
+                            _autoBusy = false;
+                        }
                         microInfo.CurrentRegion = null;
                         defWait = null;
                         continue;
@@ -155,6 +161,13 @@ namespace Microdancer
 
                         i += 1;
                         continue;
+                    }
+
+                    // set auto-busy
+                    if (trimmedCommand.StartsWith("/autobusy"))
+                    {
+                        await _commands.Writer.WriteAsync($"/busy on");
+                        _autoBusy = true;
                     }
 
                     // set auto-countdown
@@ -189,12 +202,7 @@ namespace Microdancer
                     {
                         var currentRegion = trimmedCommand[8..];
 
-                        if (currentRegion == region)
-                        {
-                            shouldExecute = true;
-                        }
-
-                        if (region == null || shouldExecute)
+                        if (region == null || currentRegion == region)
                         {
                             microInfo.CurrentRegion = currentRegion;
 
@@ -248,25 +256,18 @@ namespace Microdancer
 
                     if (trimmedCommand.StartsWith("#endregion"))
                     {
-                        if (microInfo.CurrentRegion != null && shouldExecute)
+                        if (microInfo.CurrentRegion != null)
                         {
                             microInfo.CurrentRegion = null;
                             microInfo.CurrentRegionWait = null;
                             microInfo.CurrentCommandStartTime = null;
                         }
 
-                        if (!string.IsNullOrWhiteSpace(region) && shouldExecute)
-                        {
-                            shouldExecute = false;
-                            microInfo.CurrentRegion = null;
-                            break;
-                        }
-
                         i++;
                         continue;
                     }
 
-                    if (!shouldExecute)
+                    if (microInfo.CurrentRegion == null || (region != null && microInfo.CurrentRegion != region))
                     {
                         i++;
                         continue;
@@ -282,7 +283,7 @@ namespace Microdancer
 
                     await Task.Delay(wait);
 
-                    microInfo.CurrentCommand = string.Empty;
+                    microInfo.CurrentCommand = null;
                     microInfo.CurrentCommandStartTime = null;
                     microInfo.CurrentCommandWait = null;
 
@@ -291,6 +292,19 @@ namespace Microdancer
                 } while (i < commands.Length);
 
                 Running.TryRemove(id, out _);
+
+                if (_autoBusy == true)
+                {
+                    _autoBusy = false;
+
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+
+                    if (_autoBusy == false)
+                    {
+                        _autoBusy = null;
+                        await _commands.Writer.WriteAsync($"/busy off");
+                    }
+                }
             });
             return id;
         }
