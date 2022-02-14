@@ -176,7 +176,7 @@ namespace Microdancer
                         do
                         {
                             PluginLog.LogDebug("Execute /setpose to get from {OldPose} to {NewPose} of {CurrentState:l}.", pose, toWhat, PoseNames[currentState]);
-                            _gameManager.ExecuteCommand("/setpose");
+                            _gameManager.ExecuteCommand("/cpose");
                             Task.Delay(50);
                         } while (toWhat != GetCPoseActorState(playerPointer) && i++ < 8);
                         if (i > 8)

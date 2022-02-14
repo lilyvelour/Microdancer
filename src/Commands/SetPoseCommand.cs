@@ -6,7 +6,7 @@ using XivCommon;
 
 namespace Microdancer
 {
-    public sealed class SetCPoseCommand : CommandBase, IDisposable
+    public sealed class SetPoseCommand : CommandBase, IDisposable
     {
         private readonly ChatGui _chatGui;
         private readonly CPoseManager _cPoseManager;
@@ -14,7 +14,7 @@ namespace Microdancer
 
         private bool _disposedValue;
 
-        public SetCPoseCommand(
+        public SetPoseCommand(
             CommandManager commandManager,
             Configuration configuration,
             ChatGui chatGui,
@@ -28,48 +28,24 @@ namespace Microdancer
         [Command("setpose", HelpMessage = "Use with [stand, weapon, sit, groundsit, doze] [#] to set a specific pose.")]
         public void SetCPose(params string[] args)
         {
-            if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
+            if (args.Length == 0 || string.IsNullOrWhiteSpace(args[0]))
             {
                 _xiv.Functions.Chat.SendMessage("/cpose");
                 return;
             }
 
-            string[] poseTypes =
-            {
-                "Stand",
-                "Weapon",
-                "Sit",
-                "GroundSit",
-                "Doze",
-            };
-
             var poseType = args.Length < 2 ? "stand" : args[0].ToLowerInvariant();
+            var poseTypes = new[] { "stand", "weapon", "sit", "groundsit", "doze" };
 
-            int whichPoseType;
-            switch (poseType)
+            var whichPoseType = Array.IndexOf(poseTypes, poseType);
+            if (whichPoseType < 0)
             {
-                case "stand":
-                    whichPoseType = 0;
-                    break;
-                case "weapon":
-                    whichPoseType = 1;
-                    break;
-                case "sit":
-                    whichPoseType = 2;
-                    break;
-                case "groundsit":
-                    whichPoseType = 3;
-                    break;
-                case "doze":
-                    whichPoseType = 4;
-                    break;
-                default:
-                    if (!int.TryParse(args[0], out whichPoseType) || whichPoseType < 0 || whichPoseType > 4)
-                    {
-                        _chatGui.PrintError($"Invalid pose type \"{poseType}\"");
-                        return;
-                    }
-                    break;
+                if (!int.TryParse(args[0], out whichPoseType) || whichPoseType < 0 || whichPoseType > poseTypes.Length)
+                {
+                    _chatGui.PrintError($"Invalid pose type \"{poseType}\"");
+                    return;
+                }
+                poseType = poseTypes[whichPoseType];
             }
 
             if (!byte.TryParse(args[^1], out var whichPose))
