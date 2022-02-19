@@ -671,11 +671,11 @@ namespace Microdancer
                 fileContentsSize.Y = Math.Max(fileContentsSize.Y + 2, 1);
 
                 ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ImGuiHelpers.ScaledVector2(8, 8));
-                ImGui.BeginChildFrame(10, fileContentsSize);
+                ImGui.BeginChildFrame(10, fileContentsSize, ImGuiWindowFlags.HorizontalScrollbar);
                 ImGui.PopStyleVar();
 
                 var len = lines.Length;
-                var maxChars = (len + 1).ToString().Length;
+                var maxChars = len.ToString().Length;
 
                 for (var i = 0; i < len; ++i)
                 {
