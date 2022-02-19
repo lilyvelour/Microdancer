@@ -55,6 +55,9 @@ namespace Microdancer
             IntPtr itemContextMenuAgent, uint itemID, uint inventoryPage, uint inventorySlot, short a5);
         public UseItemDelegate? UseItem;
 
+        public delegate uint GetActionIdDelegate(uint actionType, uint actionCategoryID);
+        public GetActionIdDelegate? GetActionId;
+
         public IntPtr actionCommandRequestTypePtr = IntPtr.Zero;
         public byte ActionCommandRequestType
         {
@@ -120,6 +123,9 @@ namespace Microdancer
                     UseItem = Marshal.GetDelegateForFunctionPointer<UseItemDelegate>(
                         _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 41 B0 01 BA 13 00 00 00"));
                     itemContextMenuAgent = (IntPtr)agentModule->GetAgentByInternalID(10);
+
+                    GetActionId = Marshal.GetDelegateForFunctionPointer<GetActionIdDelegate>(
+                        _sigScanner.ScanText("E8 ?? ?? ?? ?? 44 8B 4B 2C"));
                 }
                 catch
                 {
@@ -180,11 +186,6 @@ namespace Microdancer
             {
                 PluginLog.LogError("Failed injecting command");
             }
-        }
-
-        public void Dispose()
-        {
-
         }
     }
 }

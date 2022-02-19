@@ -14,17 +14,20 @@ namespace Microdancer
 
         public string Name => PLUGIN_NAME;
 
-        private readonly HashSet<IDisposable> _disposables = new();
+        internal static readonly HashSet<IDisposable> _disposables = new();
 
         public Microdancer(DalamudPluginInterface pluginInterface)
         {
-            var config = (Configuration)(pluginInterface.GetPluginConfig() ?? new Configuration());
+            if (pluginInterface.GetPluginConfig() == null)
+            {
+                pluginInterface.SavePluginConfig(new Configuration());
+            }
 
-            SetService(pluginInterface.Create<GameManager>());
-            SetService(pluginInterface.Create<CPoseManager>());
-            SetService(pluginInterface.Create<MicroManager>());
-            SetService(pluginInterface.Create<LibraryManager>(config));
-            SetService(pluginInterface.Create<PluginWindow>(config));
+            CustomService.Set(pluginInterface.Create<GameManager>());
+            CustomService.Set(pluginInterface.Create<CPoseManager>());
+            CustomService.Set(pluginInterface.Create<MicroManager>());
+            CustomService.Set(pluginInterface.Create<LibraryManager>());
+            CustomService.Set(pluginInterface.Create<PluginWindow>());
 
             var commandTypes = Assembly
                 .GetExecutingAssembly()
@@ -35,11 +38,9 @@ namespace Microdancer
             foreach (var type in commandTypes)
             {
                 var method = typeof(DalamudPluginInterface).GetMethod(nameof(DalamudPluginInterface.Create));
-
                 var generic = method!.MakeGenericMethod(type);
-
-                var svc = generic.Invoke(pluginInterface, new object[] { new object[] { config } })!;
-                SetService(svc, type);
+                var svc = generic.Invoke(pluginInterface, new object[] { Array.Empty<object>() })!;
+                CustomService.Set(svc, type);
             }
         }
 
@@ -58,34 +59,10 @@ namespace Microdancer
 
             if (disposing)
             {
-                foreach(var disposable in _disposables)
-                {
-                    disposable?.Dispose();
-                }
+                CustomService.DisposeAll();
             }
 
             _disposedValue = true;
-        }
-
-        private T SetService<T>(T obj)
-        {
-            return (T)SetService(obj!, typeof(T));
-        }
-
-        // HACK: This is a big giant hack so that we can use Dalamud's built-in IoC
-        private object SetService(object obj, Type t)
-        {
-            var type = typeof(DalamudPluginInterface).Assembly.GetType("Dalamud.Service`1");
-            var genericType = type!.MakeGenericType(t);
-            var method = genericType!.GetMethod("Set", new Type[] { t });
-            var result = method!.Invoke(null, new object[] { obj! })!;
-
-            if (result is IDisposable disposable)
-            {
-                _disposables.Add(disposable);
-            }
-
-            return result;
         }
     }
 }

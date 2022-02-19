@@ -8,25 +8,19 @@ namespace Microdancer
 {
     public sealed class SetPoseCommand : CommandBase, IDisposable
     {
-        private readonly ChatGui _chatGui;
         private readonly CPoseManager _cPoseManager;
         private readonly XivCommonBase _xiv;
 
         private bool _disposedValue;
 
-        public SetPoseCommand(
-            CommandManager commandManager,
-            Configuration configuration,
-            ChatGui chatGui,
-            CPoseManager cPoseManager) : base(commandManager, configuration)
+        public SetPoseCommand(CPoseManager cPoseManager) : base()
         {
-            _chatGui = chatGui;
             _cPoseManager = cPoseManager;
             _xiv = new XivCommonBase((Hooks)~0);
         }
 
         [Command("setpose", HelpMessage = "Use with [stand, weapon, sit, groundsit, doze] [#] to set a specific pose.")]
-        public void SetCPose(params string[] args)
+        public void SetCPose(string[] args)
         {
             if (args.Length == 0 || string.IsNullOrWhiteSpace(args[0]))
             {
@@ -42,7 +36,7 @@ namespace Microdancer
             {
                 if (!int.TryParse(args[0], out whichPoseType) || whichPoseType < 0 || whichPoseType > poseTypes.Length)
                 {
-                    _chatGui.PrintError($"Invalid pose type \"{poseType}\"");
+                    PrintError("setpose", $"Invalid pose type \"{poseType}\"");
                     return;
                 }
                 poseType = poseTypes[whichPoseType];
@@ -50,14 +44,16 @@ namespace Microdancer
 
             if (!byte.TryParse(args[^1], out var whichPose))
             {
-                _chatGui.PrintError($"Pose must be a valid number");
+                PrintError("setpose", $"Pose must be a valid number");
                 return;
             }
 
             if (whichPose == 0 || whichPose > CPoseManager.NumPoses[whichPoseType])
             {
-                _chatGui.PrintError(
-                    $"Pose {whichPose} for {poseType} does not exist. Only {CPoseManager.NumPoses[whichPoseType]} poses are supported.");
+                PrintError(
+                    "setpose",
+                    $"Pose {whichPose} for {poseType} does not exist. Only {CPoseManager.NumPoses[whichPoseType]} poses are supported."
+                );
                 return;
             }
 

@@ -1,5 +1,4 @@
 using System;
-using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Logging;
 
@@ -10,11 +9,7 @@ namespace Microdancer
         private readonly GameGui _gameGui;
         private readonly GameManager _gameManager;
 
-        public DoEmoteCommand(
-            CommandManager commandManager,
-            Configuration configuration,
-            GameGui gameGui,
-            GameManager gameManager) : base(commandManager, configuration)
+        public DoEmoteCommand(GameGui gameGui, GameManager gameManager) : base()
         {
             _gameGui = gameGui;
             _gameManager = gameManager;

@@ -10,6 +10,8 @@ namespace Microdancer
         public IEnumerable<string>? Aliases { get; set; }
         public string HelpMessage { get; set; } = string.Empty;
         public bool ShowInHelp { get; set; } = true;
+        public bool Raw { get; set; } = false;
+
         public CommandAttribute(string command, params string[] aliases)
         {
             Command = command.ToLowerInvariant();

@@ -6,24 +6,17 @@ namespace Microdancer
     {
         private readonly GameManager _gameManager;
 
-        public WalkCommand(
-            CommandManager commandManager,
-            Configuration configuration,
-            GameManager gameManager) : base(commandManager, configuration)
+        public WalkCommand(GameManager gameManager) : base()
         {
             _gameManager = gameManager;
         }
 
         [Command("walk", HelpMessage = "Toggle between walk and run. Optional subcommands: [on, off]")]
-        public void Walk(string toggle)
+        public void Walk(bool? isWalking = null)
         {
-            if (toggle == "on")
+            if (isWalking != null)
             {
-                _gameManager.IsWalking = true;
-            }
-            else if (toggle == "off")
-            {
-                _gameManager.IsWalking = false;
+                _gameManager.IsWalking = isWalking.Value;
             }
             else
             {

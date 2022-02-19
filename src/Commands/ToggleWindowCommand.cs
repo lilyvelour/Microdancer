@@ -6,20 +6,19 @@ namespace Microdancer
     public sealed class ToggleWindowCommand : CommandBase
     {
         private readonly DalamudPluginInterface _pluginInterface;
+        private readonly Configuration _configuration;
 
-        public ToggleWindowCommand(
-            CommandManager commandManager,
-            Configuration configuration,
-            DalamudPluginInterface pluginInterface) : base(commandManager, configuration)
+        public ToggleWindowCommand(DalamudPluginInterface pluginInterface) : base()
         {
             _pluginInterface = pluginInterface;
+            _configuration = _pluginInterface.Configuration();
         }
 
         [Command("microdancer", "micro", "micros", HelpMessage = "Open the Microdancer interface.")]
         public void ToggleWindow()
         {
-             Configuration.WindowVisible ^= true;
-             _pluginInterface.SavePluginConfig(Configuration);
+             _configuration.WindowVisible ^= true;
+             _pluginInterface.SavePluginConfig(_configuration);
         }
 
     }

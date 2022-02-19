@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Dalamud.IoC;
+using Dalamud.Plugin;
 
 namespace Microdancer
 {
@@ -18,9 +19,9 @@ namespace Microdancer
         private bool _shouldRebuild;
         private FileSystemWatcher? _fileSystemWatcher;
 
-        public LibraryManager(Configuration config)
+        public LibraryManager(DalamudPluginInterface pluginInterface)
         {
-            _config = config;
+            _config = pluginInterface.Configuration();
 
             EnsureWatcher();
         }
@@ -146,7 +147,6 @@ namespace Microdancer
             {
                 _fileSystemWatcher = new FileSystemWatcher(_config.LibraryPath)
                 {
-                    Filter = "*.micro",
                     IncludeSubdirectories = true,
                     EnableRaisingEvents = true,
                     NotifyFilter =
@@ -155,7 +155,9 @@ namespace Microdancer
                         | NotifyFilters.Size
                         | NotifyFilters.LastWrite
                         | NotifyFilters.CreationTime
-                        | NotifyFilters.Size,
+                        | NotifyFilters.Size
+                        | NotifyFilters.Attributes
+                        | NotifyFilters.Security
                 };
 
                 _fileSystemWatcher.Changed += new FileSystemEventHandler(WatcherEvent);

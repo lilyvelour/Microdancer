@@ -1,5 +1,4 @@
-﻿using System.Runtime.Intrinsics;
-using System.Linq;
+﻿using System.Linq;
 using System.IO;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
@@ -10,10 +9,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Game.ClientState;
+using Dalamud.IoC;
+using Dalamud.Logging;
 
 namespace Microdancer
 {
-    public class PluginWindow : IDisposable
+    [PluginInterface]
+    public unsafe class PluginWindow : IDisposable
     {
         private readonly DalamudPluginInterface _pluginInterface;
         private readonly ClientState _clientState;
@@ -29,15 +31,14 @@ namespace Microdancer
             ClientState clientState,
             Condition condition,
             LibraryManager library,
-            MicroManager microManager,
-            Configuration config)
+            MicroManager microManager)
         {
             _pluginInterface = pluginInterface;
             _clientState = clientState;
             _condition = condition;
             _library = library;
             _microManager = microManager;
-            _config = config;
+            _config = _pluginInterface.Configuration();
 
             _pluginInterface.UiBuilder.Draw += Draw;
             _pluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
@@ -80,14 +81,150 @@ namespace Microdancer
             _pluginInterface.SavePluginConfig(_config);
         }
 
+        private readonly Dictionary<ImGuiStyleVar, object> _styles = new Dictionary<ImGuiStyleVar, object>
+        {
+            { ImGuiStyleVar.WindowPadding, new Vector2(8.0f, 4.0f) },
+            { ImGuiStyleVar.FramePadding, new Vector2(4.0f, 4.0f) },
+            { ImGuiStyleVar.CellPadding, new Vector2(4.0f, 2.0f) },
+            { ImGuiStyleVar.ItemSpacing, new Vector2(8.0f, 4.0f) },
+            { ImGuiStyleVar.ItemInnerSpacing, new Vector2(4, 4)},
+            { ImGuiStyleVar.IndentSpacing, 21.0f },
+            { ImGuiStyleVar.ScrollbarSize, 10.0f },
+            { ImGuiStyleVar.GrabMinSize, 13.0f },
+            { ImGuiStyleVar.WindowBorderSize, 1.0f },
+            { ImGuiStyleVar.ChildBorderSize, 1.0f },
+            { ImGuiStyleVar.PopupBorderSize, 0.0f },
+            { ImGuiStyleVar.FrameBorderSize, 1.0f },
+            { ImGuiStyleVar.WindowRounding, 0.0f },
+            { ImGuiStyleVar.ChildRounding, 0.0f },
+            { ImGuiStyleVar.FrameRounding, 0.0f },
+            { ImGuiStyleVar.PopupRounding, 0.0f },
+            { ImGuiStyleVar.ScrollbarRounding, 6.0f },
+            { ImGuiStyleVar.GrabRounding, 12.0f },
+            { ImGuiStyleVar.TabRounding, 0.0f },
+            { ImGuiStyleVar.WindowTitleAlign, new Vector2(0.0f, 0.5f) },
+            { ImGuiStyleVar.ButtonTextAlign, new Vector2(0.5f, 0.5f) },
+            { ImGuiStyleVar.SelectableTextAlign, Vector2.Zero },
+        };
+
+        private readonly Dictionary<ImGuiCol, Vector4> _colors = new Dictionary<ImGuiCol, Vector4>
+        {
+            { ImGuiCol.Text, new Vector4(1.0f, 1.0f, 1.0f, 1.0f)  },
+            { ImGuiCol.TextDisabled, new Vector4(0.5019608f, 0.5019608f, 0.5019608f, 1.0f) },
+            { ImGuiCol.WindowBg, new Vector4(0.12941177f, 0.1254902f, 0.12941177f, 0.90f) },
+            { ImGuiCol.ChildBg, new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+            { ImGuiCol.PopupBg, new Vector4(0.08955222f, 0.08955222f, 0.08955222f, 1.0f) },
+            { ImGuiCol.Border, new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
+            { ImGuiCol.BorderShadow, new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+            { ImGuiCol.FrameBg, new Vector4(0.16078432f, 0.16078432f, 0.16078432f, 0.8f) },
+            { ImGuiCol.FrameBgHovered, new Vector4(0.22352941f, 0.22352941f, 0.22352941f, 1.0f) },
+            { ImGuiCol.TitleBg, new Vector4(0.12941177f, 0.1254902f, 0.12941177f, 1.0f) },
+            { ImGuiCol.TitleBgActive, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.TitleBgCollapsed, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.MenuBarBg, new Vector4(0.14f, 0.14f, 0.14f, 1.0f) },
+            { ImGuiCol.ScrollbarBg, new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+            { ImGuiCol.ScrollbarGrab, new Vector4(0.24313726f, 0.24313726f, 0.24313726f, 1.0f) },
+            { ImGuiCol.ScrollbarGrabHovered, new Vector4(0.27601808f, 0.2760153f, 0.27601808f, 1.0f) },
+            { ImGuiCol.ScrollbarGrabActive, new Vector4(0.27450982f, 0.27450982f, 0.27450982f, 1.0f) },
+            { ImGuiCol.CheckMark, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.SliderGrab, new Vector4(0.39800596f, 0.39800596f, 0.39800596f, 1.0f) },
+            { ImGuiCol.SliderGrabActive, new Vector4(0.4825822f, 0.4825822f, 0.4825822f, 1.0f) },
+            { ImGuiCol.Button, new Vector4(0.12941177f, 0.12941177f, 0.12941177f, 1.0f) },
+            { ImGuiCol.ButtonHovered, new Vector4(0.16078432f, 0.16078432f, 0.16078432f, 1.0f) },
+            { ImGuiCol.ButtonActive, new Vector4(0.22352941f, 0.22352941f, 0.22352941f, 1.0f) },
+            { ImGuiCol.Header, new Vector4(0.0f, 0.0f, 0.0f, 0.23529412f) },
+            { ImGuiCol.HeaderHovered, new Vector4(0.0f, 0.0f, 0.0f, 0.3529412f) },
+            { ImGuiCol.HeaderActive, new Vector4(0.0f, 0.0f, 0.0f, 0.47058824f) },
+            { ImGuiCol.Separator, new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+            { ImGuiCol.SeparatorHovered, new Vector4(0.89411765f, 0.0f, 0.06666667f, 0.5f) },
+            { ImGuiCol.SeparatorActive, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.ResizeGrip, new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+            { ImGuiCol.ResizeGripHovered, new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+            { ImGuiCol.ResizeGripActive, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.Tab, new Vector4(0.16078432f, 0.16078432f, 0.16078432f, 1.0f) },
+            { ImGuiCol.TabHovered, new Vector4(0.44705883f, 0.0f, 0.033333335f, 1.0f) },
+            { ImGuiCol.TabActive, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.TabUnfocused, new Vector4(0.16078432f, 0.15294118f, 0.16078432f, 1.0f) },
+            { ImGuiCol.TabUnfocusedActive, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.DockingPreview, new Vector4(0.89411765f, 0.0f, 0.06666667f, 0.5f) },
+            { ImGuiCol.DockingEmptyBg, new Vector4(0.2f, 0.2f, 0.2f, 1.0f) },
+            { ImGuiCol.PlotLines, new Vector4(0.61f, 0.61f, 0.61f, 1.0f) },
+            { ImGuiCol.PlotLinesHovered, new Vector4(1.0f, 0.43f, 0.35f, 1.0f) },
+            { ImGuiCol.PlotHistogram, new Vector4(0.9f, 0.7f, 0.0f, 1.0f) },
+            { ImGuiCol.PlotHistogramHovered, new Vector4(1.0f, 0.6f, 0.0f, 1.0f) },
+            { ImGuiCol.TableHeaderBg, new Vector4(0.19f, 0.19f, 0.2f, 1.0f) },
+            { ImGuiCol.TableBorderStrong, new Vector4(0.31f, 0.31f, 0.45f, 1.0f) },
+            { ImGuiCol.TableBorderLight, new Vector4(0.23f, 0.23f, 0.25f, 1.0f) },
+            { ImGuiCol.TableRowBg, new Vector4(1.0f, 1.0f, 1.0f, 0.06f) },
+            { ImGuiCol.TextSelectedBg, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.DragDropTarget, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.NavHighlight, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f) },
+            { ImGuiCol.NavWindowingHighlight, new Vector4(1.0f, 1.0f, 1.0f, 0.7f) },
+            { ImGuiCol.NavWindowingDimBg, new Vector4(0.8f, 0.8f, 0.8f, 0.2f) },
+            { ImGuiCol.ModalWindowDimBg, new Vector4(0.8f, 0.8f, 0.8f, 0.35f) },
+        };
+
+
+        private int _styleCount = 0;
+        private int _colorCount = 0;
+
+        private void BeginBurgundySkin()
+        {
+            foreach(var (style, value) in _styles)
+            {
+                if (value is float f)
+                {
+                    ImGui.PushStyleVar(style, f);
+                }
+                else if (value is Vector2 v)
+                {
+                    ImGui.PushStyleVar(style, v);
+                }
+                else
+                {
+                    continue;
+                }
+
+                _styleCount++;
+            }
+
+            foreach(var (color, value) in _colors)
+            {
+                ImGui.PushStyleColor(color, value);
+
+                _colorCount++;
+            }
+        }
+
+        private void EndBurgundySkin()
+        {
+            if (_styleCount > 0)
+            {
+                ImGui.PopStyleVar(_styleCount);
+                _styleCount = 0;
+            }
+
+            if (_colorCount > 0)
+            {
+                ImGui.PopStyleColor(_colorCount);
+                _colorCount = 0;
+            }
+        }
+
         private void Draw()
         {
             if (_config.WindowVisible)
             {
+                BeginBurgundySkin();
+
                 var windowVisible = true;
                 var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible);
                 var windowSize = ImGui.GetWindowSize();
-                ImGui.SetWindowSize(Vector2.Max(windowSize, new(400, 600)));
+
+                if (!ImGui.IsWindowCollapsed())
+                {
+                    ImGui.SetWindowSize(Vector2.Max(windowSize, ImGuiHelpers.ScaledVector2(400, 400)));
+                }
 
                 SetVisiblityIfNeeded(windowVisible);
                 if (draw)
@@ -96,6 +233,8 @@ namespace Microdancer
                 }
 
                 ImGui.End();
+
+                EndBurgundySkin();
             }
         }
         private void SetVisiblityIfNeeded(bool visible)
@@ -140,8 +279,6 @@ namespace Microdancer
 
             ImGui.Columns(1);
 
-            ImGui.Separator();
-
             DrawMicroQueue();
         }
 
@@ -170,7 +307,10 @@ namespace Microdancer
 
         private void DrawLibrary()
         {
-            ImGui.BeginChildFrame(1, new(-1,ImGui.GetContentRegionAvail().Y - 200));
+             ImGui.BeginChildFrame(
+                1,
+                new(-1,ImGui.GetContentRegionAvail().Y - (180 * ImGuiHelpers.GlobalScale))
+            );
 
             foreach (var node in _library.GetNodes())
             {
@@ -185,12 +325,24 @@ namespace Microdancer
             }
 
             ImGui.PushFont(UiBuilder.IconFont);
-            var buttonWidth = ImGui.CalcTextSize(FontAwesomeIcon.Plus.ToIconString()).X + 25.5f;
+            var buttonWidth = ImGuiHelpers.GetButtonSize(FontAwesomeIcon.Plus.ToIconString()).X;
             ImGui.PopFont();
 
-            ImGui.InvisibleButton("CreateButtonsSpacing", new(ImGui.GetColumnWidth() - buttonWidth * 2, 0));
+            var itemSpacing = ImGui.GetStyle().ItemSpacing.X;
+            var buttonGroupWidth = buttonWidth * 2 + itemSpacing;
+            var availableWidth = ImGui.GetContentRegionAvail().X;
+            var columnPadding = ImGui.GetStyle().ColumnsMinSpacing * 2;
 
-            ImGui.SameLine();
+            var spacingWidth =
+                availableWidth
+                - columnPadding
+                - buttonGroupWidth;
+
+            if (spacingWidth > itemSpacing)
+            {
+                ImGui.Dummy(new(spacingWidth, 0));
+                ImGui.SameLine();
+            }
 
             var path = _config.LibraryPath;
             if (Directory.Exists(path))
@@ -319,7 +471,11 @@ namespace Microdancer
 
         private void DrawContentArea()
         {
-            ImGui.BeginChildFrame(2, new(-1,ImGui.GetContentRegionAvail().Y - 200), ImGuiWindowFlags.NoBackground);
+            ImGui.BeginChildFrame(
+                2,
+                new(-1, ImGui.GetContentRegionAvail().Y - (180 * ImGuiHelpers.GlobalScale)),
+                ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoScrollbar
+            );
 
             INode? node = null;
 
@@ -387,10 +543,10 @@ namespace Microdancer
             if (node is Micro micro)
             {
                 var lines = micro.GetBody().ToArray();
-                    var regions = lines
-                        .Where(l => l.Trim().StartsWith("#region "))
-                        .Select(l => l.Trim()[8..])
-                        .ToArray();
+                var regions = lines
+                    .Where(l => l.Trim().StartsWith("#region "))
+                    .Select(l => l.Trim()[8..])
+                    .ToArray();
 
                 var inCombat = _condition[ConditionFlag.InCombat];
 
@@ -400,11 +556,13 @@ namespace Microdancer
                 }
                 else
                 {
-                    var sz = new Vector2(ImGui.GetColumnWidth(), (ImGui.GetTextLineHeight() + 20) * 2);
-
                     ImGui.PushFont(UiBuilder.IconFont);
-                    if (TintButton(
-                        $"{FontAwesomeIcon.Play.ToIconString()}##Play All", sz, new(0.0f, 0.67f, 0.0f, 1.0f)))
+                    var label = $"{FontAwesomeIcon.Play.ToIconString()}##Play All";
+                    var buttonSize = ImGuiHelpers.GetButtonSize(label);
+                    buttonSize.X = -1;
+                    buttonSize.Y += 20 * ImGuiHelpers.GlobalScale;
+
+                    if (TintButton(label, buttonSize, new Vector4(0.0f, 0.44705883f, 0.033333335f, 1.0f)))
                     {
                         RunMicro(micro);
                     }
@@ -429,6 +587,8 @@ namespace Microdancer
 
                 var size = Vector2.Zero;
 
+                var info = _microManager.Running.Values.Where(mi => mi.Micro.Id == micro.Id).ToArray();
+
                 if (regions.Length == 0)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
@@ -447,10 +607,9 @@ namespace Microdancer
                         }
                     }
 
-                    size.X += 40;
-                    size.Y += 20;
+                    size.X += 40 * ImGuiHelpers.GlobalScale;
+                    size.Y += 20 * ImGuiHelpers.GlobalScale;
 
-                    var info = _microManager.Running.Values.Where(mi => mi.Micro.Id == micro.Id).ToArray();
                     var running = info.Length > 0;
 
                     var col = 0;
@@ -490,7 +649,7 @@ namespace Microdancer
                             ImGui.EndPopup();
                         }
 
-                        if (ImGui.GetContentRegionAvail().X - ((size.X + 2) * (col + 1)) > size.X
+                        if (ImGui.GetContentRegionAvail().X - ((size.X + ImGui.GetStyle().ItemSpacing.X) * col) > size.X
                             && i < regions.Length - 1)
                         {
                             ImGui.SameLine();
@@ -504,29 +663,61 @@ namespace Microdancer
 
                 ImGui.Separator();
 
-                if (ImGui.TreeNode("Content"))
-                {
-                    var len = lines.Length;
-                    var maxChars = (len + 1).ToString().Length;
+                ImGui.Text("File Contents");
 
-                    for (var i = 0; i < len; ++i)
+                var framePadding = ImGui.GetStyle().FramePadding;
+                var fileContentsSize = ImGui.GetContentRegionAvail();
+                fileContentsSize.X -= framePadding.X;
+                fileContentsSize.Y = Math.Max(fileContentsSize.Y + 2, 1);
+
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ImGuiHelpers.ScaledVector2(8, 8));
+                ImGui.BeginChildFrame(10, fileContentsSize);
+                ImGui.PopStyleVar();
+
+                var len = lines.Length;
+                var maxChars = (len + 1).ToString().Length;
+
+                for (var i = 0; i < len; ++i)
+                {
+                    Vector4 prefixColor = Vector4.Zero;
+                    Vector4 textColor = *ImGui.GetStyleColorVec4(ImGuiCol.TextDisabled);
+                    foreach (var mi in info)
                     {
-                        lines[i] = $"{(i + 1).ToString().PadLeft(maxChars)} | {lines[i]}";
+                        if (mi.CurrentLineNumber == i + 1)
+                        {
+                            prefixColor = *ImGui.GetStyleColorVec4(ImGuiCol.TitleBgActive);
+                            textColor = *ImGui.GetStyleColorVec4(ImGuiCol.Text);
+                            break;
+                        }
                     }
 
-                    var contents = string.Join('\n', lines);
-                    ImGui.PushItemWidth(-1f);
-                    ImGui.PushFont(UiBuilder.MonoFont);
-                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
-                    ImGui.InputTextMultiline(
-                        $"##{micro.Id}-editor", ref contents, 10_000, new Vector2(0, 250), ImGuiInputTextFlags.ReadOnly);
-                    ImGui.PopStyleColor();
+                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImGuiHelpers.ScaledVector2(8.0f, 0.0f));
+
+                    ImGui.PushStyleColor(ImGuiCol.Text, prefixColor);
+                    ImGui.PushFont(UiBuilder.IconFont);
+                    ImGui.Text(FontAwesomeIcon.CaretRight.ToIconString());
                     ImGui.PopFont();
-                    ImGui.PopItemWidth();
+                    ImGui.PopStyleColor();
 
+                    ImGui.SameLine();
 
-                    ImGui.TreePop();
+                    ImGui.PushFont(UiBuilder.MonoFont);
+
+                    ImGui.PushStyleColor(ImGuiCol.Text, textColor * 0.8f);
+                    ImGui.Text($"{(i + 1).ToString().PadLeft(maxChars)}");
+                    ImGui.PopStyleColor();
+
+                    ImGui.SameLine();
+
+                    ImGui.PushStyleColor(ImGuiCol.Text, textColor);
+                    ImGui.Text($"{lines[i]}");
+                    ImGui.PopStyleColor();
+
+                    ImGui.PopFont();
+
+                    ImGui.PopStyleVar();
                 }
+                ImGui.EndChildFrame();
             }
 
             if (node is Folder)
@@ -556,7 +747,11 @@ namespace Microdancer
             }
 
             ImGui.PushItemWidth(-1f);
-            if (ImGui.BeginListBox("##running-micros", new Vector2(0, 100)))
+            var runningMicrosSize = ImGui.GetContentRegionAvail();
+            runningMicrosSize.Y -= ImGuiHelpers.GetButtonSize(" ").Y + ImGui.GetStyle().WindowPadding.Y * 2;
+            runningMicrosSize.Y = Math.Max(runningMicrosSize.Y, 1);
+
+            if (ImGui.BeginListBox("##running-micros", runningMicrosSize))
             {
                 if (_microManager.Running.IsEmpty)
                 {
@@ -610,7 +805,7 @@ namespace Microdancer
                         if (changeBarColor)
                         {
                             ImGui.PushStyleColor(
-                                ImGuiCol.PlotHistogram, ImGui.GetColorU32(ImGuiCol.PlotHistogramHovered));
+                                ImGuiCol.PlotHistogram, ImGui.GetColorU32(ImGuiCol.TitleBgActive));
                         }
 
                         ImGui.PushItemWidth(-1f);
@@ -636,7 +831,7 @@ namespace Microdancer
 
             var hasSelected = _microManager.IsRunning(_config.QueueSelection);
 
-            if (TintButton(hasSelected ? "Cancel Selected" : "Cancel All", new(0.67f, 0.0f, 0.0f, 1.0f)))
+            if (TintButton(hasSelected ? "Cancel Selected" : "Cancel All", _colors[ImGuiCol.TitleBgActive]))
             {
                 if (hasSelected)
                 {
@@ -710,13 +905,13 @@ namespace Microdancer
 
         private static bool TintButtonImpl(Func<bool> button, Vector4 color)
         {
-            var activeColor = new Vector4(color.X * 0.67f, color.Y * 0.67f, color.Z * 0.67f, color.W);
-            var hoveredColor = new Vector4(color.X * 1.33f, color.Y * 1.33f, color.Z * 1.33f, color.W);
+            var activeColor = new Vector4(color.X * 1.5f, color.Y * 1.5f, color.Z * 1.5f, color.W);
+            var hoveredColor = new Vector4(color.X * 1.25f, color.Y * 1.25f, color.Z * 1.25f, color.W);
             var lightText = color + new Vector4(0.8f);
             var darkText = color - new Vector4(0.8f);
 
-            var darkDiff = Vector4.DistanceSquared(darkText, activeColor * 0.67f);
-            var lightDiff = Vector4.DistanceSquared(lightText, hoveredColor);
+            var darkDiff = Vector4.DistanceSquared(darkText, Vector4.Min(activeColor, hoveredColor) * 0.67f);
+            var lightDiff = Vector4.DistanceSquared(lightText, Vector4.Max(activeColor, hoveredColor));
 
             lightText = Vector4.Min(lightText, Vector4.One);
             darkText = Vector4.Max(darkText, Vector4.Zero);

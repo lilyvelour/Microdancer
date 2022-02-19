@@ -3,34 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 using Dalamud.IoC;
-using Dalamud.Logging;
 
 namespace Microdancer
 {
     [PluginInterface]
     public abstract class CommandBase : IDisposable
     {
-        protected Configuration Configuration { get; private set; }
         private readonly CommandManager _commandManager;
-
-        private readonly (string, CommandInfo)[] _commands = Array.Empty<(string, CommandInfo)>();
+        private readonly ChatGui _chatGui;
+        protected Dictionary<string, CommandInfo> CommandInfo { get; } = new();
 
         private bool _disposedValue;
 
-        public CommandBase(CommandManager commandManager, Configuration configuration)
+        public CommandBase()
         {
-            _commandManager = commandManager;
-            Configuration = configuration;
+            _commandManager = CustomService.Get<CommandManager>();
+            _chatGui = CustomService.Get<ChatGui>();
 
-            _commands = GetType()
+            CommandInfo = GetType()
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                 .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
                 .SelectMany(GetCommands)
-                .ToArray();
+                .ToDictionary(t => t.Item1, t => t.Item2);
 
-            foreach (var (command, commandInfo) in _commands)
+            foreach (var (command, commandInfo) in CommandInfo)
             {
                 _commandManager.AddHandler(command, commandInfo);
             }
@@ -51,13 +51,38 @@ namespace Microdancer
 
             if (disposing)
             {
-                foreach (var (command, _) in _commands)
+                foreach (var (command, _) in CommandInfo)
                 {
                     _commandManager.RemoveHandler(command);
                 }
             }
 
             _disposedValue = true;
+        }
+
+        protected CommandInfo GetCommandInfo(string cmd)
+        {
+            if (!cmd.StartsWith("/"))
+            {
+                cmd = $"/{cmd}";
+            }
+
+            return CommandInfo[cmd];
+        }
+
+        protected void Print(string cmd, string msg)
+        {
+            if (!cmd.StartsWith("/"))
+            {
+                cmd = $"/{cmd}";
+            }
+
+            _chatGui.Print($"{cmd}: {msg}");
+        }
+
+        protected void PrintError(string cmd, string msg)
+        {
+            _chatGui.PrintError($"{cmd}: {msg}");
         }
 
         private IEnumerable<(string, CommandInfo)> GetCommands(MethodInfo method)
@@ -84,47 +109,8 @@ namespace Microdancer
                 return alias;
             }) ?? Array.Empty<string>();
 
-            CommandInfo.HandlerDelegate? handlerDelegate = null;
-
-            var parameterLength = method.GetParameters().Length;
-
-            switch(parameterLength)
-            {
-                case 0:
-                    handlerDelegate = new CommandInfo.HandlerDelegate(
-                        (_, _) => method.Invoke(this, null));
-                    break;
-                case 1:
-                    var parameter = method.GetParameters()[0];
-                    if (parameter.ParameterType == typeof(string[]))
-                    {
-                        handlerDelegate = new CommandInfo.HandlerDelegate(
-                            (_, args) => method.Invoke(this, new[]
-                            {
-                                Regex.Matches((args ?? string.Empty).Trim(), @"[\""].+?[\""]|[^ ]+")
-                                    .Cast<Match>()
-                                    .Select(x => x.Value.Trim('"')).ToArray(),
-                            }));
-                    }
-                    else if (parameter.ParameterType == typeof(string))
-                    {
-                        handlerDelegate = new CommandInfo.HandlerDelegate(
-                            (_, args) => method.Invoke(this, new[] { args ?? string.Empty }));
-                    }
-                    else
-                    {
-                        PluginLog.LogError(
-                            $"Invalid parameter type for {cmd} - must be a string or string array");
-                        yield break;
-                    }
-                    break;
-                default:
-                    PluginLog.LogError(
-                        $"Invalid method for {cmd} - must have a single string or string array argument");
-                    yield break;
-            }
-
-            var commandInfo = new CommandInfo(handlerDelegate!)
+            var parameter = method.GetParameters().FirstOrDefault();
+            var commandInfo = new CommandInfo(GetHandler(cmd, command, method))
             {
                 HelpMessage = command.HelpMessage ?? string.Empty,
                 ShowInHelp = command.ShowInHelp,
@@ -132,19 +118,133 @@ namespace Microdancer
 
             yield return (cmd, commandInfo);
 
-            var commands = new List<(string, CommandInfo)>
-            {
-                (cmd, commandInfo)
-            };
-
             foreach(var alias in aliases)
             {
-                yield return (alias, new CommandInfo(handlerDelegate!)
+                yield return (alias, new CommandInfo(GetHandler(alias, command, method))
                 {
                     HelpMessage = $"Alias for {cmd}.",
                     ShowInHelp = command.ShowInHelp,
                 });
             }
+        }
+
+        private CommandInfo.HandlerDelegate GetHandler(string cmd, CommandAttribute command, MethodInfo method)
+        {
+            return new CommandInfo.HandlerDelegate((_, args) =>
+            {
+                var parameters = method.GetParameters();
+
+                if (parameters.Length == 0)
+                {
+                    ExecCommand(method);
+                    return;
+                }
+
+                if (command.Raw)
+                {
+                    ExecCommand(method, new[] { args });
+                    return;
+                }
+
+                var argsArray = Regex.Matches((args ?? string.Empty).Trim(), @"[\""].+?[\""]|[^ ]+")
+                    .Cast<Match>()
+                    .Select(x => x.Value.Trim('"'))
+                    .ToArray();
+
+                if (parameters.Length == 1 && typeof(IEnumerable<string>).IsAssignableFrom(parameters[0].ParameterType))
+                {
+                    ExecCommand(method, new object[] { argsArray });
+                    return;
+                }
+
+                if (argsArray.Length < parameters.Where(p => !p.HasDefaultValue).Count())
+                {
+                    PrintError(
+                        cmd,
+                        $"Invalid parameter count. Command must have at least {parameters.Length} parameter(s).");
+                }
+
+                var convertedParams = new List<object?>();
+
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    var parameterType = parameters[i].ParameterType;
+
+                    if (i < argsArray.Length)
+                    {
+                        var arg = argsArray[i];
+
+                        try
+                        {
+                            convertedParams.Add(ChangeType(arg, parameterType));
+                        }
+                        catch (Exception e)
+                        {
+                            PrintError(
+                                cmd,
+                                $"Invalid parameter type at position {i + 1} ({arg})."
+                                + $" Type must be '{parameterType.Name}'\n{e.Message}."
+                            );
+                        }
+                    }
+                    else
+                    {
+                        convertedParams.Add(parameters[i].DefaultValue);
+                    }
+                }
+
+                ExecCommand(method, convertedParams.ToArray());
+            });
+        }
+
+        private void ExecCommand(MethodInfo method, object?[]? parameters = null)
+        {
+            if (method.ReturnType == typeof(Task))
+            {
+                Task.Run(() => (Task)method.Invoke(this, parameters)!);
+            }
+            else
+            {
+                method.Invoke(this, parameters);
+            }
+        }
+
+        private static object? ChangeType(string arg, Type conversion)
+        {
+            object value =
+                arg.ToLowerInvariant() == "on" ? true
+                : arg.ToLowerInvariant() == "off" ? false
+                : arg;
+
+            if (value is string str)
+            {
+                if (bool.TryParse(str, out var b))
+                {
+                    value = b;
+                }
+                else if (float.TryParse(str, out var f))
+                {
+                    value = f;
+                }
+                else if (int.TryParse(str, out var ii))
+                {
+                    value = ii;
+                }
+            }
+
+            var t = conversion;
+
+            if (t.IsGenericType && t.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+            {
+                if (value == null)
+                {
+                    return null;
+                }
+
+                t = Nullable.GetUnderlyingType(t)!;
+            }
+
+            return Convert.ChangeType(value, t);
         }
     }
 }

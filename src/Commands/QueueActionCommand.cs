@@ -10,23 +10,28 @@ namespace Microdancer
         private readonly Condition _condition;
         private readonly GameManager _gameManager;
 
-        public QueueActionCommand(
-            CommandManager commandManager,
-            Configuration configuration,
-            Condition condition,
-            GameManager gameManager) : base(commandManager, configuration)
+        public QueueActionCommand(Condition condition, GameManager gameManager) : base()
         {
             _condition = condition;
             _gameManager = gameManager;
         }
 
-        [Command("qaction", "qac", HelpMessage = "Uses /action but it can queue. Does not queue in combat.")]
+        [Command(
+            "qaction",
+            "qac",
+            HelpMessage = "Uses /action but it can queue. Does not queue in combat.",
+            Raw = true
+        )]
         public void QueueAction(string action)
         {
             QueueActionImpl("/ac", action);
         }
 
-        [Command("qblueaction", HelpMessage = "Uses /blueaction but it can queue. Does not queue in combat.")]
+        [Command(
+            "qblueaction",
+            HelpMessage = "Uses /blueaction but it can queue. Does not queue in combat.",
+            Raw = true
+        )]
         public void QueueBlueAction(string action)
         {
             // TODO: Does this actually work?
@@ -37,7 +42,7 @@ namespace Microdancer
         {
             if (_gameManager.actionCommandRequestTypePtr == IntPtr.Zero)
             {
-                PluginLog.LogError($"{cmd} is not yet initialized.");
+                PluginLog.LogError($"/q{cmd} is not yet initialized.");
                 return;
             }
 

@@ -145,7 +145,8 @@ namespace Microdancer
             }
             else if (toWhat >= NumPoses[which])
             {
-                PluginLog.LogError($"Higher pose requested than possible for {PoseNames[which]}: {toWhat} / {NumPoses[which]}.");
+                PluginLog.LogError(
+                    $"Higher pose requested than possible for {PoseNames[which]}: {toWhat} / {NumPoses[which]}.");
                 return;
             }
 
@@ -165,7 +166,11 @@ namespace Microdancer
                     if (pose != toWhat)
                     {
                         WritePose(which, toWhat);
-                        PluginLog.LogDebug("Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.", pose, toWhat, PoseNames[which], PoseNames[currentState]);
+                        PluginLog.LogDebug(
+                            "Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.", pose,
+                            toWhat,
+                            PoseNames[which],
+                            PoseNames[currentState]);
                     }
                 }
                 else

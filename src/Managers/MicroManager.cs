@@ -4,6 +4,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.IoC;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -127,7 +128,8 @@ namespace Microdancer
                     }
 
                     // get the line of the command
-                    var command = commands[i];
+                    var commandInfo = commands[i];
+                    var command = commandInfo.Item1;
                     var trimmedCommand = command.Trim();
 
                     // go back to the beginning if the command is loop
@@ -212,7 +214,7 @@ namespace Microdancer
                             var j = Math.Min(i + 1, commands.Length - 1);
                             for(; j < commands.Length; j++)
                             {
-                                var cmd = commands[j].Trim();
+                                var cmd = commands[j].Item1.Trim();
                                 if (cmd.StartsWith("#endregion"))
                                 {
                                     break;
@@ -226,7 +228,7 @@ namespace Microdancer
                             // Dispatch countdown task if we have any additional regions
                             if (autoCountdown != null && regionWait > TimeSpan.FromSeconds(9))
                             {
-                                if (commands[j..].Any(c => c.Trim().StartsWith("#region ")))
+                                if (commands[j..].Any(c => c.Item1.Trim().StartsWith("#region ")))
                                 {
                                     var cdTime = TimeSpan.FromSeconds(autoCountdown == "start" ? 4.98 : 5.48);
                                     var delay = regionWait - cdTime;
@@ -267,7 +269,7 @@ namespace Microdancer
                         continue;
                     }
 
-                    if (microInfo.CurrentRegion == null || (region != null && microInfo.CurrentRegion != region))
+                    if (region != null && microInfo.CurrentRegion != region)
                     {
                         i++;
                         continue;
@@ -275,6 +277,7 @@ namespace Microdancer
 
                     microInfo.CurrentCommand = command;
                     microInfo.CurrentCommandIndex = i;
+                    microInfo.CurrentLineNumber = commandInfo.Item2;
                     microInfo.CurrentCommandWait = wait;
 
                     // send the command to the channel
@@ -288,7 +291,7 @@ namespace Microdancer
                     microInfo.CurrentCommandWait = null;
 
                     // increment to next line
-                    i += 1;
+                    i++;
                 } while (i < commands.Length);
 
                 Running.TryRemove(id, out _);
@@ -366,13 +369,25 @@ namespace Microdancer
             _xiv.Functions.Chat.SendMessage(command);
         }
 
-        private static string[] ExtractCommands(Micro micro)
+        private static (string, int)[] ExtractCommands(Micro micro)
         {
-            return micro.GetBody()
-                .Where(line => line.Trim().Length > 0)
-                .Where(line =>
+            var body = micro.GetBody().ToArray();
+            var commands = new List<(string, int)>();
+
+            for(var i = 0; i < body.Length; ++i)
+            {
+                commands.Add((body[i], i + 1));
+            }
+
+            return commands
+                .Where(c =>
                 {
-                    var trim = line.Trim();
+                    var trim = c.Item1.Trim();
+
+                    if (trim.Length == 0)
+                    {
+                        return false;
+                    }
 
                     if (trim.StartsWith("#endregion") || trim.StartsWith("#region"))
                     {
@@ -426,6 +441,7 @@ namespace Microdancer
             public string? CurrentRegion { get; internal set; }
             public int CurrentCommandIndex { get; internal set; }
             public int CommandsLength { get; internal set; }
+            public int CurrentLineNumber { get; internal set; }
             public DateTime? CurrentCommandStartTime { get; internal set; }
             public TimeSpan? CurrentCommandWait { get; internal set; }
             public DateTime? CurrentRegionStartTime { get; internal set; }
@@ -440,7 +456,7 @@ namespace Microdancer
                         return TimeSpan.Zero;
                     }
 
-                    return CurrentCommandStartTime.Value + CurrentCommandWait.Value - DateTime.Now;
+                    return (CurrentCommandStartTime ?? default) + (CurrentCommandWait ?? default) - DateTime.Now;
                 }
             }
 
@@ -463,8 +479,8 @@ namespace Microdancer
 
                     return
                         Math.Clamp((float)InvLerp(
-                            CurrentCommandStartTime.Value,
-                            CurrentCommandStartTime.Value + CurrentCommandWait.Value,
+                            CurrentCommandStartTime ?? default,
+                            (CurrentCommandStartTime ?? default) + (CurrentCommandWait ?? default),
                             DateTime.Now
                         ), 0, 1);
                 }
@@ -481,8 +497,8 @@ namespace Microdancer
 
                     return
                         Math.Clamp((float)InvLerp(
-                            CurrentRegionStartTime.Value,
-                            CurrentRegionStartTime.Value + CurrentRegionWait.Value,
+                            CurrentRegionStartTime ?? default,
+                            (CurrentRegionStartTime ?? default) + (CurrentRegionWait ?? default),
                             DateTime.Now
                         ), 0, 1);
                 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 
 namespace Microdancer
@@ -9,6 +8,7 @@ namespace Microdancer
     public sealed class Micro : Node
     {
         private IEnumerable<string>? _cache;
+        private DateTime _cacheTime = DateTime.MinValue;
 
         public Micro(FileInfo file) : base(file)
         {
@@ -17,51 +17,39 @@ namespace Microdancer
 
         public IEnumerable<string> GetBody()
         {
+            if (DateTime.Now - _cacheTime > TimeSpan.FromSeconds(1.5))
+            {
+                _cache = null;
+            }
+
             if (_cache == null)
             {
-                _cache = GetBodyImpl();
-            }
-
-            return _cache;
-        }
-        private IEnumerable<string> GetBodyImpl()
-        {
-            FileStream? fs = null;
-            for (int numTries = 0; numTries < 10; numTries++)
-            {
-                try
+                for (var numTries = 0; numTries < 10; numTries++)
                 {
-                    fs = new(
-                        Path,
-                        FileMode.Open,
-                        FileAccess.Read,
-                        FileShare.ReadWrite | FileShare.Delete
-                    );
-
-                }
-                catch (IOException)
-                {
-                    if (fs != null)
+                    try
                     {
-                        fs.Dispose();
-                        fs = null;
+                        if (File.Exists(Path))
+                        {
+                            _cache = File.ReadAllLines(Path);
+                            _cacheTime = DateTime.Now;
+                            break;
+                        }
+                        else
+                        {
+                            _cache = null;
+                            _cacheTime = DateTime.MinValue;
+                        }
                     }
-                    Thread.Sleep(50);
+                    catch
+                    {
+                        _cache = null;
+                        _cacheTime = DateTime.MinValue;
+                        Thread.Sleep(50);
+                    }
                 }
             }
 
-            if (fs == null)
-            {
-                yield return string.Empty;
-                yield break;
-            }
-
-            string? line;
-            using StreamReader sr = new(fs!);
-            while ((line = sr.ReadLine()) != null)
-            {
-                yield return line;
-            }
+            return _cache ?? new[] { string.Empty };
         }
 
         public Micro(FileSystemInfo info) : base(info)

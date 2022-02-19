@@ -1,47 +1,43 @@
 using System.Linq;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
-using Dalamud.IoC;
 
 namespace Microdancer
 {
     public sealed class RunMicroCommand : CommandBase
     {
-        private readonly ChatGui _chatGui;
         private readonly LibraryManager _library;
         private readonly MicroManager _microManager;
 
-        public RunMicroCommand(
-            CommandManager commandManager,
-            Configuration configuration,
-            ChatGui chatGui,
-            LibraryManager library,
-            MicroManager microManager) : base(commandManager, configuration)
+        public RunMicroCommand(LibraryManager library, MicroManager microManager) : base()
         {
-            _chatGui = chatGui;
             _library = library;
             _microManager = microManager;
         }
 
-        [Command("runmicro", HelpMessage = "Execute a Micro. Can be supplied with a second region parameter to run only a specific region of a Micro.")]
-        public void RunMicro(params string[] args)
+        [Command(
+            "runmicro",
+            HelpMessage = "Execute a Micro by ID or partial name. Can be supplied with a second region parameter to run only a specific region of a Micro."
+        )]
+        public void RunMicro(string search, string? region = null)
         {
-            RunMicroImpl(args, false);
+            RunMicroImpl("runmicro", search, region, false);
         }
 
         [Command(
             "runparallelmicro",
             "runpmicro",
             "runmultimicro",
-            HelpMessage = "Execute a Micro in parallel with any other running Micros. Can be supplied with a second region parameter to run only a specific region of a Micro."
+            HelpMessage = "Execute a Micro by ID or partial name, in parallel with any other running Micros. Can be supplied with a second region parameter to run only a specific region of a Micro."
         )]
-        public void RunMicroParallel(params string[] args)
+        public void RunMicroParallel(string search, string? region = null)
         {
-            RunMicroImpl(args, true);
+            RunMicroImpl("runparallelmicro", search, region, true);
         }
 
-        [Command("microcancel", HelpMessage = "Cancel the first Micro of a given type or all if no value is passed.")]
-        public void CancelMicro(string search = "")
+        [Command(
+            "microcancel",
+            HelpMessage = "Cancel the first Micro of a given ID or partial name, or all if no value is passed."
+        )]
+        public void CancelMicro(string? search = null)
         {
             if (string.IsNullOrWhiteSpace(search))
             {
@@ -52,34 +48,26 @@ namespace Microdancer
             var micro = _library.Find<Micro>(search);
             if (micro == null)
             {
-                _chatGui.PrintError($"No Micro with ID or name containing \"{search}\" found.");
+                PrintError("microcancel", $"No Micro with ID or name containing \"{search}\" found.");
                 return;
             }
 
             var entry = _microManager.Running.FirstOrDefault(e => e.Value.Micro.Id == micro.Id);
             if (entry.Value == null)
             {
-                _chatGui.PrintError($"That Micro is not running.");
+                PrintError("microcancel", $"That Micro is not running.");
                 return;
             }
 
             _microManager.CancelMicro(entry.Key);
         }
 
-        private void RunMicroImpl(string[] args, bool multi)
+        private void RunMicroImpl(string cmd, string search, string? region, bool multi)
         {
-            if (args.Length == 0 || string.IsNullOrWhiteSpace(args[0]))
-            {
-                _chatGui?.PrintError("Arguments must be either the UUID or partial name of the Micro to execute, along with an optional region.");
-                return;
-            }
-
-            var search = args[0];
-
             var micro = _library.Find<Micro>(search);
             if (micro == null)
             {
-                _chatGui?.PrintError($"No Micro with ID or name containing \"{search}\" found.");
+                PrintError(cmd, $"No Micro with ID or name containing \"{search}\" found.");
                 return;
             }
 
@@ -87,8 +75,6 @@ namespace Microdancer
             {
                 CancelMicro(string.Empty);
             }
-
-            var region = args.Length > 1 ? args[1] : null;
 
             _microManager.SpawnMicro(micro, region);
         }
