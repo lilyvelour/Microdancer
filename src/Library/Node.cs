@@ -14,14 +14,14 @@ namespace Microdancer
 
         public List<INode> Children { get; } = new();
 
-        public Node(FileSystemInfo info)
+        protected Node(FileSystemInfo info)
         {
             Id = GenerateId(info.FullName);
             Name = info.FullName;
             Path = info.FullName;
         }
 
-        public static Guid GenerateId(string? path)
+        private static Guid GenerateId(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {

@@ -19,33 +19,31 @@ namespace Microdancer
 
         private Dictionary<uint, string>? _usableItems;
 
-        public UseItemCommand(
-            DataManager dataManager,
-            Condition condition,
-            GameManager gameManager) : base()
+        public UseItemCommand(DataManager dataManager, Condition condition, GameManager gameManager) : base()
         {
             _dataManager = dataManager;
             _condition = condition;
             _gameManager = gameManager;
 
-            Task.Run(async () =>
-            {
-                while (_dataManager.IsDataReady != true)
+            Task.Run(
+                async () =>
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(10));
-                }
+                    while (!_dataManager.IsDataReady)
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(10));
+                    }
 
-                _usableItems = _dataManager
-                    .GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!
-                    .Where(i => i.ItemAction.Row > 0)
-                    .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant())
-                    .Concat(
-                        _dataManager
-                            .GetExcelSheet<Lumina.Excel.GeneratedSheets.EventItem>()!
-                            .Where(i => i.Action.Row > 0)
-                            .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant()))
-                    .ToDictionary(kv => kv.Key, kv => kv.Value);
-            });
+                    _usableItems = _dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!
+                        .Where(i => i.ItemAction.Row > 0)
+                        .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant())
+                        .Concat(
+                            _dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.EventItem>()!
+                                .Where(i => i.Action.Row > 0)
+                                .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant())
+                        )
+                        .ToDictionary(kv => kv.Key, kv => kv.Value);
+                }
+            );
         }
 
         [Command("useitem", "item", HelpMessage = "Uses an item by name or ID. Only available out of combat.")]
@@ -80,7 +78,7 @@ namespace Microdancer
 
             if (id > 0 && _usableItems.ContainsKey(id is >= 1_000_000 and < 2_000_000 ? id - 1_000_000 : id))
             {
-                do
+                while (true)
                 {
                     var t = DateTime.Now;
                     if (id < 2_000_000)
@@ -104,7 +102,6 @@ namespace Microdancer
                     _gameManager.ActionCommandRequestType = 2;
                     break;
                 }
-                while (true);
             }
             else
             {

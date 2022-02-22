@@ -18,14 +18,16 @@ namespace Microdancer
         [Command("doemote", HelpMessage = "Performs the specified emote by ID.")]
         public void DoEmote(string id)
         {
-            _gameManager.emoteAgent = (_gameManager.emoteAgent != IntPtr.Zero)
-                ? _gameManager.emoteAgent
-                : _gameGui.FindAgentInterface("Emote");
+            _gameManager.emoteAgent =
+                (_gameManager.emoteAgent != IntPtr.Zero)
+                    ? _gameManager.emoteAgent
+                    : _gameGui.FindAgentInterface("Emote");
 
             if (_gameManager.emoteAgent == IntPtr.Zero)
             {
                 PluginLog.LogError(
-                    "Failed to get emote agent - open the emote window and then use this command to initialize it.");
+                    "Failed to get emote agent - open the emote window and then use this command to initialize it."
+                );
                 return;
             }
 

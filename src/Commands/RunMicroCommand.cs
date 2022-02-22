@@ -41,7 +41,7 @@ namespace Microdancer
         {
             if (string.IsNullOrWhiteSpace(search))
             {
-                _microManager.CancelAllMicros();
+                _microManager.CancelAll();
                 return;
             }
 
@@ -52,14 +52,14 @@ namespace Microdancer
                 return;
             }
 
-            var entry = _microManager.Running.FirstOrDefault(e => e.Value.Micro.Id == micro.Id);
-            if (entry.Value == null)
+            var microInfo = _microManager.Find(micro.Id).FirstOrDefault();
+            if (microInfo == null)
             {
-                PrintError("microcancel", $"That Micro is not running.");
+                PrintError("microcancel", "That Micro is not running.");
                 return;
             }
 
-            _microManager.CancelMicro(entry.Key);
+            _microManager.Cancel(microInfo);
         }
 
         private void RunMicroImpl(string cmd, string search, string? region, bool multi)
@@ -76,7 +76,7 @@ namespace Microdancer
                 CancelMicro(string.Empty);
             }
 
-            _microManager.SpawnMicro(micro, region);
+            _microManager.RunMicro(micro, region);
         }
     }
 }

@@ -1,0 +1,7 @@
+{
+    "formatAll.includeFileExtensions": [".cs", ".json"],
+    "formatAll.excludeFolders": [
+        "bin",
+        "obj"
+    ]
+}

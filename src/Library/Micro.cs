@@ -52,8 +52,6 @@ namespace Microdancer
             return _cache ?? new[] { string.Empty };
         }
 
-        public Micro(FileSystemInfo info) : base(info)
-        {
-        }
+        public Micro(FileSystemInfo info) : base(info) { }
     }
 }

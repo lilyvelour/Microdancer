@@ -55,56 +55,40 @@ namespace Microdancer
             };
         }
 
-
         public const byte DefaultPose = byte.MaxValue;
         public const byte UnchangedPose = byte.MaxValue - 1;
 
         private readonly byte[] _defaultPoses = new byte[5];
 
-        public byte DefaultStandingPose
-            => _defaultPoses[0];
+        public byte DefaultStandingPose => _defaultPoses[0];
 
-        public byte DefaultWeaponDrawnPose
-            => _defaultPoses[1];
+        public byte DefaultWeaponDrawnPose => _defaultPoses[1];
 
-        public byte DefaultSitPose
-            => _defaultPoses[2];
+        public byte DefaultSitPose => _defaultPoses[2];
 
-        public byte DefaultGroundSitPose
-            => _defaultPoses[3];
+        public byte DefaultGroundSitPose => _defaultPoses[3];
 
-        public byte DefaultDozePose
-            => _defaultPoses[4];
+        public byte DefaultDozePose => _defaultPoses[4];
 
-        public byte StandingPose
-            => GetPose(0);
+        public byte StandingPose => GetPose(0);
 
-        public byte WeaponDrawnPose
-            => GetPose(1);
+        public byte WeaponDrawnPose => GetPose(1);
 
-        public byte SitPose
-            => GetPose(2);
+        public byte SitPose => GetPose(2);
 
-        public byte GroundSitPose
-            => GetPose(3);
+        public byte GroundSitPose => GetPose(3);
 
-        public byte DozePose
-            => GetPose(4);
+        public byte DozePose => GetPose(4);
 
-        public void SetStandingPose(byte pose)
-            => SetPose(0, pose);
+        public void SetStandingPose(byte pose) => SetPose(0, pose);
 
-        public void SetWeaponDrawnPose(byte pose)
-            => SetPose(1, pose);
+        public void SetWeaponDrawnPose(byte pose) => SetPose(1, pose);
 
-        public void SetSitPose(byte pose)
-            => SetPose(2, pose);
+        public void SetSitPose(byte pose) => SetPose(2, pose);
 
-        public void SetGroundSitPose(byte pose)
-            => SetPose(3, pose);
+        public void SetGroundSitPose(byte pose) => SetPose(3, pose);
 
-        public void SetDozePose(byte pose)
-            => SetPose(4, pose);
+        public void SetDozePose(byte pose) => SetPose(4, pose);
 
         public bool WeaponDrawn { get; set; } = false;
 
@@ -146,7 +130,8 @@ namespace Microdancer
             else if (toWhat >= NumPoses[which])
             {
                 PluginLog.LogError(
-                    $"Higher pose requested than possible for {PoseNames[which]}: {toWhat} / {NumPoses[which]}.");
+                    $"Higher pose requested than possible for {PoseNames[which]}: {toWhat} / {NumPoses[which]}."
+                );
                 return;
             }
 
@@ -167,37 +152,52 @@ namespace Microdancer
                     {
                         WritePose(which, toWhat);
                         PluginLog.LogDebug(
-                            "Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.", pose,
+                            "Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.",
+                            pose,
                             toWhat,
                             PoseNames[which],
-                            PoseNames[currentState]);
+                            PoseNames[currentState]
+                        );
                     }
                 }
                 else
                 {
-                    Task.Run(() =>
-                    {
-                        var i = 0;
-                        do
+                    Task.Run(
+                        () =>
                         {
-                            PluginLog.LogDebug("Execute /setpose to get from {OldPose} to {NewPose} of {CurrentState:l}.", pose, toWhat, PoseNames[currentState]);
-                            _gameManager.ExecuteCommand("/cpose");
-                            Task.Delay(50);
-                        } while (toWhat != GetCPoseActorState(playerPointer) && i++ < 8);
-                        if (i > 8)
-                        {
-                            PluginLog.LogError(
-                                "Could not change pose of {CurrentState:l}.",
-                                PoseNames[GetCPoseActorState(playerPointer)]
-                            );
+                            var i = 0;
+                            do
+                            {
+                                PluginLog.LogDebug(
+                                    "Execute /setpose to get from {OldPose} to {NewPose} of {CurrentState:l}.",
+                                    pose,
+                                    toWhat,
+                                    PoseNames[currentState]
+                                );
+                                _gameManager.ExecuteCommand("/cpose");
+                                Task.Delay(50);
+                            } while (toWhat != GetCPoseActorState(playerPointer) && i++ < 8);
+                            if (i > 8)
+                            {
+                                PluginLog.LogError(
+                                    "Could not change pose of {CurrentState:l}.",
+                                    PoseNames[GetCPoseActorState(playerPointer)]
+                                );
+                            }
                         }
-                    });
+                    );
                 }
             }
             else if (pose != toWhat)
             {
                 WritePose(which, toWhat);
-                PluginLog.LogDebug("Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.", pose, toWhat, PoseNames[which], PoseNames[currentState]);
+                PluginLog.LogDebug(
+                    "Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.",
+                    pose,
+                    toWhat,
+                    PoseNames[which],
+                    PoseNames[currentState]
+                );
             }
         }
 

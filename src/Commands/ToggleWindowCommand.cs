@@ -17,9 +17,8 @@ namespace Microdancer
         [Command("microdancer", "micro", "micros", HelpMessage = "Open the Microdancer interface.")]
         public void ToggleWindow()
         {
-             _configuration.WindowVisible ^= true;
-             _pluginInterface.SavePluginConfig(_configuration);
+            _configuration.WindowVisible ^= true;
+            _pluginInterface.SavePluginConfig(_configuration);
         }
-
     }
 }

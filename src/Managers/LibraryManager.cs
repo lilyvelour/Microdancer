@@ -72,29 +72,50 @@ namespace Microdancer
         public T? Find<T>(Guid id) where T : INode
         {
             return GetNodes()
-                .Select(node =>
-                    (T?)Traverse(node, n => n.Children)
-                        .FirstOrDefault(n => n is T && n.Id == id))
+                .Select(node => (T?)Traverse(node, n => n.Children).FirstOrDefault(n => n is T && n.Id == id))
                 .FirstOrDefault(micro => micro != null);
         }
 
-        public T? Find<T>(string search) where T : INode
+        public T? Find<T>(string? search) where T : INode
         {
-            var str = System.Text.RegularExpressions.Regex.Unescape(search);
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                return default;
+            }
 
-            if (Guid.TryParse(str, out var id))
+            if (Guid.TryParse(search, out var id))
             {
                 return Find<T>(id);
             }
 
-            return GetNodes()
-                .Select(node =>
-                    (T?)Traverse(node, n => n.Children)
-                        .FirstOrDefault(
-                            n => n is T && n.Name.StartsWith(search, true, CultureInfo.InvariantCulture)
-                        )
+            var nodes = GetNodes();
+
+            var node = nodes
+                .Select(
+                    node =>
+                        (T?)Traverse(node, n => n.Children)
+                            .FirstOrDefault(
+                                n => n is T && Path.Equals(Path.GetFullPath(n.Path), Path.GetFullPath(search))
+                            )
                 )
-                .FirstOrDefault(micro => micro != null);
+                .FirstOrDefault(node => node != null);
+
+            if (node != null)
+            {
+                return node;
+            }
+
+            node = nodes
+                .Select(
+                    node =>
+                        (T?)Traverse(node, n => n.Children)
+                            .FirstOrDefault(
+                                n => n is T && n.Name.StartsWith(search, true, CultureInfo.InvariantCulture)
+                            )
+                )
+                .FirstOrDefault(node => node != null);
+
+            return node ?? default;
         }
 
         internal void MarkAsDirty()
@@ -160,10 +181,10 @@ namespace Microdancer
                         | NotifyFilters.Security
                 };
 
-                _fileSystemWatcher.Changed += new FileSystemEventHandler(WatcherEvent);
-                _fileSystemWatcher.Created += new FileSystemEventHandler(WatcherEvent);
-                _fileSystemWatcher.Deleted += new FileSystemEventHandler(WatcherEvent);
-                _fileSystemWatcher.Renamed += new RenamedEventHandler(WatcherEvent);
+                _fileSystemWatcher.Changed += WatcherEvent;
+                _fileSystemWatcher.Created += WatcherEvent;
+                _fileSystemWatcher.Deleted += WatcherEvent;
+                _fileSystemWatcher.Renamed += WatcherEvent;
 
                 _shouldRebuild = true;
             }
@@ -178,7 +199,7 @@ namespace Microdancer
         {
             var stack = new Stack<T>();
             stack.Push(item);
-            while (stack.Any())
+            while (stack.Count > 0)
             {
                 var next = stack.Pop();
                 yield return next;

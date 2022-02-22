@@ -1,8 +1,12 @@
-﻿using System.Reflection;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
+using System.Reflection;
 using Dalamud.Plugin;
 using System;
 using System.Linq;
-using System.Collections.Generic;
+using System.Net.Http.Json;
+using Dalamud.Game.ClientState;
+using Dalamud.Logging;
 
 namespace Microdancer
 {
@@ -14,9 +18,9 @@ namespace Microdancer
 
         public string Name => PLUGIN_NAME;
 
-        internal static readonly HashSet<IDisposable> _disposables = new();
+        public static bool? LicenseIsValid { get; private set; }
 
-        public Microdancer(DalamudPluginInterface pluginInterface)
+        public Microdancer(DalamudPluginInterface pluginInterface, ClientState clientState)
         {
             if (pluginInterface.GetPluginConfig() == null)
             {
@@ -42,6 +46,66 @@ namespace Microdancer
                 var svc = generic.Invoke(pluginInterface, new object[] { Array.Empty<object>() })!;
                 CustomService.Set(svc, type);
             }
+
+            Task.Run(
+                async () =>
+                {
+                    while (!_disposedValue)
+                    {
+                        var player = clientState.LocalPlayer;
+
+                        if (player == null)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(5));
+                            continue;
+                        }
+
+                        try
+                        {
+                            var playerName = player.Name.TextValue;
+                            var playerWorld = player.HomeWorld.GameData?.Name.RawString ?? string.Empty;
+
+                            using var client = new HttpClient();
+
+                            PluginLog.LogVerbose(
+                                "Checking license status. name=\"{0}\", world=\"{1}\"",
+                                playerName,
+                                playerWorld
+                            );
+
+                            var response = await client.PostAsJsonAsync(
+                                "https://example.com/prod/v1/license",
+                                new { name = playerName, world = playerWorld }
+                            );
+
+                            if (
+                                bool.TryParse(await response.Content.ReadAsStringAsync(), out var licenseIsValid)
+                                && licenseIsValid
+                            )
+                            {
+                                PluginLog.LogVerbose("License valid.");
+                                LicenseIsValid = true;
+                            }
+                            else
+                            {
+                                PluginLog.LogWarning("Microdancer license invalid.");
+                                LicenseIsValid = false;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            PluginLog.LogError(e, e.Message);
+                            LicenseIsValid = false;
+                        }
+                        finally
+                        {
+                            await Task.Delay(
+                                LicenseIsValid == false ? TimeSpan.FromMinutes(1) : TimeSpan.FromMinutes(15)
+                            );
+                        }
+                    }
+                }
+            );
         }
 
         public void Dispose()

@@ -44,15 +44,18 @@ namespace Microdancer
             }
         }
 
-        private delegate IntPtr GetModuleDelegate(IntPtr basePtr);
-
         public IntPtr emoteAgent = IntPtr.Zero;
         public delegate void DoEmoteDelegate(IntPtr agent, uint emoteID, long a3, bool a4, bool a5);
         public DoEmoteDelegate? DoEmote;
 
         public IntPtr itemContextMenuAgent = IntPtr.Zero;
         public delegate void UseItemDelegate(
-            IntPtr itemContextMenuAgent, uint itemID, uint inventoryPage, uint inventorySlot, short a5);
+            IntPtr itemContextMenuAgent,
+            uint itemID,
+            uint inventoryPage,
+            uint inventorySlot,
+            short a5
+        );
         public UseItemDelegate? UseItem;
 
         public delegate uint GetActionIdDelegate(uint actionType, uint actionCategoryID);
@@ -85,7 +88,8 @@ namespace Microdancer
             {
                 uiModule = _gameGui.GetUIModule();
                 ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(
-                    _sigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9"));
+                    _sigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9")
+                );
             }
             catch
             {
@@ -95,8 +99,7 @@ namespace Microdancer
             try
             {
                 // also found around g_PlayerMoveController+523
-                walkingBoolPtr =
-                    _sigScanner.GetStaticAddressFromSig("88 83 ?? ?? ?? ?? 0F B6 05 ?? ?? ?? ?? 88 83");
+                walkingBoolPtr = _sigScanner.GetStaticAddressFromSig("88 83 ?? ?? ?? ?? 0F B6 05 ?? ?? ?? ?? 88 83");
             }
             catch
             {
@@ -110,7 +113,8 @@ namespace Microdancer
                 try
                 {
                     DoEmote = Marshal.GetDelegateForFunctionPointer<DoEmoteDelegate>(
-                        _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B8 0A 00 00 00"));
+                        _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B8 0A 00 00 00")
+                    );
                     emoteAgent = (IntPtr)agentModule->GetAgentByInternalID(19);
                 }
                 catch
@@ -121,11 +125,13 @@ namespace Microdancer
                 try
                 {
                     UseItem = Marshal.GetDelegateForFunctionPointer<UseItemDelegate>(
-                        _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 41 B0 01 BA 13 00 00 00"));
+                        _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 41 B0 01 BA 13 00 00 00")
+                    );
                     itemContextMenuAgent = (IntPtr)agentModule->GetAgentByInternalID(10);
 
                     GetActionId = Marshal.GetDelegateForFunctionPointer<GetActionIdDelegate>(
-                        _sigScanner.ScanText("E8 ?? ?? ?? ?? 44 8B 4B 2C"));
+                        _sigScanner.ScanText("E8 ?? ?? ?? ?? 44 8B 4B 2C")
+                    );
                 }
                 catch
                 {

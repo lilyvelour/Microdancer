@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,45 +7,10 @@ using System.Text;
 
 namespace Microdancer
 {
-    /// <summary>
-    /// Helper methods for working with <see cref="Guid"/>.
-    /// </summary>
     public static class GuidUtility
     {
         /// <summary>
-        /// Tries to parse the specified string as a <see cref="Guid"/>.  A return value indicates whether the operation succeeded.
-        /// </summary>
-        /// <param name="value">The GUID string to attempt to parse.</param>
-        /// <param name="guid">When this method returns, contains the <see cref="Guid"/> equivalent to the GUID
-        /// contained in <paramref name="value"/>, if the conversion succeeded, or Guid.Empty if the conversion failed.</param>
-        /// <returns><c>true</c> if a GUID was successfully parsed; <c>false</c> otherwise.</returns>
-        public static bool TryParse(string? value, out Guid guid) => Guid.TryParse(value, out guid);
-
-        /// <summary>
-        /// Converts a GUID to a lowercase string with no dashes.
-        /// </summary>
-        /// <param name="guid">The GUID.</param>
-        /// <returns>The GUID as a lowercase string with no dashes.</returns>
-        public static string ToLowerNoDashString(this Guid guid) => guid.ToString("N");
-
-        /// <summary>
-        /// Converts a lowercase, no dashes string to a GUID.
-        /// </summary>
-        /// <param name="value">The string.</param>
-        /// <returns>The GUID.</returns>
-        /// <exception cref="FormatException">The argument is not a valid GUID short string.</exception>
-        public static Guid FromLowerNoDashString(string value) =>
-            TryFromLowerNoDashString(value) ?? throw new FormatException(string.Format(CultureInfo.InvariantCulture, "The string '{0}' is not a no-dash lowercase GUID.", value ?? "(null)"));
-
-        /// <summary>
-        /// Attempts to convert a lowercase, no dashes string to a GUID.
-        /// </summary>
-        /// <param name="value">The string.</param>
-        /// <returns>The GUID, if the string could be converted; otherwise, null.</returns>
-        public static Guid? TryFromLowerNoDashString(string value) => !TryParse(value, out var guid) || value != guid.ToLowerNoDashString() ? default(Guid?) : guid;
-
-        /// <summary>
-        /// Creates a name-based UUID using the algorithm from RFC 4122 §4.3.
+        /// /// Creates a name-based UUID using the algorithm from RFC 4122 §4.3.
         /// </summary>
         /// <param name="namespaceId">The ID of the namespace.</param>
         /// <param name="name">The name (within that namespace).</param>

@@ -11,12 +11,7 @@ namespace Microdancer
 
         public static Configuration Configuration(this DalamudPluginInterface pluginInterface)
         {
-            if (_configuration == null)
-            {
-                _configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            }
-
-            return _configuration;
+            return _configuration ??= pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         }
 
         public static T Set<T>(T obj)
@@ -31,7 +26,7 @@ namespace Microdancer
 
         public static void DisposeAll()
         {
-            foreach(var disposable in _disposables)
+            foreach (var disposable in _disposables)
             {
                 disposable?.Dispose();
             }

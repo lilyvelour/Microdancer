@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Microdancer
 {
-    public class IOUtility
+    public static class IOUtility
     {
         public static string MakeUniqueDir(string dir, string name, string? first = null)
         {

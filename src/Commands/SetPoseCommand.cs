@@ -44,7 +44,7 @@ namespace Microdancer
 
             if (!byte.TryParse(args[^1], out var whichPose))
             {
-                PrintError("setpose", $"Pose must be a valid number");
+                PrintError("setpose", "Pose must be a valid number");
                 return;
             }
 

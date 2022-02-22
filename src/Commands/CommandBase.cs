@@ -19,7 +19,7 @@ namespace Microdancer
 
         private bool _disposedValue;
 
-        public CommandBase()
+        protected CommandBase()
         {
             _commandManager = CustomService.Get<CommandManager>();
             _chatGui = CustomService.Get<ChatGui>();
@@ -99,15 +99,18 @@ namespace Microdancer
                 cmd = $"/{cmd}";
             }
 
-            var aliases = command.Aliases?.Select(alias =>
-            {
-                if (!alias.StartsWith("/"))
-                {
-                    alias = $"/{alias}";
-                }
+            var aliases =
+                command.Aliases?.Select(
+                    alias =>
+                    {
+                        if (!alias.StartsWith("/"))
+                        {
+                            alias = $"/{alias}";
+                        }
 
-                return alias;
-            }) ?? Array.Empty<string>();
+                        return alias;
+                    }
+                ) ?? Array.Empty<string>();
 
             var parameter = method.GetParameters().FirstOrDefault();
             var commandInfo = new CommandInfo(GetHandler(cmd, command, method))
@@ -118,87 +121,111 @@ namespace Microdancer
 
             yield return (cmd, commandInfo);
 
-            foreach(var alias in aliases)
+            foreach (var alias in aliases)
             {
-                yield return (alias, new CommandInfo(GetHandler(alias, command, method))
-                {
-                    HelpMessage = $"Alias for {cmd}.",
-                    ShowInHelp = command.ShowInHelp,
-                });
+                yield return (
+                    alias,
+                    new CommandInfo(GetHandler(alias, command, method))
+                    {
+                        HelpMessage = $"Alias for {cmd}.",
+                        ShowInHelp = command.ShowInHelp,
+                    }
+                );
             }
         }
 
         private CommandInfo.HandlerDelegate GetHandler(string cmd, CommandAttribute command, MethodInfo method)
         {
-            return new CommandInfo.HandlerDelegate((_, args) =>
-            {
-                var parameters = method.GetParameters();
-
-                if (parameters.Length == 0)
+            return new CommandInfo.HandlerDelegate(
+                (_, args) =>
                 {
-                    ExecCommand(method);
-                    return;
-                }
+                    var parameters = method.GetParameters();
 
-                if (command.Raw)
-                {
-                    ExecCommand(method, new[] { args });
-                    return;
-                }
-
-                var argsArray = Regex.Matches((args ?? string.Empty).Trim(), @"[\""].+?[\""]|[^ ]+")
-                    .Cast<Match>()
-                    .Select(x => x.Value.Trim('"'))
-                    .ToArray();
-
-                if (parameters.Length == 1 && typeof(IEnumerable<string>).IsAssignableFrom(parameters[0].ParameterType))
-                {
-                    ExecCommand(method, new object[] { argsArray });
-                    return;
-                }
-
-                if (argsArray.Length < parameters.Where(p => !p.HasDefaultValue).Count())
-                {
-                    PrintError(
-                        cmd,
-                        $"Invalid parameter count. Command must have at least {parameters.Length} parameter(s).");
-                }
-
-                var convertedParams = new List<object?>();
-
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    var parameterType = parameters[i].ParameterType;
-
-                    if (i < argsArray.Length)
+                    if (parameters.Length == 0)
                     {
-                        var arg = argsArray[i];
+                        ExecCommand(method);
+                        return;
+                    }
 
-                        try
+                    if (command.Raw)
+                    {
+                        ExecCommand(method, new[] { args });
+                        return;
+                    }
+
+                    var argsArray = Regex
+                        .Matches((args ?? string.Empty).Trim(), @"[\""].+?[\""]|[^ ]+")
+                        .Cast<Match>()
+                        .Select(x => x.Value.Trim('"'))
+                        .ToArray();
+
+                    if (
+                        parameters.Length == 1
+                        && typeof(IEnumerable<string>).IsAssignableFrom(parameters[0].ParameterType)
+                    )
+                    {
+                        ExecCommand(method, new object[] { argsArray });
+                        return;
+                    }
+
+                    if (argsArray.Length < parameters.Count(p => !p.HasDefaultValue))
+                    {
+                        PrintError(
+                            cmd,
+                            $"Invalid parameter count. Command must have at least {parameters.Length} parameter(s)."
+                        );
+                    }
+
+                    var convertedParams = new List<object?>();
+
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        var parameterType = parameters[i].ParameterType;
+
+                        if (i < argsArray.Length)
                         {
-                            convertedParams.Add(ChangeType(arg, parameterType));
+                            var arg = argsArray[i];
+
+                            try
+                            {
+                                convertedParams.Add(ChangeType(arg, parameterType));
+                            }
+                            catch (Exception e)
+                            {
+                                PrintError(
+                                    cmd,
+                                    $"Invalid parameter type at position {i + 1} ({arg})."
+                                        + $" Type must be '{parameterType.Name}'\n{e.Message}."
+                                );
+                            }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            PrintError(
-                                cmd,
-                                $"Invalid parameter type at position {i + 1} ({arg})."
-                                + $" Type must be '{parameterType.Name}'\n{e.Message}."
-                            );
+                            convertedParams.Add(parameters[i].DefaultValue);
                         }
                     }
-                    else
-                    {
-                        convertedParams.Add(parameters[i].DefaultValue);
-                    }
-                }
 
-                ExecCommand(method, convertedParams.ToArray());
-            });
+                    ExecCommand(method, convertedParams.ToArray());
+                }
+            );
         }
 
         private void ExecCommand(MethodInfo method, object?[]? parameters = null)
         {
+            if (Microdancer.LicenseIsValid == null)
+            {
+                _chatGui.PrintError("Microdancer is not yet initialized. Please wait before using any commands.");
+                return;
+            }
+
+            if (Microdancer.LicenseIsValid != true)
+            {
+                _chatGui.PrintError(
+                    "Microdancer is not currently licensed for this character. Please contact Dance Mom for access!"
+                );
+                return;
+            }
+
             if (method.ReturnType == typeof(Task))
             {
                 Task.Run(() => (Task)method.Invoke(this, parameters)!);
@@ -211,10 +238,11 @@ namespace Microdancer
 
         private static object? ChangeType(string arg, Type conversion)
         {
-            object value =
-                arg.ToLowerInvariant() == "on" ? true
-                : arg.ToLowerInvariant() == "off" ? false
-                : arg;
+            object value = string.Equals(arg, "on", StringComparison.InvariantCultureIgnoreCase)
+              ? true
+              : string.Equals(arg, "off", StringComparison.InvariantCultureIgnoreCase)
+                  ? false
+                  : arg;
 
             if (value is string str)
             {
