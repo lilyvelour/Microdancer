@@ -15,6 +15,8 @@ namespace Microdancer
     {
         private readonly CommandManager _commandManager;
         private readonly ChatGui _chatGui;
+        private readonly LicenseChecker _license;
+
         protected Dictionary<string, CommandInfo> CommandInfo { get; } = new();
 
         private bool _disposedValue;
@@ -23,6 +25,7 @@ namespace Microdancer
         {
             _commandManager = CustomService.Get<CommandManager>();
             _chatGui = CustomService.Get<ChatGui>();
+            _license = CustomService.Get<LicenseChecker>();
 
             CommandInfo = GetType()
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
@@ -212,13 +215,13 @@ namespace Microdancer
 
         private void ExecCommand(MethodInfo method, object?[]? parameters = null)
         {
-            if (Microdancer.LicenseIsValid == null)
+            if (_license.IsValidLicense == null)
             {
                 _chatGui.PrintError("Microdancer is not yet initialized. Please wait before using any commands.");
                 return;
             }
 
-            if (Microdancer.LicenseIsValid != true)
+            if (_license.IsValidLicense != true)
             {
                 _chatGui.PrintError(
                     "Microdancer is not currently licensed for this character. Please contact Dance Mom for access!"

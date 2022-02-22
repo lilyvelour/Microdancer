@@ -18,10 +18,14 @@ namespace Microdancer
 
         public string Name => PLUGIN_NAME;
 
-        public static bool? LicenseIsValid { get; private set; }
+        internal static DalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-        public Microdancer(DalamudPluginInterface pluginInterface, ClientState clientState)
+        public Microdancer(DalamudPluginInterface pluginInterface)
         {
+            PluginInterface = pluginInterface;
+
+            CustomService.Set(pluginInterface.Create<LicenseChecker>());
+
             if (pluginInterface.GetPluginConfig() == null)
             {
                 pluginInterface.SavePluginConfig(new Configuration());
@@ -31,7 +35,7 @@ namespace Microdancer
             CustomService.Set(pluginInterface.Create<CPoseManager>());
             CustomService.Set(pluginInterface.Create<MicroManager>());
             CustomService.Set(pluginInterface.Create<LibraryManager>());
-            CustomService.Set(pluginInterface.Create<PluginWindow>());
+            CustomService.Set(pluginInterface.Create<MicrodancerUi>());
 
             var commandTypes = Assembly
                 .GetExecutingAssembly()
@@ -46,66 +50,6 @@ namespace Microdancer
                 var svc = generic.Invoke(pluginInterface, new object[] { Array.Empty<object>() })!;
                 CustomService.Set(svc, type);
             }
-
-            Task.Run(
-                async () =>
-                {
-                    while (!_disposedValue)
-                    {
-                        var player = clientState.LocalPlayer;
-
-                        if (player == null)
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(5));
-                            continue;
-                        }
-
-                        try
-                        {
-                            var playerName = player.Name.TextValue;
-                            var playerWorld = player.HomeWorld.GameData?.Name.RawString ?? string.Empty;
-
-                            using var client = new HttpClient();
-
-                            PluginLog.LogVerbose(
-                                "Checking license status. name=\"{0}\", world=\"{1}\"",
-                                playerName,
-                                playerWorld
-                            );
-
-                            var response = await client.PostAsJsonAsync(
-                                "https://example.com/prod/v1/license",
-                                new { name = playerName, world = playerWorld }
-                            );
-
-                            if (
-                                bool.TryParse(await response.Content.ReadAsStringAsync(), out var licenseIsValid)
-                                && licenseIsValid
-                            )
-                            {
-                                PluginLog.LogVerbose("License valid.");
-                                LicenseIsValid = true;
-                            }
-                            else
-                            {
-                                PluginLog.LogWarning("Microdancer license invalid.");
-                                LicenseIsValid = false;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            PluginLog.LogError(e, e.Message);
-                            LicenseIsValid = false;
-                        }
-                        finally
-                        {
-                            await Task.Delay(
-                                LicenseIsValid == false ? TimeSpan.FromMinutes(1) : TimeSpan.FromMinutes(15)
-                            );
-                        }
-                    }
-                }
-            );
         }
 
         public void Dispose()
