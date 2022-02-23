@@ -2,11 +2,11 @@
   "Author": "Dance Mom",
   "Name": "Microdancer",
   "Punchline": "Make your dances better",
-  "Description": "Microdancer is a tool for RP dance performance. It is an alternative system to macros used out of combat, with features such as infinite line length, fractional wait times, comments, pausing, parallel execution, looping, and ability queueing.\n\nMicro-only commands:\n\n/autocountdown, /autocd → When specified, all regions following this line will automatically add countdowns. Can be supplied with the optional arguments [start, pulse].\n/autobusy → When specified, busy status will be set to on when the Micro begins, and set to off 5 seconds after the micro ends, unless /autobusy is set again in any Micro.\n/defaultwait → Controls the Micro's default wait time in milliseconds for all subsequent lines. When supplied without an argument, reverts to a 10-millisecond timer.\n/loop → When supplied, immediately loops a Micro from the starting point.\n\nOther commands:",
+  "Description": "Microdancer is a tool for RP dance performance. It is an alternative system to macros used out of combat, with features such as infinite line length, fractional wait times, comments, pausing, parallel execution, looping, and ability queueing.\n\nMicro-only commands:\n\n/autocountdown → When specified, all regions following this line will automatically add countdowns. Can be supplied with the optional arguments [start, pulse].\n/autocd → Alias for /autocountdown.\n/autobusy → When specified, busy status will be set to on when the Micro begins, and set to off 5 seconds after the micro ends, unless /autobusy is set again in any Micro.\n/defaultwait → Controls the Micro's default wait time in milliseconds for all subsequent lines. When supplied without an argument, reverts to a 10-millisecond timer.\n/loop → When supplied, immediately loops a Micro from the starting point.\n\nOther commands:",
   "CategoryTags": [
     "social"
   ],
-  "IconUrl": "https://burgundy-static.s3.amazonaws.com/android-chrome-512x512.png",
+  "IconUrl": "https://microdancer.s3.amazonaws.com/icon.png",
   "InternalName": "Microdancer",
   "ApplicableVersion": "any",
   "DalamudApiLevel": 5,
