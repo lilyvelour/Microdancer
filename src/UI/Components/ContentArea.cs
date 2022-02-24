@@ -195,7 +195,27 @@ namespace Microdancer
                     fileContentsSize.Y -= ImGui.GetTextLineHeightWithSpacing();
 
                     ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ImGuiHelpers.ScaledVector2(8, 8));
+
+                    if (info.Length > 0)
+                    {
+                        var normal = Theme.GetColor(ImGuiCol.FrameBg);
+                        var active = Theme.GetColor(ImGuiCol.FrameBgActive);
+                        var hovered = Theme.GetColor(ImGuiCol.FrameBgHovered);
+                        normal.X *= 1.25f;
+                        active.X *= 1.25f;
+                        hovered.X *= 1.25f;
+                        ImGui.PushStyleColor(ImGuiCol.FrameBg, normal);
+                        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, active);
+                        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hovered);
+                    }
+
                     ImGui.BeginChildFrame(10, fileContentsSize, ImGuiWindowFlags.HorizontalScrollbar);
+
+                    if (info.Length > 0)
+                    {
+                        ImGui.PopStyleColor(3);
+                    }
+
                     ImGui.PopStyleVar();
 
                     var len = lines.Length;
@@ -203,8 +223,10 @@ namespace Microdancer
 
                     for (var i = 0; i < len; ++i)
                     {
-                        Vector4 prefixColor = Vector4.Zero;
-                        Vector4 textColor = Theme.GetColor(ImGuiCol.TextDisabled);
+                        var prefixColor = Vector4.Zero;
+                        var textColor = Theme.GetColor(ImGuiCol.Text) * 0.75f;
+                        textColor.W = 1.0f;
+
                         foreach (var mi in info)
                         {
                             if (mi.CurrentCommand?.LineNumber == i + 1)
@@ -227,7 +249,7 @@ namespace Microdancer
 
                         ImGui.PushFont(UiBuilder.MonoFont);
 
-                        ImGui.PushStyleColor(ImGuiCol.Text, textColor * 0.8f);
+                        ImGui.PushStyleColor(ImGuiCol.Text, textColor * 0.75f);
                         ImGui.Text($"{(i + 1).ToString().PadLeft(maxChars)}");
                         ImGui.PopStyleColor();
 
@@ -236,6 +258,12 @@ namespace Microdancer
                         ImGui.PushStyleColor(ImGuiCol.Text, textColor);
                         ImGui.Text($"{lines[i]}");
                         ImGui.PopStyleColor();
+
+                        if (lines[i].StartsWith("#region "))
+                        {
+                            var mi = new MicroInfo(micro, lines[i][8..]);
+                            ImGuiExt.TextTooltip($"{mi.WaitTime.TotalSeconds} sec");
+                        }
 
                         ImGui.PopFont();
 

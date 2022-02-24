@@ -85,7 +85,7 @@ namespace Microdancer
                 {
                     continue;
                 }
-                else if (region == null || region == currentRegion?.Name)
+                else if (region == null || currentRegion == null || region == currentRegion?.Name)
                 {
                     // Don't include named regions unless they are explicitly executed
                     if (region == null && currentRegion?.IsNamedRegion == true)
