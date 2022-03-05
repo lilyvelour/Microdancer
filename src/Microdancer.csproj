@@ -26,8 +26,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="1.2.1"/>
-        <PackageReference Include="XivCommon" Version="5.0.0"/>
+        <PackageReference Include="DalamudPackager" Version="1.2.1" />
+        <PackageReference Include="XivCommon" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -59,7 +59,7 @@
 
     <!-- set HUSKY to 0 in CI/CD disable this -->
     <Target Name="husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != 0">
-        <Exec Command="dotnet tool restore"  StandardOutputImportance="Low" StandardErrorImportance="High"/>
+        <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
         <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../" />
     </Target>
 </Project>

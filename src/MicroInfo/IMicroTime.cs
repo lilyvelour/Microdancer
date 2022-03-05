@@ -5,10 +5,11 @@ namespace Microdancer
     public interface IMicroTime
     {
         TimeSpan WaitTime { get; }
-
-        DateTime? StartTime { get; }
+        TimeSpan CurrentTime { get; }
+        TimeSpan RemainingTime { get; }
+        bool IsPlaying { get; }
+        bool IsPaused { get; }
 
         float GetProgress();
-        TimeSpan? GetRemainingTime();
     }
 }

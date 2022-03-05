@@ -19,64 +19,20 @@ namespace Microdancer
         )]
         public void RunMicro(string search, string? region = null)
         {
-            RunMicroImpl("runmicro", search, region, false);
-        }
-
-        [Command(
-            "runparallelmicro",
-            "runpmicro",
-            "runmultimicro",
-            HelpMessage = "Execute a Micro by ID or partial name, in parallel with any other running Micros. Can be supplied with a second region parameter to run only a specific region of a Micro."
-        )]
-        public void RunMicroParallel(string search, string? region = null)
-        {
-            RunMicroImpl("runparallelmicro", search, region, true);
-        }
-
-        [Command(
-            "microcancel",
-            HelpMessage = "Cancel the first Micro of a given ID or partial name, or all if no value is passed."
-        )]
-        public void CancelMicro(string? search = null)
-        {
-            if (string.IsNullOrWhiteSpace(search))
-            {
-                _microManager.CancelAll();
-                return;
-            }
-
             var micro = _library.Find<Micro>(search);
             if (micro == null)
             {
-                PrintError("microcancel", $"No Micro with ID or name containing \"{search}\" found.");
+                PrintError("runmicro", $"No Micro with ID or name containing \"{search}\" found.");
                 return;
             }
 
-            var microInfo = _microManager.Find(micro.Id).FirstOrDefault();
-            if (microInfo == null)
-            {
-                PrintError("microcancel", "That Micro is not running.");
-                return;
-            }
-
-            _microManager.Cancel(microInfo);
+            _microManager.StartMicro(micro, region);
         }
 
-        private void RunMicroImpl(string cmd, string search, string? region, bool multi)
+        [Command("microcancel", HelpMessage = "Cancel the currently running micro.")]
+        public void CancelMicro()
         {
-            var micro = _library.Find<Micro>(search);
-            if (micro == null)
-            {
-                PrintError(cmd, $"No Micro with ID or name containing \"{search}\" found.");
-                return;
-            }
-
-            if (!multi)
-            {
-                CancelMicro(string.Empty);
-            }
-
-            _microManager.RunMicro(micro, region);
+            _microManager.Current?.Stop();
         }
     }
 }

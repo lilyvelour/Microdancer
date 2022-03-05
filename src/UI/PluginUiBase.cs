@@ -50,15 +50,5 @@ namespace Microdancer
             fileOpener.StartInfo.Arguments = "\"" + path + "\"";
             fileOpener.Start();
         }
-
-        protected void RunMicro(Micro micro, string? region = null, bool multi = false)
-        {
-            if (!multi)
-            {
-                MicroManager.CancelAll();
-            }
-
-            MicroManager.RunMicro(micro, region);
-        }
     }
 }

@@ -1,13 +1,10 @@
-﻿using Dalamud.Game;
+﻿using System.Diagnostics;
+using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.IoC;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using XivCommon;
@@ -17,19 +14,19 @@ namespace Microdancer
     [PluginInterface]
     public class MicroManager : IDisposable
     {
+        public const int FRAME_TIME = 33;
+
         private bool _disposedValue;
         private bool _ready;
         private readonly Framework _framework;
         private readonly ClientState _clientState;
         private readonly Condition _condition;
         private readonly XivCommonBase _xiv;
-
         private readonly Channel<string> _channel = Channel.CreateUnbounded<string>();
-        private readonly ConcurrentDictionary<Guid, MicroInfo> _running = new();
-        private readonly ConcurrentDictionary<Guid, bool> _cancelled = new();
-        private readonly ConcurrentDictionary<Guid, bool> _paused = new();
 
         private bool? _autoBusy;
+
+        public MicroInfo? Current { get; private set; }
 
         public MicroManager(Framework framework, ClientState clientState, Condition condition)
         {
@@ -69,130 +66,38 @@ namespace Microdancer
             _disposedValue = true;
         }
 
-        public Guid RunMicro(Micro micro, string? region = null)
+        public void StartMicro(Micro micro, string? region = null)
         {
             if (!_ready)
             {
-                return Guid.Empty;
+                return;
             }
 
-            var microInfo = new MicroInfo(micro, region);
-            _running.TryAdd(microInfo.Id, microInfo);
-            microInfo.StartTime = DateTime.Now;
-
-            Task.Run(() => ExecuteMicro(microInfo));
-
-            return microInfo.Id;
+            StartMicro(new MicroInfo(micro, region));
         }
 
-        public IEnumerable<MicroInfo> GetQueue()
+        public void StartMicro(Micro micro, int lineNumber)
         {
-            return _running.Values;
-        }
-
-        public IEnumerable<MicroInfo> Find(Guid id)
-        {
-            if (_running.TryGetValue(id, out var value))
+            if (!_ready)
             {
-                return new[] { value };
+                return;
             }
 
-            return _running.Values.Where(mi => mi.Micro.Id == id);
+            StartMicro(new MicroInfo(micro, lineNumber));
         }
 
-        public bool IsRunning(Guid id)
+        public void StartMicro(MicroInfo microInfo)
         {
-            return Find(id).Any();
-        }
-
-        public bool IsRunning(MicroInfo info)
-        {
-            return _running.ContainsKey(info.Id);
-        }
-
-        public bool IsPaused(Guid id)
-        {
-            foreach (var mi in Find(id))
+            if (!_ready)
             {
-                if (IsPaused(mi))
-                {
-                    return true;
-                }
+                return;
             }
 
-            return false;
-        }
+            Current?.Stop();
 
-        public bool IsPaused(MicroInfo info)
-        {
-            _paused.TryGetValue(info.Id, out var paused);
-            return paused;
-        }
+            Current = microInfo;
 
-        public bool IsCancelled(Guid id)
-        {
-            foreach (var mi in Find(id))
-            {
-                if (IsCancelled(mi))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool IsCancelled(MicroInfo info)
-        {
-            _cancelled.TryGetValue(info.Id, out var cancelled);
-            return cancelled;
-        }
-
-        public void Pause(Guid id)
-        {
-            foreach (var mi in Find(id))
-            {
-                Pause(mi);
-            }
-        }
-
-        public void Pause(MicroInfo info)
-        {
-            _paused.TryAdd(info.Id, true);
-        }
-
-        public void Resume(Guid id)
-        {
-            foreach (var mi in Find(id))
-            {
-                Resume(mi);
-            }
-        }
-
-        public void Resume(MicroInfo info)
-        {
-            _paused.TryRemove(info.Id, out _);
-        }
-
-        public void Cancel(MicroInfo info)
-        {
-            _cancelled.TryAdd(info.Id, true);
-        }
-
-        public void Cancel(Guid id)
-        {
-            foreach (var mi in Find(id))
-            {
-                Cancel(mi);
-            }
-        }
-
-        public void CancelAll()
-        {
-            foreach (var running in _running.Keys)
-            {
-                Cancel(running);
-            }
+            Task.Run(() => ExecuteMicro(Current));
         }
 
         private void Login(object? sender, EventArgs args)
@@ -204,79 +109,119 @@ namespace Microdancer
         {
             _ready = false;
 
-            foreach (var id in _running.Keys)
-            {
-                Cancel(id);
-            }
+            Current?.Stop();
+            Current = null;
         }
 
         private void Update(Framework _)
         {
-            // get a message to send, but discard it if we're not ready
             if (!_channel.Reader.TryRead(out var command) || !_ready)
             {
                 return;
             }
 
-            // send the message as if it were entered in the chat box
             _xiv.Functions.Chat.SendMessage(command);
+        }
+
+        public PlaybackState PlaybackState
+        {
+            get
+            {
+                if (Current == null)
+                {
+                    return PlaybackState.Stopped;
+                }
+
+                bool _;
+                return GetPlaybackState(Current, out _);
+            }
+        }
+
+        private PlaybackState GetPlaybackState(MicroInfo microInfo, out bool shouldBreakLoop)
+        {
+            shouldBreakLoop = microInfo != Current;
+
+            if (_condition[ConditionFlag.InCombat])
+            {
+                microInfo.Stop();
+                shouldBreakLoop = true;
+                return PlaybackState.Stopped;
+            }
+
+            if (microInfo.IsPaused)
+            {
+                return PlaybackState.Paused;
+            }
+
+            if (!microInfo.IsPlaying)
+            {
+                shouldBreakLoop = true;
+                return PlaybackState.Stopped;
+            }
+
+            return PlaybackState.Playing;
         }
 
         private async Task ExecuteMicro(MicroInfo microInfo)
         {
-            // the default wait
-            TimeSpan? defaultWait = null;
-
-            // auto-countdown
+            // Auto-countdown
             string? autoCountdown = null;
 
-            // keep track of the line we're at in the Micro
+            // Precise frame timings
+            var watch = new Stopwatch();
+
+            // Keep track of the line we're at in the Micro
             var i = 0;
+
+            // Set current time to zero
+            microInfo.Start();
 
             while (i < microInfo.Commands.Length)
             {
-                // cancel if requested
-                if (_cancelled.TryRemove(microInfo.Id, out var cancel) && cancel)
+                if (GetPlaybackState(microInfo, out var shouldBreakLoop) == PlaybackState.Paused)
                 {
-                    microInfo.WasCancelled = true;
+                    await Task.Delay(FRAME_TIME);
 
-                    DisableBusy();
+                    if (shouldBreakLoop)
+                    {
+                        break;
+                    }
 
+                    continue;
+                }
+
+                if (shouldBreakLoop)
+                {
                     break;
                 }
 
-                // wait instead of executing if paused
-                if (_paused.TryGetValue(microInfo.Id, out var paused) && paused)
-                {
-                    await Task.Delay(defaultWait ?? TimeSpan.FromMilliseconds(10));
-                    continue;
-                }
-                // force pause if in combat to prevent bad automation
-                else if (_condition[ConditionFlag.InCombat])
-                {
-                    Pause(microInfo.Id);
-                    continue;
-                }
-
-                // get the line of the command
+                // Get the line of the command
                 var command = microInfo.Commands[i];
+                MicroCommand? lastCommand = null;
+                if (i > 1)
+                {
+                    lastCommand = microInfo.Commands[i - 1];
+                }
 
                 microInfo.CurrentCommand = command;
-                microInfo.CurrentCommand.StartTime = DateTime.Now;
 
-                // handle entering a new region
-                if (command.Region != null && command.Region.StartTime == null)
+                // Handle entering a new region
+                if (!command.Region.IsDefaultRegion && command.Region != lastCommand?.Region)
                 {
-                    command.Region.StartTime = microInfo.CurrentCommand.StartTime;
-
-                    if (autoCountdown != null)
+                    if (autoCountdown == "off")
+                    {
+                        autoCountdown = null;
+                    }
+                    else if (autoCountdown != null)
                     {
                         DispatchAutoCountdown(microInfo, command.Region, autoCountdown, i);
                     }
                 }
 
-                // go back to the beginning if the command is loop
-                if (command.Text == "/loop")
+                watch.Reset();
+
+                // Go back to the beginning if the command is a loop
+                if (command.Text == "/loop" && microInfo.Commands.Length > 1)
                 {
                     if (_autoBusy == true)
                     {
@@ -284,20 +229,19 @@ namespace Microdancer
                     }
 
                     i = 0;
-                    microInfo.CurrentCommand = null;
-                    microInfo.StartTime = DateTime.Now;
-
+                    microInfo.CurrentCommand = microInfo.Commands[0];
                     continue;
                 }
-                // set auto-busy
+                // Set auto-busy
                 else if (command.Text.StartsWith("/autobusy"))
                 {
-                    await SetBusy();
+                    _autoBusy = true;
+                    await _channel.Writer.WriteAsync("/busy on");
 
                     ++i;
                     continue;
                 }
-                // set auto-countdown
+                // Set auto-countdown
                 else if (command.Text.StartsWith("/autocountdown") || command.Text.StartsWith("/autocd"))
                 {
                     autoCountdown = SetAutoCountdown(command.Text);
@@ -305,22 +249,67 @@ namespace Microdancer
                     ++i;
                     continue;
                 }
-                // send the command to the channel (ignore /wait)
+                // Send the command to the channel (ignore /wait)
                 else if (command.Text != "/wait")
                 {
+                    watch.Start();
                     await _channel.Writer.WriteAsync(command.Text);
                 }
 
-                await Task.Delay(command.WaitTime);
+                var delay = command.WaitTime - command.CurrentTime;
 
-                microInfo.CurrentCommand = null;
+                while (delay > TimeSpan.Zero)
+                {
+                    await Task.Delay(Math.Min((int)delay.TotalMilliseconds, FRAME_TIME));
+
+                    // Micro is currently paused
+                    if (GetPlaybackState(microInfo, out shouldBreakLoop) == PlaybackState.Paused)
+                    {
+                        continue;
+                    }
+
+                    if (shouldBreakLoop)
+                    {
+                        break;
+                    }
+
+                    delay = command.WaitTime - command.CurrentTime;
+                }
+
+                // Micro is currently paused
+                if (GetPlaybackState(microInfo, out shouldBreakLoop) == PlaybackState.Paused)
+                {
+                    continue;
+                }
+
+                if (shouldBreakLoop)
+                {
+                    break;
+                }
 
                 ++i;
             }
 
-            _running.TryRemove(microInfo.Id, out _);
+            microInfo.Stop();
+            microInfo.CurrentCommand = null;
 
-            DisableBusy();
+            if (_autoBusy == true)
+            {
+                _autoBusy = false;
+
+                await Task.Run(
+                    async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2.5));
+
+                        if (_autoBusy == false)
+                        {
+                            _autoBusy = null;
+                            await _channel.Writer.WriteAsync("/busy off");
+                        }
+                    }
+                );
+            }
         }
 
         private void DispatchAutoCountdown(MicroInfo microInfo, MicroRegion region, string autoCountdown, int i)
@@ -351,17 +340,24 @@ namespace Microdancer
 
             var cdTime = TimeSpan.FromSeconds(autoCountdown == "start" ? 4.98 : 5.48);
             var delay = region.WaitTime - cdTime;
-            var end = region.StartTime + region.WaitTime;
 
             Task.Run(
                     async () =>
                     {
                         await Task.Delay(delay);
 
-                        if (microInfo.WasCancelled)
+                        if (PlaybackState == PlaybackState.Stopped || Current != microInfo)
                             return;
 
-                        if (end - DateTime.Now <= cdTime)
+                        while (PlaybackState == PlaybackState.Paused)
+                        {
+                            await Task.Delay(FRAME_TIME);
+
+                            if (PlaybackState == PlaybackState.Stopped || Current != microInfo)
+                                return;
+                        }
+
+                        if (region.RemainingTime <= cdTime)
                         {
                             await _channel.Writer.WriteAsync("/cd 5");
                         }
@@ -385,6 +381,10 @@ namespace Microdancer
                 {
                     autoCountdown = "start";
                 }
+                else if (string.Equals(autocd, "off", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    autoCountdown = "off";
+                }
                 else
                 {
                     autoCountdown = "pulse";
@@ -392,34 +392,6 @@ namespace Microdancer
             }
 
             return autoCountdown;
-        }
-
-        private async Task SetBusy()
-        {
-            await _channel.Writer.WriteAsync("/busy on");
-            _autoBusy = true;
-        }
-
-        private void DisableBusy()
-        {
-            if (_autoBusy == true)
-            {
-                _autoBusy = false;
-
-                Task.Run(
-                        async () =>
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(2.5));
-
-                            if (_autoBusy == false)
-                            {
-                                _autoBusy = null;
-                                await _channel.Writer.WriteAsync("/busy off");
-                            }
-                        }
-                    )
-                    .ConfigureAwait(false);
-            }
         }
     }
 }

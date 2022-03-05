@@ -175,7 +175,7 @@ namespace Microdancer
                                     PoseNames[currentState]
                                 );
                                 _gameManager.ExecuteCommand("/cpose");
-                                Task.Delay(50);
+                                Task.Delay(TimeSpan.FromMilliseconds(50));
                             } while (toWhat != GetCPoseActorState(playerPointer) && i++ < 8);
                             if (i > 8)
                             {

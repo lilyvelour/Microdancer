@@ -9,5 +9,6 @@ namespace Microdancer
         string Name { get; }
         string Path { get; }
         List<INode> Children { get; }
+        public void Move(string newPath);
     }
 }

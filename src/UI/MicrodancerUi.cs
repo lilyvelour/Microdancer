@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.IO;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Interface;
+﻿using Dalamud.Interface;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -18,7 +15,7 @@ namespace Microdancer
         private readonly LibraryPath _libraryPath;
         private readonly DisplayLibrary _library;
         private readonly ContentArea _contentArea;
-        private readonly MicroQueue _microQueue;
+        private readonly Timeline _timeline;
 
         public MicrodancerUi(LicenseChecker license)
         {
@@ -27,7 +24,7 @@ namespace Microdancer
             _libraryPath = new LibraryPath();
             _library = new DisplayLibrary();
             _contentArea = new ContentArea();
-            _microQueue = new MicroQueue();
+            _timeline = new Timeline();
         }
 
         public override void Draw()
@@ -64,9 +61,10 @@ namespace Microdancer
 
         private void DrawWindowContent()
         {
-            if (Config.QueueSelection != Guid.Empty && !MicroManager.IsRunning(Config.QueueSelection))
+            if (Config.QueueSelection != Guid.Empty && MicroManager.Current != null)
             {
                 Config.QueueSelection = Guid.Empty;
+                PluginInterface.SavePluginConfig(Config);
             }
 
             if (!ClientState.IsLoggedIn)
@@ -105,7 +103,7 @@ namespace Microdancer
 
             ImGui.Columns(1);
 
-            _microQueue.Draw();
+            _timeline.Draw();
         }
     }
 }

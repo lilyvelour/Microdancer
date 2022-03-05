@@ -1,11 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Numerics;
 using ImGuiNET;
 
 namespace Microdancer
 {
-    public unsafe sealed class BurgundyTheme : Theme
+    public sealed class BurgundyTheme : Theme
     {
         private readonly Dictionary<ImGuiStyleVar, object> _styles =
             new()
@@ -15,7 +14,7 @@ namespace Microdancer
                 { ImGuiStyleVar.CellPadding, new Vector2(4.0f, 2.0f) },
                 { ImGuiStyleVar.ItemSpacing, new Vector2(8.0f, 4.0f) },
                 { ImGuiStyleVar.ItemInnerSpacing, new Vector2(4, 4) },
-                { ImGuiStyleVar.IndentSpacing, 21.0f },
+                { ImGuiStyleVar.IndentSpacing, 10.0f },
                 { ImGuiStyleVar.ScrollbarSize, 10.0f },
                 { ImGuiStyleVar.GrabMinSize, 13.0f },
                 { ImGuiStyleVar.WindowBorderSize, 1.0f },
@@ -145,7 +144,17 @@ namespace Microdancer
                 return value;
             }
 
-            return *ImGui.GetStyleColorVec4(color);
+            return base.GetColor(color);
+        }
+
+        public override T GetStyle<T>(ImGuiStyleVar style) where T : struct
+        {
+            if (_styles.TryGetValue(style, out var value) && value is Vector2)
+            {
+                return (T)value;
+            }
+
+            return base.GetStyle<T>(style);
         }
     }
 }

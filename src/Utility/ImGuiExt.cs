@@ -68,5 +68,17 @@ namespace Microdancer
 
             return pressed;
         }
+
+        public static Vector4 RandomColor(int seed)
+        {
+            var random = new Random(seed);
+
+            static float NextClamped(Random rand)
+            {
+                return MathExt.Lerp(0.25f, 0.75f, (float)rand.NextDouble());
+            }
+
+            return new Vector4(NextClamped(random), NextClamped(random), NextClamped(random), 1.0f);
+        }
     }
 }

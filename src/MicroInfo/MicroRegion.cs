@@ -8,15 +8,47 @@ namespace Microdancer
     {
         public string Name { get; }
         public bool IsNamedRegion { get; }
+        public bool IsDefaultRegion { get; }
         public int StartLineNumber { get; private set; }
         public int EndLineNumber { get; private set; }
 
         public IList<MicroCommand> Commands { get; } = new List<MicroCommand>();
 
-        public MicroRegion(string name, bool isNamedRegion)
+        public override bool IsPlaying => Commands.Any(c => c.IsPlaying);
+        public override bool IsPaused => Commands.Any(c => c.IsPaused);
+
+        public override TimeSpan CurrentTime
         {
-            Name = name;
+            get
+            {
+                var t = TimeSpan.Zero;
+                var valid = false;
+
+                foreach (var command in Commands)
+                {
+                    if (command.IsPlaying)
+                    {
+                        valid = true;
+                        t += command.CurrentTime;
+                        break;
+                    }
+                    else
+                    {
+                        t += command.WaitTime;
+                    }
+                }
+
+                return valid ? t : TimeSpan.Zero;
+            }
+        }
+
+        public MicroRegion() : this(null, false) { }
+
+        public MicroRegion(string? name, bool isNamedRegion)
+        {
+            Name = name ?? string.Empty;
             IsNamedRegion = isNamedRegion;
+            IsDefaultRegion = name == null;
         }
 
         internal MicroCommand AddCommand(MicroCommand command)

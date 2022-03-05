@@ -7,6 +7,9 @@ namespace Microdancer
     {
         private readonly string _idPrefix;
 
+        private bool _isRenaming;
+        private string? _rename;
+
         public DisplayNode(string idPrefix)
         {
             _idPrefix = idPrefix;
@@ -55,14 +58,7 @@ namespace Microdancer
                 {
                     if (ImGui.Button("Play##context"))
                     {
-                        RunMicro(micro);
-                    }
-
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Queue##context"))
-                    {
-                        RunMicro(micro, multi: true);
+                        MicroManager.StartMicro(micro);
                     }
 
                     ImGui.SameLine();
@@ -77,6 +73,24 @@ namespace Microdancer
                     if (ImGui.Button("Open Folder##context"))
                     {
                         OpenNode(node);
+                    }
+
+                    ImGui.SameLine();
+
+                    if (ImGui.Button("Rename Folder##context"))
+                    {
+                        _isRenaming = true;
+                    }
+
+                    if (_isRenaming)
+                    {
+                        _rename = node.Name;
+
+                        if (ImGui.InputText("RenameFolder", ref _rename, 256))
+                        {
+                            _isRenaming = false;
+                            // no-op
+                        }
                     }
                 }
 
