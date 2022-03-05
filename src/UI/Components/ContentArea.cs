@@ -40,7 +40,6 @@ namespace Microdancer
             _breadcrumb.Draw(node);
 
             ImGui.Separator();
-            ImGui.Separator();
 
             if (node is Micro micro)
             {

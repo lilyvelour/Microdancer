@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Numerics;
 using ImGuiNET;
 
 namespace Microdancer
@@ -8,6 +9,9 @@ namespace Microdancer
     {
         public void Draw(INode? node)
         {
+            ImGui.Spacing();
+            ImGui.SameLine();
+
             if (node == null)
             {
                 if (Config.LibrarySelection != Guid.Empty)

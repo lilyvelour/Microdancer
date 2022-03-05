@@ -147,7 +147,8 @@ namespace Microdancer
             var scrollX = ImGui.GetScrollX();
             var startMousePos = ImGui.GetCursorScreenPos().X;
             var endMousePos = startMousePos + size.X;
-            var hasPlaybackCursor = MicroManager.Current?.Micro == micro && MicroManager.Current?.IsPlaying == true;
+            var hasPlaybackCursor = false;
+            var isCurrent = MicroManager.Current?.Micro == micro;
             var mousePos = ImGui.GetMousePos().X;
             var t = MathExt.InvLerp(startMousePos, endMousePos, mousePos);
             var timecode = MathExt.Lerp(TimeSpan.Zero, info.WaitTime, t).ToTimeCode();
@@ -177,16 +178,16 @@ namespace Microdancer
                 {
                     label = region.IsDefaultRegion ? "(No Region)" : region.Name;
                     lineNumber = region.Commands[0].LineNumber;
-                    hasPlaybackCursor = region.Commands.Any(
-                        c => c.LineNumber == MicroManager.Current?.CurrentCommand?.LineNumber
-                    );
+                    hasPlaybackCursor =
+                        isCurrent
+                        && region.Commands.Any(c => c.LineNumber == MicroManager.Current?.CurrentCommand?.LineNumber);
                     barColor = ImGuiExt.RandomColor(label.GetHashCode());
                 }
                 else if (item is MicroCommand command)
                 {
                     label = command.Text.Replace(" motion", string.Empty);
                     lineNumber = command.LineNumber;
-                    hasPlaybackCursor = MicroManager.Current?.CurrentCommand?.LineNumber == lineNumber;
+                    hasPlaybackCursor = isCurrent && MicroManager.Current?.CurrentCommand?.LineNumber == lineNumber;
                     barColor = ImGuiExt.RandomColor(
                         command.Text.Replace("\"", string.Empty).Replace(" motion", string.Empty).GetHashCode()
                     );

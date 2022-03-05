@@ -22,9 +22,13 @@ namespace Microdancer
                 return;
             }
 
+            ImGui.InvisibleButton("file-contents-spacer", new(-1, 0.0f));
+
             var framePadding = ImGui.GetStyle().FramePadding;
             var fileContentsSize = ImGui.GetContentRegionAvail();
             fileContentsSize.X -= framePadding.X;
+            fileContentsSize.Y -= ImGuiHelpers.GetButtonSize(string.Empty).Y;
+            fileContentsSize.Y -= Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).Y;
 
             if (lines.Length > 0)
             {
@@ -123,6 +127,10 @@ namespace Microdancer
                     ImGui.PopStyleVar();
                 }
                 ImGui.EndChildFrame();
+            }
+            if (ImGui.Button("Open File"))
+            {
+                OpenNode(micro);
             }
         }
     }
