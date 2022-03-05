@@ -16,7 +16,7 @@ namespace Microdancer
 
         public void Draw()
         {
-            ImGui.BeginChildFrame(1, new(-1, ImGui.GetContentRegionAvail().Y - (253 * ImGuiHelpers.GlobalScale)));
+            ImGui.BeginChildFrame(1, new(-1, ImGui.GetContentRegionAvail().Y - (140 * ImGuiHelpers.GlobalScale)));
 
             foreach (var node in Library.GetNodes())
             {

@@ -28,7 +28,6 @@ namespace Microdancer
             var fileContentsSize = ImGui.GetContentRegionAvail();
             fileContentsSize.X -= framePadding.X;
             fileContentsSize.Y -= ImGuiHelpers.GetButtonSize(string.Empty).Y;
-            fileContentsSize.Y -= Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).Y;
 
             if (lines.Length > 0)
             {
@@ -128,6 +127,7 @@ namespace Microdancer
                 }
                 ImGui.EndChildFrame();
             }
+
             if (ImGui.Button("Open File"))
             {
                 OpenNode(micro);

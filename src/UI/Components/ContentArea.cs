@@ -31,9 +31,16 @@ namespace Microdancer
                 node = Library.Find<INode>(Config.LibrarySelection);
             }
 
+            var micro = node as Micro;
+
+            if (micro != null && _info?.Micro != micro)
+            {
+                _info = new MicroInfo(micro);
+            }
+
             ImGui.BeginChildFrame(
                 2,
-                new(-1, ImGui.GetContentRegionAvail().Y - (216 * ImGuiHelpers.GlobalScale)),
+                new(-1, ImGui.GetContentRegionAvail().Y - (micro != null ? 216 : 108) * ImGuiHelpers.GlobalScale),
                 ImGuiWindowFlags.NoBackground
             );
 
@@ -41,16 +48,11 @@ namespace Microdancer
 
             ImGui.Separator();
 
-            if (node is Micro micro)
+            if (micro != null)
             {
                 var lines = micro.GetBody().ToArray();
 
                 var inCombat = Condition[ConditionFlag.InCombat];
-
-                if (_info?.Micro != micro)
-                {
-                    _info = new MicroInfo(micro);
-                }
 
                 var regions = lines.Where(l => l.Trim().StartsWith("#region ")).Select(l => l.Trim()[8..]).ToArray();
                 var regionButtonSize = Vector2.Zero;

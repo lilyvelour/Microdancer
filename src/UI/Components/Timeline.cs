@@ -24,6 +24,11 @@ namespace Microdancer
                 _info = new MicroInfo(micro);
             }
 
+            if (micro == null)
+            {
+                return;
+            }
+
             var frameSize = ImGui.GetContentRegionAvail();
             frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X * 2.0f;
             frameSize.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 2.0f;
@@ -53,7 +58,7 @@ namespace Microdancer
 
             var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * 2.0f * ImGuiHelpers.GlobalScale;
 
-            var duration = micro != null && _info != null ? (float)_info.WaitTime.TotalSeconds : 5.0f;
+            var duration = _info?.Commands.Length > 0 ? (float)_info.WaitTime.TotalSeconds : 5.0f;
 
             var usableWidth = Math.Max(duration * timecodeWidth * 2.0f, frameSize.X);
             var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
@@ -61,7 +66,8 @@ namespace Microdancer
             var regionsSize = new Vector2(usableWidth, usableHeight * 0.33f);
             var commandsSize = new Vector2(usableWidth, usableHeight * 0.33f);
 
-            var increment = 0.5f;
+            const float increment = 0.5f;
+
             var rulerSize = new Vector2(
                 Math.Clamp((float)increment / duration, 0.0f, 1.0f) * usableWidth,
                 usableHeight * 0.33f
@@ -104,7 +110,7 @@ namespace Microdancer
                 }
             }
 
-            if (micro != null && _info != null)
+            if (_info?.Commands.Length > 0)
             {
                 var commandProgress = MicroManager.Current?.CurrentCommand?.GetProgress() ?? 0.0f;
                 var regionProgress = MicroManager.Current?.CurrentCommand?.Region.GetProgress() ?? 0.0f;

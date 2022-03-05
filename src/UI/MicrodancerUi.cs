@@ -103,8 +103,6 @@ namespace Microdancer
 
             _contentArea.Draw();
 
-            ImGui.Columns(1);
-
             _timeline.Draw();
 
             ImGui.Columns(1);
