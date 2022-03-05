@@ -16,7 +16,7 @@ namespace Microdancer
 
         public void Draw()
         {
-            ImGui.BeginChildFrame(1, new(-1, ImGui.GetContentRegionAvail().Y - (153 * ImGuiHelpers.GlobalScale)));
+            ImGui.BeginChildFrame(1, new(-1, ImGui.GetContentRegionAvail().Y - (253 * ImGuiHelpers.GlobalScale)));
 
             foreach (var node in Library.GetNodes())
             {
@@ -28,6 +28,7 @@ namespace Microdancer
             if (ImGui.IsItemClicked())
             {
                 Config.LibrarySelection = Guid.Empty;
+                PluginInterface.SavePluginConfig(Config);
             }
 
             ImGui.PushFont(UiBuilder.IconFont);

@@ -51,8 +51,8 @@ namespace Microdancer
 
             lightText = Vector4.Min(lightText, Vector4.One);
             darkText = Vector4.Max(darkText, Vector4.Zero);
-            lightText.W = color.W;
-            darkText.W = color.W;
+            lightText.W = 1.0f;
+            darkText.W = 1.0f;
 
             ImGui.PushStyleColor(ImGuiCol.Button, color);
             ImGui.PushStyleColor(ImGuiCol.Text, darkDiff > lightDiff ? darkText : lightText);

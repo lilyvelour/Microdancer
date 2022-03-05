@@ -206,7 +206,7 @@ namespace Microdancer
                 microInfo.CurrentCommand = command;
 
                 // Handle entering a new region
-                if (!command.Region.IsDefaultRegion && command.Region != lastCommand?.Region)
+                if (command.Region != lastCommand?.Region)
                 {
                     if (autoCountdown == "off")
                     {
@@ -314,10 +314,10 @@ namespace Microdancer
 
         private void DispatchAutoCountdown(MicroInfo microInfo, MicroRegion region, string autoCountdown, int i)
         {
-            // Dispatch countdown task if we have any additional regions (unless we're in a named region)
-            var isNamedRegion = region.IsNamedRegion;
+            // Dispatch countdown task if we have any additional regions (unless we're in a named or default region)
+            var isNamedOrDefaultRegion = region.IsNamedRegion || region.IsDefaultRegion;
 
-            if (isNamedRegion)
+            if (isNamedOrDefaultRegion)
             {
                 return;
             }
@@ -330,7 +330,7 @@ namespace Microdancer
             }
 
             var hasNextRegion = microInfo.Commands[i..].Any(
-                c => c.Region != region && c.Region?.IsNamedRegion == false
+                c => c.Region != region && !c.Region.IsNamedRegion && !c.Region.IsDefaultRegion
             );
 
             if (!hasNextRegion)
@@ -346,21 +346,10 @@ namespace Microdancer
                     {
                         await Task.Delay(delay);
 
-                        if (PlaybackState == PlaybackState.Stopped || Current != microInfo)
+                        if (Current != microInfo || PlaybackState != PlaybackState.Playing)
                             return;
 
-                        while (PlaybackState == PlaybackState.Paused)
-                        {
-                            await Task.Delay(FRAME_TIME);
-
-                            if (PlaybackState == PlaybackState.Stopped || Current != microInfo)
-                                return;
-                        }
-
-                        if (region.RemainingTime <= cdTime)
-                        {
-                            await _channel.Writer.WriteAsync("/cd 5");
-                        }
+                        await _channel.Writer.WriteAsync("/cd 5");
                     }
                 )
                 .ConfigureAwait(false);

@@ -33,11 +33,14 @@ namespace Microdancer
 
             ImGui.BeginChildFrame(
                 2,
-                new(-1, ImGui.GetContentRegionAvail().Y - (120 * ImGuiHelpers.GlobalScale)),
+                new(-1, ImGui.GetContentRegionAvail().Y - (216 * ImGuiHelpers.GlobalScale)),
                 ImGuiWindowFlags.NoBackground
             );
 
             _breadcrumb.Draw(node);
+
+            ImGui.Separator();
+            ImGui.Separator();
 
             if (node is Micro micro)
             {
@@ -50,19 +53,25 @@ namespace Microdancer
                     _info = new MicroInfo(micro);
                 }
 
-                if (inCombat)
-                {
-                    ImGui.TextColored(new(1.0f, 0.0f, 0.0f, 1.0f), "All Micros paused while in combat!");
-                }
-                else
-                {
-                    DrawPlayPause(micro, lines, _info);
-
-                    ImGui.Separator();
-                }
-
                 var regions = lines.Where(l => l.Trim().StartsWith("#region ")).Select(l => l.Trim()[8..]).ToArray();
                 var regionButtonSize = Vector2.Zero;
+
+                ImGui.Columns(2);
+
+                _fileContents.Draw(lines);
+
+                ImGui.NextColumn();
+
+                ImGui.BeginChildFrame(
+                    20,
+                    new(
+                        -1,
+                        ImGui.GetContentRegionAvail().Y
+                            - Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize)
+                            + ImGuiHelpers.GlobalScale
+                    ),
+                    ImGuiWindowFlags.NoBackground
+                );
 
                 if (regions.Length == 0)
                 {
@@ -83,8 +92,8 @@ namespace Microdancer
                         }
                     }
 
-                    regionButtonSize.X += 40 * ImGuiHelpers.GlobalScale;
-                    regionButtonSize.Y += 20 * ImGuiHelpers.GlobalScale;
+                    regionButtonSize.X += 80 * ImGuiHelpers.GlobalScale;
+                    regionButtonSize.Y += 40 * ImGuiHelpers.GlobalScale;
 
                     var col = 0;
                     var regionNumber = 1;
@@ -98,7 +107,8 @@ namespace Microdancer
 
                         if (region.StartsWith(":"))
                         {
-                            size.X = -1;
+                            size.X =
+                                ImGui.GetContentRegionAvail().X - Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X;
                             isNamedRegion = true;
                         }
 
@@ -154,7 +164,7 @@ namespace Microdancer
                     }
                 }
 
-                _fileContents.Draw(lines);
+                ImGui.EndChildFrame();
             }
             else
             {
@@ -196,87 +206,6 @@ namespace Microdancer
             }
 
             ImGui.EndChildFrame();
-        }
-
-        private void DrawPlayPause(Micro micro, string[] lines, MicroInfo displayInfo)
-        {
-            if (lines.Length > 0 && displayInfo.Commands.Length > 0)
-            {
-                var controlButtonColor = new Vector4(0.44705883f, 0.44705883f, 0.44705883f, 1.0f);
-                var stopButtonColor = new Vector4(0.44705883f, 0.0f, 0.0f, 1.0f);
-                var playPauseLabel = $"{FontAwesomeIcon.Play.ToIconString()}##PlayPause";
-                var playPauseTooltip = MicroManager.PlaybackState == PlaybackState.Paused ? "Resume" : "Play";
-                var playPauseColor = new Vector4(0.0f, 0.44705883f, 0.0f, 1.0f);
-
-                var isCurrent = micro == MicroManager.Current?.Micro;
-
-                if (isCurrent && MicroManager.PlaybackState == PlaybackState.Playing)
-                {
-                    playPauseLabel = $"{FontAwesomeIcon.Pause.ToIconString()}##PlayPause";
-                    playPauseTooltip = "Pause";
-                    playPauseColor = controlButtonColor;
-                }
-
-                var buttonSize = ImGuiHelpers.ScaledVector2(96, 48);
-
-                ImGui.BeginChildFrame(9008, new(-1, buttonSize.Y + (8 * ImGuiHelpers.GlobalScale)));
-
-                var spacer = ImGui.GetContentRegionAvail();
-                spacer.X -= buttonSize.X * 2.0f;
-                spacer.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 4.0f;
-                spacer.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.ItemSpacing).X;
-                spacer.X /= 2.0f;
-                spacer.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.ItemSpacing).X;
-
-                if (spacer.X > 0)
-                {
-                    ImGui.InvisibleButton("controls-before", spacer);
-                    ImGui.SameLine();
-                }
-
-                ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0.0f);
-
-                ImGui.PushFont(UiBuilder.IconFont);
-                if (ImGuiExt.TintButton(playPauseLabel, buttonSize, playPauseColor))
-                {
-                    if (isCurrent && MicroManager.PlaybackState == PlaybackState.Playing)
-                    {
-                        MicroManager.Current?.Pause();
-                    }
-                    else if (isCurrent && MicroManager.PlaybackState == PlaybackState.Paused)
-                    {
-                        MicroManager.Current?.Resume();
-                    }
-                    else
-                    {
-                        MicroManager.StartMicro(micro);
-                    }
-                }
-                ImGui.PopFont();
-
-                ImGuiExt.TextTooltip(playPauseTooltip);
-
-                ImGui.SameLine();
-
-                ImGui.PushFont(UiBuilder.IconFont);
-                if (ImGuiExt.TintButton(FontAwesomeIcon.Stop.ToIconString(), buttonSize, stopButtonColor))
-                {
-                    MicroManager.Current?.Stop();
-                }
-                ImGui.PopFont();
-
-                ImGuiExt.TextTooltip("Stop");
-
-                if (spacer.X > 0)
-                {
-                    ImGui.SameLine();
-                    ImGui.InvisibleButton("controls-after", spacer);
-                }
-
-                ImGui.PopStyleVar();
-
-                ImGui.EndChildFrame();
-            }
         }
     }
 }

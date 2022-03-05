@@ -28,12 +28,9 @@ namespace Microdancer
 
             if (lines.Length > 0)
             {
-                var isRunning = MicroManager.Current?.Micro == micro;
+                var isRunning =
+                    MicroManager.Current?.Micro == micro && MicroManager.PlaybackState != PlaybackState.Stopped;
 
-                ImGui.Separator();
-
-                ImGui.Text("File Contents");
-                fileContentsSize.Y -= ImGui.GetTextLineHeightWithSpacing();
                 fileContentsSize.Y -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 4.0f;
                 fileContentsSize.Y = Math.Max(fileContentsSize.Y, 200 * ImGuiHelpers.GlobalScale);
 
@@ -70,10 +67,26 @@ namespace Microdancer
                     var textColor = Theme.GetColor(ImGuiCol.Text) * 0.75f;
                     textColor.W = 1.0f;
 
-                    if (MicroManager.Current?.CurrentCommand?.LineNumber == i + 1)
+                    if (isRunning && MicroManager.Current?.CurrentCommand?.LineNumber == i + 1)
                     {
                         prefixColor = Theme.GetColor(ImGuiCol.TitleBgActive);
                         textColor = Theme.GetColor(ImGuiCol.Text);
+
+                        var linePos = ImGui.GetCursorPosY();
+
+                        if (MicroManager.PlaybackState == PlaybackState.Playing)
+                        {
+                            if (
+                                linePos > ImGui.GetScrollY() + fileContentsSize.Y - ImGui.GetTextLineHeightWithSpacing()
+                            )
+                            {
+                                ImGui.SetScrollHereY(0.85f);
+                            }
+                            else if (linePos < ImGui.GetScrollY())
+                            {
+                                ImGui.SetScrollHereY(0.15f);
+                            }
+                        }
                     }
 
                     ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImGuiHelpers.ScaledVector2(8.0f, 0.0f));

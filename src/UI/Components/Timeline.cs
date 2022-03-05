@@ -8,8 +8,6 @@ namespace Microdancer
 {
     public class Timeline : PluginUiBase, IDrawable
     {
-        private bool _autoScroll;
-
         private MicroInfo? _info;
 
         public void Draw()
@@ -21,116 +19,125 @@ namespace Microdancer
                 micro = Library.Find<Micro>(Config.LibrarySelection);
             }
 
-            if (micro == null)
-            {
-                return;
-            }
-
-            if (_info?.Micro != micro)
+            if (micro != null && _info?.Micro != micro)
             {
                 _info = new MicroInfo(micro);
             }
 
-            if (_info.Commands.Length > 0)
+            var frameSize = ImGui.GetContentRegionAvail();
+            frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X * 2.0f;
+            frameSize.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 2.0f;
+            frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.WindowPadding).X * 2.0f;
+            frameSize.Y = ImGuiHelpers.GetButtonSize(string.Empty).Y * 4.0f;
+
+            ImGui.PushStyleColor(ImGuiCol.ScrollbarBg, Theme.GetColor(ImGuiCol.ScrollbarGrab));
+            ImGui.PushStyleColor(ImGuiCol.ScrollbarGrab, Theme.GetColor(ImGuiCol.ScrollbarGrab) * 2);
+            ImGui.PushStyleColor(ImGuiCol.ScrollbarGrabActive, Theme.GetColor(ImGuiCol.ScrollbarGrabActive) * 2);
+            ImGui.PushStyleColor(ImGuiCol.ScrollbarGrabHovered, Theme.GetColor(ImGuiCol.ScrollbarGrabHovered) * 2);
+
+            ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarSize, 20.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarRounding, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0.0f, 0.0f));
+
+            ImGui.BeginChildFrame(
+                (uint)(_info?.Id.GetHashCode() ?? 9999),
+                frameSize,
+                ImGuiWindowFlags.AlwaysHorizontalScrollbar
+            );
+
+            ImGui.PopStyleColor(4);
+
+            ImGui.PushStyleColor(ImGuiCol.Border, Theme.GetColor(ImGuiCol.ScrollbarGrab));
+
+            var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * 2.0f * ImGuiHelpers.GlobalScale;
+
+            var duration = micro != null && _info != null ? (float)_info.WaitTime.TotalSeconds : 5.0f;
+
+            var usableWidth = Math.Max(duration * timecodeWidth * 2.0f, frameSize.X);
+            var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
+
+            var regionsSize = new Vector2(usableWidth, usableHeight * 0.33f);
+            var commandsSize = new Vector2(usableWidth, usableHeight * 0.33f);
+
+            var increment = 0.5f;
+            var rulerSize = new Vector2(
+                Math.Clamp((float)increment / duration, 0.0f, 1.0f) * usableWidth,
+                usableHeight * 0.33f
+            );
+            var spacingSize = new Vector2(rulerSize.X - timecodeWidth, rulerSize.Y);
+
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
+
+            for (var time = 0.0f; time < duration; time += increment)
             {
-                var frameSize = ImGui.GetContentRegionAvail();
-                frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X;
-                frameSize.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize);
-                frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.WindowPadding).X;
-                frameSize.Y = ImGuiHelpers.GetButtonSize(string.Empty).Y * 4.0f;
-
-                ImGui.PushStyleColor(ImGuiCol.ScrollbarBg, Theme.GetColor(ImGuiCol.ScrollbarGrab));
-                ImGui.PushStyleColor(ImGuiCol.ScrollbarGrab, Theme.GetColor(ImGuiCol.ScrollbarGrab) * 2);
-                ImGui.PushStyleColor(ImGuiCol.ScrollbarGrabActive, Theme.GetColor(ImGuiCol.ScrollbarGrabActive) * 2);
-                ImGui.PushStyleColor(ImGuiCol.ScrollbarGrabHovered, Theme.GetColor(ImGuiCol.ScrollbarGrabHovered) * 2);
-
-                ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarSize, 20.0f);
-                ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarRounding, 0.0f);
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, Vector2.Zero);
-                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0.0f, 0.0f));
-
-                ImGui.BeginChildFrame(
-                    (uint)_info.Id.GetHashCode(),
-                    frameSize,
-                    ImGuiWindowFlags.AlwaysHorizontalScrollbar
-                );
-
-                ImGui.PopStyleColor(4);
-
-                ImGui.PushStyleColor(ImGuiCol.Border, Theme.GetColor(ImGuiCol.ScrollbarGrab));
-
-                var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * 2.0f * ImGuiHelpers.GlobalScale;
-
-                var usableWidth = Math.Max((float)_info.WaitTime.TotalSeconds * timecodeWidth * 2.0f, frameSize.X);
-                var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
-
-                var regionsSize = new Vector2(usableWidth, usableHeight * 0.33f);
-                var commandsSize = new Vector2(usableWidth, usableHeight * 0.33f);
-
-                var increment = 0.5f;
-                var rulerSize = new Vector2(
-                    Math.Clamp((float)increment / (float)_info.WaitTime.TotalSeconds, 0.0f, 1.0f) * usableWidth,
-                    usableHeight * 0.33f
-                );
-                var spacingSize = new Vector2(rulerSize.X - timecodeWidth, rulerSize.Y);
-
-                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
-
-                for (var i = 0.0f; i + increment < _info.WaitTime.TotalSeconds; i += increment)
+                if (time >= increment)
                 {
-                    if (i >= increment)
-                    {
-                        ImGui.SameLine();
-                    }
-
-                    ImGuiExt.TintButton(
-                        $"##timelineCursor_{i}",
-                        new Vector2(1.0f, rulerSize.Y),
-                        Theme.GetColor(ImGuiCol.TextDisabled)
-                    );
-
                     ImGui.SameLine();
-
-                    ImGui.InvisibleButton($"ruler_line_{i}", new(4.0f, rulerSize.Y));
-
-                    ImGui.SameLine();
-
-                    ImGui.Selectable(
-                        TimeSpan.FromSeconds(i).ToTimeCode(),
-                        false,
-                        ImGuiSelectableFlags.Disabled,
-                        new Vector2(timecodeWidth - 5.0f, rulerSize.Y)
-                    );
-
-                    if (spacingSize.X > 0)
-                    {
-                        ImGui.SameLine();
-                        ImGui.InvisibleButton($"ruler_{i}", spacingSize);
-                    }
                 }
 
+                ImGuiExt.TintButton(
+                    $"##timelineCursor_{time}",
+                    new Vector2(1.0f, rulerSize.Y),
+                    new(0.0f, 0.0f, 0.0f, 1.0f)
+                );
+
+                ImGui.SameLine();
+
+                ImGui.InvisibleButton($"ruler_line_{time}", new(4.0f, rulerSize.Y));
+
+                ImGui.SameLine();
+
+                ImGui.Selectable(
+                    TimeSpan.FromSeconds(time).ToTimeCode(),
+                    false,
+                    ImGuiSelectableFlags.Disabled,
+                    new Vector2(timecodeWidth - 5.0f, rulerSize.Y)
+                );
+
+                if (spacingSize.X > 0)
+                {
+                    ImGui.SameLine();
+                    ImGui.InvisibleButton($"ruler_{time}", spacingSize);
+                }
+            }
+
+            if (micro != null && _info != null)
+            {
                 var commandProgress = MicroManager.Current?.CurrentCommand?.GetProgress() ?? 0.0f;
                 var regionProgress = MicroManager.Current?.CurrentCommand?.Region.GetProgress() ?? 0.0f;
 
                 ImGui.Separator();
-                ImGui.InvisibleButton("blocks-separator-0", new(-1f, 1.0f));
+                ImGuiExt.TintButton(
+                    "##blocks-separator-0",
+                    new(usableWidth + timecodeWidth, 1.0f),
+                    new(0.0f, 0.0f, 0.0f, 1.0f)
+                );
                 ImGui.Separator();
 
                 DrawBlocks(micro, _info, _info.Regions, regionProgress, regionsSize);
 
                 ImGui.Separator();
-                ImGui.InvisibleButton("blocks-separator-1", new(-1f, 1.0f));
+                ImGuiExt.TintButton(
+                    "##blocks-separator-1",
+                    new(usableWidth + timecodeWidth, 1.0f),
+                    new(0.25f, 0.25f, 0.25f, 0.5f)
+                );
                 ImGui.Separator();
 
                 DrawBlocks(micro, _info, _info.Commands, commandProgress, commandsSize);
-
-                ImGui.PopStyleColor();
-                ImGui.PopStyleVar(7);
-
-                ImGui.EndChildFrame();
             }
+            else
+            {
+                ImGuiExt.TintButton(" - Empty - ", new(-1, -1), Vector4.Zero);
+            }
+
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar(7);
+
+            ImGui.EndChildFrame();
 
             ImGui.Separator();
         }
@@ -189,7 +196,7 @@ namespace Microdancer
                     hasPlaybackCursor = false;
                 }
 
-                var tooltip = $"{label} [{timecode}]";
+                var tooltip = $"{label} <{item.WaitTime.ToSimpleString()}> [{timecode}]";
 
                 var playbackCursorSize = new Vector2(2.0f, barSize.Y);
 
@@ -208,7 +215,6 @@ namespace Microdancer
                 }
 
                 var cursorColor = hasPlaybackCursor ? Theme.GetColor(ImGuiCol.TextSelectedBg) : barColor;
-
                 if (ImGuiExt.TintButton($"##{i}_before", beforeSize, barColor))
                 {
                     MicroManager.StartMicro(micro, lineNumber);
@@ -222,20 +228,9 @@ namespace Microdancer
                 }
                 ImGuiExt.TextTooltip(tooltip);
 
-                if (hasPlaybackCursor)
+                if (hasPlaybackCursor && MicroManager.PlaybackState != PlaybackState.Paused)
                 {
-                    if (_autoScroll && MicroManager.PlaybackState != PlaybackState.Paused)
-                    {
-                        ImGui.SetScrollHereX();
-                    }
-                    else if (MicroManager.PlaybackState == PlaybackState.Paused)
-                    {
-                        _autoScroll = false;
-                    }
-                    else if (ImGui.GetCursorPosX() <= scrollX + size.X || ImGui.GetCursorPosX() >= scrollX)
-                    {
-                        _autoScroll = true;
-                    }
+                    ImGui.SetScrollHereX();
                 }
 
                 ImGui.SameLine();

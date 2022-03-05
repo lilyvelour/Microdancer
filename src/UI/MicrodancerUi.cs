@@ -16,6 +16,7 @@ namespace Microdancer
         private readonly DisplayLibrary _library;
         private readonly ContentArea _contentArea;
         private readonly Timeline _timeline;
+        private readonly PlaybackControls _playbackControls;
 
         public MicrodancerUi(LicenseChecker license)
         {
@@ -25,6 +26,7 @@ namespace Microdancer
             _library = new DisplayLibrary();
             _contentArea = new ContentArea();
             _timeline = new Timeline();
+            _playbackControls = new PlaybackControls();
         }
 
         public override void Draw()
@@ -104,6 +106,10 @@ namespace Microdancer
             ImGui.Columns(1);
 
             _timeline.Draw();
+
+            ImGui.Columns(1);
+
+            _playbackControls.Draw();
         }
     }
 }
