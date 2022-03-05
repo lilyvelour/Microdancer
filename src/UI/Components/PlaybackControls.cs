@@ -44,6 +44,53 @@ namespace Microdancer
 
             ImGui.PopStyleVar(2);
 
+            var timecodeSize = new Vector2(-1, ImGui.GetTextLineHeightWithSpacing());
+
+            var label = micro?.Name ?? "------";
+            var time = TimeSpan.Zero.ToTimeCode();
+            var playing = true;
+            if (MicroManager.Current != null && MicroManager.PlaybackState != PlaybackState.Stopped)
+            {
+                label = MicroManager.Current.Micro.Name ?? "<Unknown Micro>";
+                time = MicroManager.Current.CurrentTime.ToTimeCode();
+            }
+            else
+            {
+                playing = false;
+            }
+
+            if (!playing)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Theme.GetColor(ImGuiCol.TextDisabled));
+            }
+
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
+            if (ImGuiExt.TintButton(label, timecodeSize, new(0, 0, 0, 0)))
+            {
+                if (MicroManager.Current != null)
+                {
+                    Config.LibrarySelection = MicroManager.Current.Micro.Id;
+                    PluginInterface.SavePluginConfig(Config);
+                }
+            }
+            if (ImGuiExt.TintButton(time, timecodeSize, new(0, 0, 0, 0)))
+            {
+                if (MicroManager.Current != null)
+                {
+                    Config.LibrarySelection = MicroManager.Current.Micro.Id;
+                    PluginInterface.SavePluginConfig(Config);
+                }
+            }
+            ImGui.PopStyleVar(2);
+
+            if (!playing)
+            {
+                ImGui.PopStyleColor();
+            }
+
+            ImGui.Separator();
+
             var playPauseLabel = $"{FontAwesomeIcon.Play.ToIconString()}##PlayPause";
             var playPauseTooltip = MicroManager.PlaybackState == PlaybackState.Paused ? "Resume" : "Play";
 
@@ -117,36 +164,6 @@ namespace Microdancer
             }
 
             ImGui.PopStyleVar();
-
-            var timecodeSize = new Vector2(-1, ImGui.GetTextLineHeightWithSpacing());
-
-            var label = "";
-            var time = "";
-            if (MicroManager.Current != null && MicroManager.PlaybackState != PlaybackState.Stopped)
-            {
-                label = MicroManager.Current.Micro.Name ?? "<Unknown Micro>";
-                time = MicroManager.Current.CurrentTime.ToTimeCode();
-            }
-
-            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
-            if (ImGuiExt.TintButton(label, timecodeSize, new(0, 0, 0, 0)))
-            {
-                if (MicroManager.Current != null)
-                {
-                    Config.LibrarySelection = MicroManager.Current.Micro.Id;
-                    PluginInterface.SavePluginConfig(Config);
-                }
-            }
-            if (ImGuiExt.TintButton(time, timecodeSize, new(0, 0, 0, 0)))
-            {
-                if (MicroManager.Current != null)
-                {
-                    Config.LibrarySelection = MicroManager.Current.Micro.Id;
-                    PluginInterface.SavePluginConfig(Config);
-                }
-            }
-            ImGui.PopStyleVar(2);
 
             ImGui.EndChildFrame();
         }
