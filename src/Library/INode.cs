@@ -8,6 +8,7 @@ namespace Microdancer
         Guid Id { get; }
         string Name { get; }
         string Path { get; }
+        public INode? Parent { get; }
         List<INode> Children { get; }
         public void Move(string newPath);
     }

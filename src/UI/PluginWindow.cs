@@ -5,7 +5,7 @@ using Dalamud.IoC;
 namespace Microdancer
 {
     [PluginInterface]
-    public abstract class PluginWindow : PluginUiBase, IDrawable, IDisposable
+    public abstract class PluginWindow : PluginUiBase, IDisposable
     {
         protected PluginWindow()
         {

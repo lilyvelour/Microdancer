@@ -31,24 +31,17 @@ namespace Microdancer
 
         protected void OpenNode(INode? node, bool parent = false)
         {
-            using Process fileOpener = new();
-
-            string path = Config.LibraryPath;
+            var path = Config.LibraryPath;
             if (node != null)
             {
-                if (parent)
-                {
-                    path = Path.GetDirectoryName(node.Path) ?? path;
-                }
-                else
-                {
-                    path = node.Path;
-                }
+                path = parent ? Path.GetDirectoryName(node.Path) ?? path : node.Path;
             }
+            using var _ = Process.Start("explorer", $"\"{path}\"");
+        }
 
-            fileOpener.StartInfo.FileName = "explorer";
-            fileOpener.StartInfo.Arguments = "\"" + path + "\"";
-            fileOpener.Start();
+        protected void RevealNode(INode node)
+        {
+            using var _ = Process.Start("explorer", $"/select, \"{node.Path}\"");
         }
     }
 }

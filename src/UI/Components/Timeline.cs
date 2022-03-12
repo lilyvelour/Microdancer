@@ -10,7 +10,7 @@ namespace Microdancer
     {
         private MicroInfo? _info;
 
-        public void Draw()
+        public bool Draw()
         {
             Micro? micro = null;
 
@@ -19,14 +19,14 @@ namespace Microdancer
                 micro = Library.Find<Micro>(Config.LibrarySelection);
             }
 
-            if (micro != null && _info?.Micro != micro)
-            {
-                _info = new MicroInfo(micro);
-            }
-
             if (micro == null)
             {
-                return;
+                return false;
+            }
+
+            if (_info?.Micro != micro)
+            {
+                _info = new MicroInfo(micro);
             }
 
             var frameSize = ImGui.GetContentRegionAvail();
@@ -110,28 +110,24 @@ namespace Microdancer
                 }
             }
 
+            ImGuiExt.TintButton(
+                "##blocks-separator-0",
+                new(usableWidth + timecodeWidth, 1.0f),
+                new(0.0f, 0.0f, 0.0f, 1.0f)
+            );
+
             if (_info?.Commands.Length > 0)
             {
                 var commandProgress = MicroManager.Current?.CurrentCommand?.GetProgress() ?? 0.0f;
                 var regionProgress = MicroManager.Current?.CurrentCommand?.Region.GetProgress() ?? 0.0f;
 
-                ImGui.Separator();
-                ImGuiExt.TintButton(
-                    "##blocks-separator-0",
-                    new(usableWidth + timecodeWidth, 1.0f),
-                    new(0.0f, 0.0f, 0.0f, 1.0f)
-                );
-                ImGui.Separator();
-
                 DrawBlocks(micro, _info, _info.Regions, regionProgress, regionsSize);
 
-                ImGui.Separator();
                 ImGuiExt.TintButton(
                     "##blocks-separator-1",
                     new(usableWidth + timecodeWidth, 1.0f),
                     new(0.25f, 0.25f, 0.25f, 0.5f)
                 );
-                ImGui.Separator();
 
                 DrawBlocks(micro, _info, _info.Commands, commandProgress, commandsSize);
             }
@@ -145,7 +141,7 @@ namespace Microdancer
 
             ImGui.EndChildFrame();
 
-            ImGui.Separator();
+            return true;
         }
 
         private void DrawBlocks(Micro micro, MicroInfo info, MicroInfoBase[] items, float progress, Vector2 size)

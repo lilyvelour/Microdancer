@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Numerics;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -9,18 +10,52 @@ namespace Microdancer
     {
         private readonly DisplayNode _node;
 
+        private string _search = string.Empty;
+
         public DisplayLibrary()
         {
             _node = new DisplayNode("library");
         }
 
-        public void Draw()
+        public bool Draw()
         {
-            ImGui.BeginChildFrame(1, new(-1, ImGui.GetContentRegionAvail().Y - (140 * ImGuiHelpers.GlobalScale)));
+            var searchIcon = FontAwesomeIcon.Search.ToIconString();
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            var searchButtonWidth = ImGuiHelpers.GetButtonSize(searchIcon).X + ImGui.GetStyle().FrameBorderSize;
+            ImGui.PopFont();
+
+            ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - searchButtonWidth);
+            ImGui.InputText("##search", ref _search, 1024);
+            ImGui.PopItemWidth();
+
+            ImGui.SameLine();
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.Text(searchIcon);
+            ImGui.PopFont();
+
+            ImGui.BeginChildFrame(
+                1,
+                new(
+                    -1,
+                    ImGui.GetContentRegionAvail().Y
+                        - ImGuiHelpers.GetButtonSize(string.Empty).Y
+                        - Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).Y
+                        - Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize)
+                )
+            );
+
+            var hasResults = false;
 
             foreach (var node in Library.GetNodes())
             {
-                _node.Draw(node);
+                hasResults |= _node.Draw(node, _search);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_search) && !hasResults)
+            {
+                ImGui.TextDisabled("No results found.");
             }
 
             ImGui.EndChildFrame();
@@ -51,10 +86,9 @@ namespace Microdancer
             var path = Config.LibraryPath;
             if (Directory.Exists(path))
             {
-                INode? node = null;
                 if (Config.LibrarySelection != Guid.Empty)
                 {
-                    node = Library.Find<INode>(Config.LibrarySelection);
+                    INode? node = Library.Find<INode>(Config.LibrarySelection);
                     if (node is Micro)
                     {
                         path = Path.GetDirectoryName(node.Path)!;
@@ -80,6 +114,8 @@ namespace Microdancer
                     Library.MarkAsDirty();
                 }
             }
+
+            return true;
         }
     }
 }

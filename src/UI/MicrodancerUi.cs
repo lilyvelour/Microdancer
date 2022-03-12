@@ -31,33 +31,39 @@ namespace Microdancer
 
         public override void Draw()
         {
-            if (Config.WindowVisible)
+            if (!Config.WindowVisible || !ClientState.IsLoggedIn)
             {
-                Theme.Begin();
+                return;
+            }
 
-                var windowVisible = true;
-                var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible);
-                var windowSize = ImGui.GetWindowSize();
+            Theme.Begin();
 
-                if (!ImGui.IsWindowCollapsed())
-                {
-                    ImGui.SetWindowSize(Vector2.Max(windowSize, ImGuiHelpers.ScaledVector2(400, 400)));
-                }
+            var windowVisible = true;
 
-                if (draw)
-                {
-                    DrawWindowContent();
-                }
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
+            var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible);
+            ImGui.PopStyleVar();
 
-                ImGui.End();
+            var windowSize = ImGui.GetWindowSize();
 
-                Theme.End();
+            if (!ImGui.IsWindowCollapsed())
+            {
+                ImGui.SetWindowSize(Vector2.Max(windowSize, ImGuiHelpers.ScaledVector2(400, 400)));
+            }
 
-                if (windowVisible != Config.WindowVisible)
-                {
-                    Config.WindowVisible = windowVisible;
-                    PluginInterface.SavePluginConfig(Config);
-                }
+            if (draw)
+            {
+                DrawWindowContent();
+            }
+
+            ImGui.End();
+
+            Theme.End();
+
+            if (windowVisible != Config.WindowVisible)
+            {
+                Config.WindowVisible = windowVisible;
+                PluginInterface.SavePluginConfig(Config);
             }
         }
 
@@ -67,12 +73,6 @@ namespace Microdancer
             {
                 Config.QueueSelection = Guid.Empty;
                 PluginInterface.SavePluginConfig(Config);
-            }
-
-            if (!ClientState.IsLoggedIn)
-            {
-                ImGui.TextColored(new(1.0f, 0.0f, 0.0f, 1.0f), "Please log in to open Microdancer.");
-                return;
             }
             else if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
             {
@@ -93,19 +93,35 @@ namespace Microdancer
 
             _libraryPath.Draw();
 
-            ImGui.Separator();
+            ImGui.Spacing();
 
             ImGui.Columns(2);
 
+            ImGui.BeginChildFrame(
+                101010,
+                new(-1, ImGui.GetContentRegionAvail().Y - 112),
+                ImGuiWindowFlags.NoBackground
+            );
+
             _library.Draw();
 
+            ImGui.EndChildFrame();
+
             ImGui.NextColumn();
+
+            ImGui.BeginChildFrame(
+                101011,
+                new(-1, ImGui.GetContentRegionAvail().Y - 112),
+                ImGuiWindowFlags.NoBackground
+            );
 
             _contentArea.Draw();
 
             _timeline.Draw();
 
-            ImGui.Columns(1);
+            ImGui.EndChildFrame();
+
+            ImGui.Columns(1, "playback-controls", false);
 
             _playbackControls.Draw();
         }

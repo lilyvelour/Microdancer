@@ -8,7 +8,7 @@ namespace Microdancer
 {
     public class FileContents : PluginUiBase, IDrawable<string[]>
     {
-        public void Draw(string[] lines)
+        public bool Draw(string[] lines)
         {
             Micro? micro = null;
 
@@ -19,7 +19,7 @@ namespace Microdancer
 
             if (micro == null)
             {
-                return;
+                return false;
             }
 
             ImGui.InvisibleButton("file-contents-spacer", new(-1, 0.0f));
@@ -27,7 +27,6 @@ namespace Microdancer
             var framePadding = ImGui.GetStyle().FramePadding;
             var fileContentsSize = ImGui.GetContentRegionAvail();
             fileContentsSize.X -= framePadding.X;
-            fileContentsSize.Y -= ImGuiHelpers.GetButtonSize(string.Empty).Y;
 
             if (lines.Length > 0)
             {
@@ -128,10 +127,7 @@ namespace Microdancer
                 ImGui.EndChildFrame();
             }
 
-            if (ImGui.Button("Open File"))
-            {
-                OpenNode(micro);
-            }
+            return true;
         }
     }
 }

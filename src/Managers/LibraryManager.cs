@@ -54,15 +54,15 @@ namespace Microdancer
 
         public IEnumerable<INode> GetNodes()
         {
-            var configDir = new DirectoryInfo(_config.LibraryPath);
-            if (!configDir.Exists)
+            var libraryPath = new DirectoryInfo(_config.LibraryPath);
+            if (!libraryPath.Exists)
             {
                 return new List<INode>();
             }
 
             if (_shouldRebuild)
             {
-                _cachedNodes = BuildTree(configDir).Children;
+                _cachedNodes = BuildTree(libraryPath).Children;
                 _shouldRebuild = false;
             }
 
@@ -124,9 +124,9 @@ namespace Microdancer
             _shouldRebuild = true;
         }
 
-        private INode BuildTree(DirectoryInfo dir)
+        private INode BuildTree(DirectoryInfo dir, INode? parent = null)
         {
-            var node = new Folder(dir);
+            var node = new Folder(dir, parent);
 
             foreach (var subDir in dir.GetDirectories())
             {
@@ -134,7 +134,7 @@ namespace Microdancer
                 {
                     continue;
                 }
-                node.Children.Add(BuildTree(subDir));
+                node.Children.Add(BuildTree(subDir, node));
             }
 
             foreach (var microFile in dir.GetFiles("*.micro"))
@@ -143,7 +143,7 @@ namespace Microdancer
                 {
                     continue;
                 }
-                node.Children.Add(new Micro(microFile));
+                node.Children.Add(new Micro(microFile, node));
             }
 
             return node;

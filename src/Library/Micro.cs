@@ -13,7 +13,7 @@ namespace Microdancer
 
         private DateTime? _modifiedTime;
 
-        public Micro(FileInfo file) : base(file)
+        public Micro(FileInfo file, INode? parent = null) : base(file, parent)
         {
             Name = IOPath.GetFileNameWithoutExtension(file.FullName);
             _modifiedTime = file.LastWriteTime;
@@ -73,7 +73,7 @@ namespace Microdancer
             return _cache ?? new[] { string.Empty };
         }
 
-        public Micro(FileSystemInfo info) : base(info) { }
+        public Micro(FileSystemInfo info, INode? parent = null) : base(info, parent) { }
 
         public override bool Equals(Node? other)
         {

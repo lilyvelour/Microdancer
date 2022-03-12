@@ -167,9 +167,6 @@ namespace Microdancer
             // Auto-countdown
             string? autoCountdown = null;
 
-            // Precise frame timings
-            var watch = new Stopwatch();
-
             // Keep track of the line we're at in the Micro
             var i = 0;
 
@@ -218,8 +215,6 @@ namespace Microdancer
                     }
                 }
 
-                watch.Reset();
-
                 // Go back to the beginning if the command is a loop
                 if (command.Text == "/loop" && microInfo.Commands.Length > 1)
                 {
@@ -252,7 +247,6 @@ namespace Microdancer
                 // Send the command to the channel (ignore /wait)
                 else if (command.Text != "/wait")
                 {
-                    watch.Start();
                     await _channel.Writer.WriteAsync(command.Text);
                 }
 

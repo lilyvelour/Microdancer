@@ -7,7 +7,7 @@ namespace Microdancer
 {
     public class Breadcrumb : PluginUiBase, IDrawable<INode?>
     {
-        public void Draw(INode? node)
+        public bool Draw(INode? node)
         {
             ImGui.Spacing();
             ImGui.SameLine();
@@ -66,6 +66,8 @@ namespace Microdancer
                     }
                 }
             }
+
+            return true;
         }
     }
 }

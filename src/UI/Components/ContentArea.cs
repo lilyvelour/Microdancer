@@ -15,6 +15,8 @@ namespace Microdancer
         private readonly FileContents _fileContents;
         private MicroInfo? _info;
 
+        private float _lastColumnWidth;
+
         public ContentArea()
         {
             _breadcrumb = new Breadcrumb();
@@ -22,7 +24,7 @@ namespace Microdancer
             _fileContents = new FileContents();
         }
 
-        public void Draw()
+        public bool Draw()
         {
             INode? node = null;
 
@@ -38,15 +40,18 @@ namespace Microdancer
                 _info = new MicroInfo(micro);
             }
 
-            ImGui.BeginChildFrame(
-                2,
-                new(-1, ImGui.GetContentRegionAvail().Y - (micro != null ? 216 : 108) * ImGuiHelpers.GlobalScale),
-                ImGuiWindowFlags.NoBackground
-            );
+            var frameSize = new Vector2(-1, -1);
+
+            if (micro != null)
+            {
+                frameSize.Y = -108 * ImGuiHelpers.GlobalScale;
+            }
+
+            ImGui.BeginChildFrame(2, frameSize, ImGuiWindowFlags.NoBackground);
 
             _breadcrumb.Draw(node);
 
-            ImGui.Separator();
+            ImGui.Spacing();
 
             if (micro != null)
             {
@@ -57,6 +62,8 @@ namespace Microdancer
                 var regions = lines.Where(l => l.Trim().StartsWith("#region ")).Select(l => l.Trim()[8..]).ToArray();
                 var regionButtonSize = Vector2.Zero;
 
+                float? newColumnWidth = null;
+
                 ImGui.Columns(2);
 
                 _fileContents.Draw(lines);
@@ -65,12 +72,7 @@ namespace Microdancer
 
                 ImGui.BeginChildFrame(
                     20,
-                    new(
-                        -1,
-                        ImGui.GetContentRegionAvail().Y
-                            - Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize)
-                            + ImGuiHelpers.GlobalScale
-                    ),
+                    new(-1, -Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) + ImGuiHelpers.GlobalScale),
                     ImGuiWindowFlags.NoBackground
                 );
 
@@ -98,6 +100,25 @@ namespace Microdancer
 
                     var col = 0;
                     var regionNumber = 1;
+
+                    var columnWidth = ImGui.GetColumnWidth();
+                    if (Math.Abs(columnWidth - _lastColumnWidth) > 1.0f)
+                    {
+                        var w = columnWidth;
+                        var gridWidth =
+                            regionButtonSize.X
+                            + ImGui.GetStyle().ItemSpacing.X * 2.0f
+                            + ImGui.GetStyle().ColumnsMinSpacing * 2.0f
+                            + ImGui.GetStyle().FramePadding.X * 2.0f;
+
+                        if (w % gridWidth < gridWidth * 0.5f)
+                            w -= w % gridWidth;
+                        else
+                            w += gridWidth - w % gridWidth;
+
+                        newColumnWidth = Math.Max(w, gridWidth);
+                    }
+
                     for (int i = 0; i < regions.Length; i++)
                     {
                         col++;
@@ -108,8 +129,14 @@ namespace Microdancer
 
                         if (region.StartsWith(":"))
                         {
-                            size.X =
-                                ImGui.GetContentRegionAvail().X - Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X;
+                            while (
+                                size.X + regionButtonSize.X
+                                < ImGui.GetContentRegionAvail().X
+                                    + Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X
+                            )
+                            {
+                                size.X += regionButtonSize.X + ImGui.GetStyle().ItemSpacing.X;
+                            }
                             isNamedRegion = true;
                         }
 
@@ -166,11 +193,16 @@ namespace Microdancer
                 }
 
                 ImGui.EndChildFrame();
+
+                if (newColumnWidth != null && regions.Length > 0 && !ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+                {
+                    ImGui.SetColumnOffset(1, Math.Max(ImGui.GetWindowContentRegionWidth() - newColumnWidth.Value, 2));
+                    _lastColumnWidth = newColumnWidth.Value;
+                }
             }
             else
             {
-                ImGui.Separator();
-                ImGui.Separator();
+                ImGui.Spacing();
 
                 var nodes = node?.Children ?? Library.GetNodes().ToList();
 
@@ -188,7 +220,7 @@ namespace Microdancer
 
                 var basePath = (node as Folder)?.Path ?? Config.LibraryPath;
 
-                ImGui.Separator();
+                ImGui.Spacing();
 
                 if (ImGui.Button("Create new Micro"))
                 {
@@ -207,6 +239,8 @@ namespace Microdancer
             }
 
             ImGui.EndChildFrame();
+
+            return true;
         }
     }
 }

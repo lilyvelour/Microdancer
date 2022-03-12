@@ -3,94 +3,74 @@ using ImGuiNET;
 
 namespace Microdancer
 {
-    public class DisplayNode : PluginUiBase, IDrawable<INode>
+    public class DisplayNode : PluginUiBase, IDrawable<INode>, IDrawable<INode, string>
     {
         private readonly string _idPrefix;
-
-        private bool _isRenaming;
-        private string? _rename;
 
         public DisplayNode(string idPrefix)
         {
             _idPrefix = idPrefix;
         }
 
-        public void Draw(INode node)
+        bool IDrawable<INode>.Draw(INode node)
         {
-            ImGui.PushID($"{node.Id}");
+            return Draw(node);
+        }
 
-            bool open;
+        public bool Draw(INode node, string? filter = null)
+        {
+            var shouldDraw = false;
+            return DrawImpl(node, filter, ref shouldDraw);
+        }
 
-            if (node.Children.Count == 0)
+        private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
+        {
+            var flags = GetFlags(node, filter, ref shouldDraw);
+            if (!shouldDraw)
             {
-                var flags = ImGuiTreeNodeFlags.Leaf;
-                if (Config.LibrarySelection == node.Id)
-                {
-                    flags |= ImGuiTreeNodeFlags.Selected;
-                }
-                open = ImGui.TreeNodeEx($"{_idPrefix}{node.Id}", flags, $"{node.Name}");
-
-                if (ImGui.IsItemClicked())
-                {
-                    Config.LibrarySelection = Config.LibrarySelection == node.Id ? Guid.Empty : node.Id;
-                    PluginInterface.SavePluginConfig(Config);
-                }
+                return false;
             }
-            else
-            {
-                var flags = ImGuiTreeNodeFlags.None;
-                if (_idPrefix != string.Empty)
-                {
-                    flags |= ImGuiTreeNodeFlags.DefaultOpen;
-                }
-                open = ImGui.TreeNodeEx($"{_idPrefix}{node.Id}", flags, $"{node.Name}");
 
-                if (_idPrefix.Length == 0 && ImGui.IsItemClicked() && Config.LibrarySelection != node.Id)
-                {
-                    Config.LibrarySelection = node.Id;
-                    PluginInterface.SavePluginConfig(Config);
-                }
+            ImGui.PushID($"{node.Id}{filter ?? string.Empty}");
+
+            var open = ImGui.TreeNodeEx($"{_idPrefix}{node.Id}", flags, $"{node.Name}");
+
+            if (ImGui.IsItemClicked() && (node.Children.Count == 0 || _idPrefix == "library"))
+            {
+                Config.LibrarySelection = node.Id;
+                PluginInterface.SavePluginConfig(Config);
             }
 
             if (ImGui.BeginPopupContextItem())
             {
+                if (ImGui.Selectable("Select"))
+                {
+                    Config.LibrarySelection = node.Id;
+                    PluginInterface.SavePluginConfig(Config);
+                }
+
+                if (ImGui.Selectable("Open"))
+                {
+                    OpenNode(node);
+                }
+
+                if (ImGui.Selectable("Reveal in File Explorer"))
+                {
+                    RevealNode(node);
+                }
+
                 if (node is Micro micro)
                 {
-                    if (ImGui.Button("Play##context"))
+                    if (ImGui.Selectable("Play"))
                     {
+                        Config.LibrarySelection = micro.Id;
+                        PluginInterface.SavePluginConfig(Config);
                         MicroManager.StartMicro(micro);
                     }
 
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Open File##context"))
+                    if (ImGui.Selectable($"Copy run command"))
                     {
-                        OpenNode(node);
-                    }
-                }
-                else
-                {
-                    if (ImGui.Button("Open Folder##context"))
-                    {
-                        OpenNode(node);
-                    }
-
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Rename Folder##context"))
-                    {
-                        _isRenaming = true;
-                    }
-
-                    if (_isRenaming)
-                    {
-                        _rename = node.Name;
-
-                        if (ImGui.InputText("RenameFolder", ref _rename, 256))
-                        {
-                            _isRenaming = false;
-                            // no-op
-                        }
+                        ImGui.SetClipboardText($"/runmicro {micro.Id}");
                     }
                 }
 
@@ -103,11 +83,60 @@ namespace Microdancer
             {
                 foreach (var child in node.Children)
                 {
-                    Draw(child);
+                    DrawImpl(child, filter, ref shouldDraw);
                 }
 
                 ImGui.TreePop();
             }
+
+            return true;
+        }
+
+        private ImGuiTreeNodeFlags GetFlags(INode root, string? filter, ref bool shouldDraw)
+        {
+            return GetFlags(root, root, filter, ref shouldDraw, ImGuiTreeNodeFlags.SpanAvailWidth);
+        }
+
+        private ImGuiTreeNodeFlags GetFlags(
+            INode root,
+            INode node,
+            string? filter,
+            ref bool shouldDraw,
+            ImGuiTreeNodeFlags flags
+        )
+        {
+            var emptyFilter = string.IsNullOrWhiteSpace(filter);
+            var matchesFilter = !emptyFilter && node.Name.Contains(filter!, StringComparison.CurrentCultureIgnoreCase);
+            shouldDraw |= emptyFilter || matchesFilter;
+
+            var hasChildren = node.Children.Count > 0;
+            var isSelected = Config.LibrarySelection == node.Id;
+
+            if (node == root && !hasChildren)
+            {
+                flags = ImGuiTreeNodeFlags.Leaf;
+                if (isSelected)
+                {
+                    flags |= ImGuiTreeNodeFlags.Selected;
+                }
+            }
+
+            if (matchesFilter || (node != root && isSelected))
+            {
+                flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.Bullet;
+
+                if (node == root)
+                {
+                    flags &= ~ImGuiTreeNodeFlags.Bullet;
+                }
+            }
+
+            foreach (var child in node.Children)
+            {
+                flags |= GetFlags(root, child, filter, ref shouldDraw, flags);
+            }
+
+            return flags;
         }
     }
 }

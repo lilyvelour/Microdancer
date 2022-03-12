@@ -39,12 +39,20 @@ namespace Microdancer
                 sb.Append(':');
             }
 
-            sb.Append(ts.Seconds.ToString(hasMinutes ? "D2" : "D1"));
-
-            if (ts.Milliseconds > 0)
+            if (ts.Seconds > 0)
             {
-                sb.Append('.');
-                sb.Append(ts.Milliseconds.ToString().TrimEnd('0'));
+                if (hasMinutes)
+                {
+                    sb.Append(ts.Seconds.ToString("D2"));
+                }
+                else
+                {
+                    sb.Append(ts.TotalSeconds);
+                }
+            }
+            else if (ts.Milliseconds > 0)
+            {
+                sb.Append(ts.Milliseconds * 0.001);
             }
 
             if (!hasMinutes)

@@ -13,16 +13,19 @@ namespace Microdancer
 
         public string Path { get; protected set; }
 
+        public INode? Parent { get; }
+
         public List<INode> Children { get; } = new();
 
         protected FileSystemInfo FileSystemInfo { get; private set; }
 
-        protected Node(FileSystemInfo info)
+        protected Node(FileSystemInfo info, INode? parent = null)
         {
             FileSystemInfo = info;
             Id = GenerateId(info.FullName);
             Name = info.FullName;
             Path = info.FullName;
+            Parent = parent;
         }
 
         public virtual void Move(string newPath)

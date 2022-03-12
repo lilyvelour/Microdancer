@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -12,7 +10,7 @@ namespace Microdancer
     {
         private MicroInfo? _info;
 
-        public void Draw()
+        public bool Draw()
         {
             Micro? micro = null;
 
@@ -26,23 +24,16 @@ namespace Microdancer
                 _info = new MicroInfo(micro);
             }
 
-            ImGui.BeginChildFrame(3, new(-1, -1), ImGuiWindowFlags.NoBackground);
-
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.12941177f, 0.1254902f, 0.12941177f, 0.5f));
             ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 6.0f));
-
-            ImGuiExt.TintButton(
-                string.Empty,
-                new(
-                    ImGui.GetContentRegionAvail().X
-                        - Theme.GetStyle<Vector2>(ImGuiStyleVar.WindowPadding).X * 2.0f
-                        - Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X,
-                    1
-                ),
-                new(0, 0, 0, 1)
-            );
-
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
+            ImGui.BeginChildFrame(3, new(-1, -1));
             ImGui.PopStyleVar(2);
+            ImGui.PopStyleColor();
+
+            ImGui.PushStyleColor(ImGuiCol.Separator, new Vector4(0, 0, 0, 1));
+            ImGui.Separator();
+            ImGui.PopStyleColor();
 
             var timecodeSize = new Vector2(-1, ImGui.GetTextLineHeightWithSpacing());
 
@@ -89,30 +80,25 @@ namespace Microdancer
                 ImGui.PopStyleColor();
             }
 
-            ImGui.Separator();
+            ImGui.Spacing();
 
             var playPauseLabel = $"{FontAwesomeIcon.Play.ToIconString()}##PlayPause";
             var playPauseTooltip = MicroManager.PlaybackState == PlaybackState.Paused ? "Resume" : "Play";
 
-            var controlButtonColor = Theme.GetColor(ImGuiCol.FrameBg);
-            var playPauseColor =
-                MicroManager.PlaybackState == PlaybackState.Playing
-                    ? new Vector4(0.0f, 0.44705883f, 0.0f, 1.0f)
-                    : controlButtonColor;
-            var stopButtonColor = controlButtonColor;
+            var controlButtonColor = new Vector4(0.8f, 0.8f, 0.8f, 1.0f);
 
             if (MicroManager.PlaybackState == PlaybackState.Playing)
             {
                 playPauseLabel = $"{FontAwesomeIcon.Pause.ToIconString()}##PlayPause";
                 playPauseTooltip = "Pause";
-                playPauseColor = controlButtonColor;
             }
 
-            var buttonSize = ImGuiHelpers.ScaledVector2(48, 36);
+            var buttonSize = ImGuiHelpers.ScaledVector2(42, 42);
+            const float buttonCount = 4;
 
             var spacer = ImGui.GetContentRegionAvail();
-            spacer.X -= buttonSize.X * 2.0f;
-            spacer.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 4.0f;
+            spacer.X -= buttonSize.X * buttonCount;
+            spacer.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * buttonCount * 2;
             spacer.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.ItemSpacing).X;
             spacer.X /= 2.0f;
             spacer.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.ItemSpacing).X;
@@ -124,10 +110,47 @@ namespace Microdancer
                 ImGui.SameLine();
             }
 
-            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, buttonSize.X * 0.5f);
+            ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(0, 0, 0, 0));
 
             ImGui.PushFont(UiBuilder.IconFont);
-            if (ImGuiExt.TintButton(playPauseLabel, buttonSize, playPauseColor))
+            if (ImGuiExt.TintButton(FontAwesomeIcon.FastBackward.ToIconString(), buttonSize, controlButtonColor))
+            {
+                var current = MicroManager.Current;
+                if (current != null && _info != null && current.Commands.Length > 0)
+                {
+                    var command = current.CurrentCommand ?? current.Commands.FirstOrDefault();
+                    if (command != null)
+                    {
+                        var lineNumber = Math.Max(
+                            _info.Commands
+                                .LastOrDefault(
+                                    c =>
+                                        c.LineNumber < command.LineNumber && c.WaitTime > TimeSpan.FromMilliseconds(100)
+                                )
+                                ?.LineNumber ?? 0,
+                            0
+                        );
+                        MicroManager.StartMicro(current.Micro, lineNumber);
+                    }
+                    else
+                    {
+                        MicroManager.StartMicro(current.Micro);
+                    }
+                }
+                else if (micro != null)
+                {
+                    MicroManager.StartMicro(micro);
+                }
+            }
+            ImGui.PopFont();
+
+            ImGuiExt.TextTooltip("Previous Line");
+
+            ImGui.SameLine();
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            if (ImGuiExt.TintButton(playPauseLabel, buttonSize, controlButtonColor))
             {
                 if (MicroManager.PlaybackState == PlaybackState.Playing)
                 {
@@ -149,7 +172,7 @@ namespace Microdancer
             ImGui.SameLine();
 
             ImGui.PushFont(UiBuilder.IconFont);
-            if (ImGuiExt.TintButton(FontAwesomeIcon.Stop.ToIconString(), buttonSize, stopButtonColor))
+            if (ImGuiExt.TintButton(FontAwesomeIcon.Stop.ToIconString(), buttonSize, controlButtonColor))
             {
                 MicroManager.Current?.Stop();
             }
@@ -157,15 +180,48 @@ namespace Microdancer
 
             ImGuiExt.TextTooltip("Stop");
 
+            ImGui.SameLine();
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            if (ImGuiExt.TintButton(FontAwesomeIcon.FastForward.ToIconString(), buttonSize, controlButtonColor))
+            {
+                var current = MicroManager.Current;
+                if (current != null)
+                {
+                    var command = current.CurrentCommand ?? current.Commands.FirstOrDefault();
+                    if (command != null)
+                    {
+                        MicroManager.StartMicro(
+                            current.Micro,
+                            Math.Clamp(command.LineNumber + 1, 0, current.Commands.Last().LineNumber)
+                        );
+                    }
+                    else
+                    {
+                        MicroManager.StartMicro(current.Micro);
+                    }
+                }
+                else if (micro != null)
+                {
+                    MicroManager.StartMicro(micro);
+                }
+            }
+            ImGui.PopFont();
+
+            ImGuiExt.TextTooltip("Next Line");
+
             if (spacer.X > 0)
             {
                 ImGui.SameLine();
                 ImGui.InvisibleButton("controls-after", spacer);
             }
 
+            ImGui.PopStyleColor();
             ImGui.PopStyleVar();
 
             ImGui.EndChildFrame();
+
+            return true;
         }
     }
 }

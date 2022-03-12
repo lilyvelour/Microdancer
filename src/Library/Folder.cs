@@ -6,7 +6,7 @@ namespace Microdancer
 {
     public sealed class Folder : Node
     {
-        public Folder(DirectoryInfo dir, List<INode>? children = null) : base(dir)
+        public Folder(DirectoryInfo dir, INode? parent = null, List<INode>? children = null) : base(dir, parent)
         {
             Id = GuidUtility.Create(GuidUtility.UrlNamespace, dir.FullName);
             Name = dir.Name;
