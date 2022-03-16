@@ -1,0 +1,22 @@
+[{
+    "Author": "Dance Mom",
+    "Name": "Microdancer",
+    "Punchline": "Make your dances better",
+    "Description": "Microdancer is a tool for RP dance performance. It is an alternative system to macros used out of combat, with features such as infinite line length, fractional wait times, comments, pausing, parallel execution, looping, and ability queueing.",
+    "CategoryTags": [
+        "social"
+    ],
+    "IconUrl": "https://microdancer.s3.amazonaws.com/icon.png",
+    "InternalName": "Microdancer",
+    "AssemblyVersion": "0.2.3",
+    "RepoUrl": "https://github.com/dance-mom/micro-releases",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 5,
+    "LoadPriority": 0,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "DownloadCount": 420,
+    "DownloadLinkInstall": "https://raw.githubusercontent.com/dance-mom/micro-releases/main/bin/latest.zip",
+    "DownloadLinkTesting": "https://raw.githubusercontent.com/dance-mom/micro-releases/main/bin/latest.zip",
+    "DownloadLinkUpdate": "https://raw.githubusercontent.com/dance-mom/micro-releases/main/bin/latest.zip"
+}]
