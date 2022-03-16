@@ -16,7 +16,7 @@
     "IsHide": "False",
     "IsTestingExclusive": "False",
     "DownloadCount": 420,
-    "DownloadLinkInstall": "https://raw.githubusercontent.com/dance-mom/micro-releases/main/bin/latest.zip",
-    "DownloadLinkTesting": "https://raw.githubusercontent.com/dance-mom/micro-releases/main/bin/latest.zip",
-    "DownloadLinkUpdate": "https://raw.githubusercontent.com/dance-mom/micro-releases/main/bin/latest.zip"
+    "DownloadLinkInstall": "https://dance-mom.github.io/Microdancer/bin/latest.zip",
+    "DownloadLinkTesting": "https://dance-mom.github.io/Microdancer/bin/latest.zip",
+    "DownloadLinkUpdate": "https://dance-mom.github.io/Microdancer/bin/latest.zip"
 }]
