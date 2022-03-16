@@ -16,7 +16,7 @@
     "IsHide": "False",
     "IsTestingExclusive": "False",
     "DownloadCount": 420,
-    "DownloadLinkInstall": "https://dance-mom.github.io/Microdancer/bin/latest.zip",
-    "DownloadLinkTesting": "https://dance-mom.github.io/Microdancer/bin/latest.zip",
-    "DownloadLinkUpdate": "https://dance-mom.github.io/Microdancer/bin/latest.zip"
+    "DownloadLinkInstall": "https://dance-mom.github.io/Microdancer/releases/latest.zip",
+    "DownloadLinkTesting": "https://dance-mom.github.io/Microdancer/releases/latest.zip",
+    "DownloadLinkUpdate": "https://dance-mom.github.io/Microdancer/releases/latest.zip"
 }]
