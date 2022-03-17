@@ -9,7 +9,6 @@
     "IconUrl": "https://microdancer.s3.amazonaws.com/icon.png",
     "InternalName": "Microdancer",
     "AssemblyVersion": "0.2.3",
-    "RepoUrl": "https://github.com/dance-mom/micro-releases",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 5,
     "LoadPriority": 0,
