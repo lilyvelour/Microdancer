@@ -35,16 +35,23 @@ namespace Microdancer
 
             var micro = node as Micro;
 
-            if (micro != null && _info?.Micro != micro)
+            if (micro != null)
             {
-                _info = new MicroInfo(micro);
+                if (MicroManager.Current?.Micro == micro)
+                {
+                    _info = MicroManager.Current;
+                }
+                else if (_info?.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
+                {
+                    _info = new MicroInfo(micro);
+                }
             }
 
             var frameSize = new Vector2(-1, -1);
 
             if (micro != null)
             {
-                frameSize.Y = -108 * ImGuiHelpers.GlobalScale;
+                frameSize.Y = -134 * ImGuiHelpers.GlobalScale;
             }
 
             ImGui.BeginChildFrame(2, frameSize, ImGuiWindowFlags.NoBackground);
@@ -55,18 +62,16 @@ namespace Microdancer
 
             if (micro != null)
             {
-                var lines = micro.GetBody().ToArray();
-
                 var inCombat = Condition[ConditionFlag.InCombat];
 
-                var regions = lines.Where(l => l.Trim().StartsWith("#region ")).Select(l => l.Trim()[8..]).ToArray();
+                var regions = _info!.AllRegions;
                 var regionButtonSize = Vector2.Zero;
 
                 float? newColumnWidth = null;
 
                 ImGui.Columns(2);
 
-                _fileContents.Draw(lines);
+                _fileContents.Draw(micro);
 
                 ImGui.NextColumn();
 
@@ -76,7 +81,7 @@ namespace Microdancer
                     ImGuiWindowFlags.NoBackground
                 );
 
-                if (regions.Length == 0)
+                if (regions.Length == 0 || regions.All(r => r.IsDefaultRegion))
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
                     ImGui.TextWrapped(
@@ -86,6 +91,8 @@ namespace Microdancer
                 }
                 else
                 {
+                    regions = regions.Where(r => !r.IsDefaultRegion).ToArray();
+
                     for (int i = 0; i < regions.Length; i++)
                     {
                         var sz = ImGui.CalcTextSize($"{i + 1}");
@@ -121,13 +128,18 @@ namespace Microdancer
 
                     for (int i = 0; i < regions.Length; i++)
                     {
+                        if (regions[i].IsDefaultRegion)
+                        {
+                            continue;
+                        }
+
                         col++;
 
                         var region = regions[i];
                         var isNamedRegion = false;
                         var size = regionButtonSize;
 
-                        if (region.StartsWith(":"))
+                        if (region.IsNamedRegion)
                         {
                             while (
                                 size.X + regionButtonSize.X
@@ -146,20 +158,20 @@ namespace Microdancer
                             !isNamedRegion
                             && MicroManager.Current?.Micro == micro
                             && MicroManager.PlaybackState != PlaybackState.Stopped
-                            && currentRegion?.Name == region
+                            && currentRegion == region
                         )
                         {
                             ImGui.ProgressBar(currentRegion.GetProgress(), size, $"{regionNumber++}");
                         }
-                        else if (ImGui.Button(isNamedRegion ? region[1..] : $"{regionNumber++}", size))
+                        else if (ImGui.Button(isNamedRegion ? region.Name : $"{regionNumber++}", size))
                         {
                             if (!inCombat)
                             {
-                                MicroManager.StartMicro(micro, region);
+                                MicroManager.StartMicro(micro, region.Name);
                             }
                         }
 
-                        ImGuiExt.TextTooltip(isNamedRegion ? region[1..] : region);
+                        ImGuiExt.TextTooltip(region.Name);
 
                         if (ImGui.BeginPopupContextItem())
                         {
@@ -180,7 +192,7 @@ namespace Microdancer
                         {
                             var nextRegion = i == regions.Length - 1 ? null : regions[i + 1];
 
-                            if (nextRegion?.StartsWith(":") != true)
+                            if (nextRegion?.IsNamedRegion != true)
                             {
                                 ImGui.SameLine();
                             }

@@ -24,7 +24,11 @@ namespace Microdancer
                 return false;
             }
 
-            if (_info?.Micro != micro)
+            if (MicroManager.Current?.Micro == micro)
+            {
+                _info = MicroManager.Current;
+            }
+            else if (_info?.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
             {
                 _info = new MicroInfo(micro);
             }
@@ -41,7 +45,7 @@ namespace Microdancer
             ImGui.PushStyleColor(ImGuiCol.ScrollbarGrabHovered, Theme.GetColor(ImGuiCol.ScrollbarGrabHovered) * 2);
 
             ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarSize, 20.0f);
-            ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarRounding, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarRounding, 2.0f);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0.0f, 0.0f));
@@ -56,17 +60,18 @@ namespace Microdancer
 
             ImGui.PushStyleColor(ImGuiCol.Border, Theme.GetColor(ImGuiCol.ScrollbarGrab));
 
-            var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * 2.0f * ImGuiHelpers.GlobalScale;
+            ImGui.SetWindowFontScale(0.85f);
+            var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * ImGuiHelpers.GlobalScale;
+            ImGui.SetWindowFontScale(1.0f);
 
-            var duration = _info?.Commands.Length > 0 ? (float)_info.WaitTime.TotalSeconds : 5.0f;
+            var duration = _info?.AllCommands.Length > 0 ? (float)_info.TotalTime.TotalSeconds : 5.0f;
+            float increment = Config.TimelineZoom;
 
-            var usableWidth = Math.Max(duration * timecodeWidth * 2.0f, frameSize.X);
+            var usableWidth = duration / increment * timecodeWidth * 2.0f;
             var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
 
             var regionsSize = new Vector2(usableWidth, usableHeight * 0.33f);
             var commandsSize = new Vector2(usableWidth, usableHeight * 0.33f);
-
-            const float increment = 0.5f;
 
             var rulerSize = new Vector2(
                 Math.Clamp((float)increment / duration, 0.0f, 1.0f) * usableWidth,
@@ -77,6 +82,7 @@ namespace Microdancer
             ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
 
+            ImGui.SetWindowFontScale(0.85f);
             for (var time = 0.0f; time < duration; time += increment)
             {
                 if (time >= increment)
@@ -109,27 +115,22 @@ namespace Microdancer
                     ImGui.InvisibleButton($"ruler_{time}", spacingSize);
                 }
             }
+            ImGui.SetWindowFontScale(1.0f);
 
-            ImGuiExt.TintButton(
-                "##blocks-separator-0",
-                new(usableWidth + timecodeWidth, 1.0f),
-                new(0.0f, 0.0f, 0.0f, 1.0f)
-            );
+            var separatorWidth = Math.Max(usableWidth + timecodeWidth, frameSize.X);
 
-            if (_info?.Commands.Length > 0)
+            ImGuiExt.TintButton("##blocks-separator-0", new(separatorWidth, 1.0f), new(0.0f, 0.0f, 0.0f, 1.0f));
+
+            if (_info?.AllCommands.Length > 0)
             {
                 var commandProgress = MicroManager.Current?.CurrentCommand?.GetProgress() ?? 0.0f;
                 var regionProgress = MicroManager.Current?.CurrentCommand?.Region.GetProgress() ?? 0.0f;
 
-                DrawBlocks(micro, _info, _info.Regions, regionProgress, regionsSize);
+                DrawBlocks(micro, _info, _info.AllRegions, regionProgress, regionsSize);
 
-                ImGuiExt.TintButton(
-                    "##blocks-separator-1",
-                    new(usableWidth + timecodeWidth, 1.0f),
-                    new(0.25f, 0.25f, 0.25f, 0.5f)
-                );
+                ImGuiExt.TintButton("##blocks-separator-1", new(separatorWidth, 1.0f), new(0.25f, 0.25f, 0.25f, 0.5f));
 
-                DrawBlocks(micro, _info, _info.Commands, commandProgress, commandsSize);
+                DrawBlocks(micro, _info, _info.AllCommands, commandProgress, commandsSize);
             }
             else
             {
@@ -140,6 +141,36 @@ namespace Microdancer
             ImGui.PopStyleVar(7);
 
             ImGui.EndChildFrame();
+
+            ImGui.PushButtonRepeat(true);
+
+            var changedZoom = false;
+
+            if (ImGuiExt.IconButton((FontAwesomeIcon)0xf010, "Zoom Out"))
+            {
+                Config.TimelineZoom += 0.1f;
+                changedZoom = true;
+            }
+
+            ImGui.SameLine();
+
+            if (ImGuiExt.IconButton((FontAwesomeIcon)0xf00e, "Zoom In"))
+            {
+                Config.TimelineZoom -= 0.1f;
+                changedZoom = true;
+            }
+
+            ImGui.PopButtonRepeat();
+
+            Config.TimelineZoom = Math.Max(
+                MathExt.Snap(Math.Clamp(Config.TimelineZoom, duration * 0.01f, duration * 0.1f), 0.1f),
+                0.1f
+            );
+
+            if (changedZoom)
+            {
+                PluginInterface.SavePluginConfig(Config);
+            }
 
             return true;
         }
@@ -153,7 +184,7 @@ namespace Microdancer
             var isCurrent = MicroManager.Current?.Micro == micro;
             var mousePos = ImGui.GetMousePos().X;
             var t = MathExt.InvLerp(startMousePos, endMousePos, mousePos);
-            var timecode = MathExt.Lerp(TimeSpan.Zero, info.WaitTime, t).ToTimeCode();
+            var timecode = MathExt.Lerp(TimeSpan.Zero, info.TotalTime, t).ToTimeCode();
 
             var firstDraw = false;
             for (var i = 0; i < items.Length; ++i)
@@ -169,7 +200,7 @@ namespace Microdancer
                 }
                 firstDraw = true;
 
-                var f = (float)item.WaitTime.TotalSeconds / Math.Max((float)info.WaitTime.TotalSeconds, float.Epsilon);
+                var f = (float)item.WaitTime.TotalSeconds / Math.Max((float)info.TotalTime.TotalSeconds, float.Epsilon);
                 var barSize = new Vector2(f * size.X, size.Y);
 
                 var label = string.Empty;
@@ -184,6 +215,36 @@ namespace Microdancer
                         isCurrent
                         && region.Commands.Any(c => c.LineNumber == MicroManager.Current?.CurrentCommand?.LineNumber);
                     barColor = ImGuiExt.RandomColor(label.GetHashCode());
+
+                    if (info.CurrentTime > TimeSpan.Zero)
+                    {
+                        var dim = true;
+                        foreach (var c in info.Commands)
+                        {
+                            if (c.Text == "/loop")
+                            {
+                                break;
+                            }
+                            if (c.Region.StartLineNumber == region.StartLineNumber)
+                            {
+                                dim = false;
+                                break;
+                            }
+                        }
+
+                        if (dim)
+                        {
+                            barColor *= 0.5f;
+                        }
+                    }
+
+                    if (
+                        info.CurrentTime > TimeSpan.Zero
+                        && info.Regions.All(r => r.StartLineNumber != region.StartLineNumber)
+                    )
+                    {
+                        barColor *= 0.5f;
+                    }
                 }
                 else if (item is MicroCommand command)
                 {
@@ -193,6 +254,28 @@ namespace Microdancer
                     barColor = ImGuiExt.RandomColor(
                         command.Text.Replace("\"", string.Empty).Replace(" motion", string.Empty).GetHashCode()
                     );
+
+                    if (info.CurrentTime > TimeSpan.Zero)
+                    {
+                        var dim = true;
+                        foreach (var c in info.Commands)
+                        {
+                            if (c.Text == "/loop")
+                            {
+                                break;
+                            }
+                            if (c.LineNumber == command.LineNumber)
+                            {
+                                dim = false;
+                                break;
+                            }
+                        }
+
+                        if (dim)
+                        {
+                            barColor *= 0.5f;
+                        }
+                    }
                 }
                 else
                 {

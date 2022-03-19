@@ -52,5 +52,21 @@ namespace Microdancer
             var denominator = (float)(b - a).TotalMilliseconds;
             return Math.Clamp(numerator / denominator, 0, 1);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Snap(float x, float snap)
+        {
+            var mod = x % snap;
+            if (mod < snap * 0.5f)
+            {
+                x -= mod;
+            }
+            else
+            {
+                x += snap - mod;
+            }
+
+            return x;
+        }
     }
 }

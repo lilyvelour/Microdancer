@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Dalamud.Game;
+﻿using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.IoC;
@@ -20,6 +19,7 @@ namespace Microdancer
         private bool _ready;
         private readonly Framework _framework;
         private readonly ClientState _clientState;
+        private readonly GameManager _gameManager;
         private readonly Condition _condition;
         private readonly XivCommonBase _xiv;
         private readonly Channel<string> _channel = Channel.CreateUnbounded<string>();
@@ -28,10 +28,11 @@ namespace Microdancer
 
         public MicroInfo? Current { get; private set; }
 
-        public MicroManager(Framework framework, ClientState clientState, Condition condition)
+        public MicroManager(Framework framework, ClientState clientState, GameManager gameManager, Condition condition)
         {
             _framework = framework;
             _clientState = clientState;
+            _gameManager = gameManager;
             _condition = condition;
             _xiv = new XivCommonBase((Hooks)~0);
 
@@ -115,12 +116,17 @@ namespace Microdancer
 
         private void Update(Framework _)
         {
-            if (!_channel.Reader.TryRead(out var command) || !_ready)
+            while (true)
             {
-                return;
-            }
+                if (!_channel.Reader.TryRead(out var command) || !_ready)
+                {
+                    return;
+                }
 
-            _xiv.Functions.Chat.SendMessage(command);
+                _gameManager.ActionCommandRequestType = 0;
+                _xiv.Functions.Chat.SendMessage(command);
+                _gameManager.ActionCommandRequestType = 2;
+            }
         }
 
         public PlaybackState PlaybackState
@@ -173,6 +179,8 @@ namespace Microdancer
             // Set current time to zero
             microInfo.Start();
 
+            var autoPing = TimeSpan.Zero;
+
             while (i < microInfo.Commands.Length)
             {
                 if (GetPlaybackState(microInfo, out var shouldBreakLoop) == PlaybackState.Paused)
@@ -224,7 +232,7 @@ namespace Microdancer
                     }
 
                     i = 0;
-                    microInfo.CurrentCommand = microInfo.Commands[0];
+                    microInfo.Loop();
                     continue;
                 }
                 // Set auto-busy
@@ -244,16 +252,28 @@ namespace Microdancer
                     ++i;
                     continue;
                 }
+                // Set auto-countdown
+                else if (command.Text.StartsWith("/autoping") || command.Text.StartsWith("/autoping"))
+                {
+                    autoPing = TimeSpan.FromMilliseconds(57); // TODO: Not hardcoded ping!
+
+                    ++i;
+                    continue;
+                }
                 // Send the command to the channel (ignore /wait)
                 else if (command.Text != "/wait")
                 {
                     await _channel.Writer.WriteAsync(command.Text);
                 }
 
-                var delay = command.WaitTime - command.CurrentTime;
+                var waitTime = command.WaitTime - autoPing;
+                var delay = waitTime - command.CurrentTime;
+                var resetAutoPing = false;
 
                 while (delay > TimeSpan.Zero)
                 {
+                    resetAutoPing = true;
+
                     await Task.Delay(Math.Min((int)delay.TotalMilliseconds, FRAME_TIME));
 
                     // Micro is currently paused
@@ -267,7 +287,12 @@ namespace Microdancer
                         break;
                     }
 
-                    delay = command.WaitTime - command.CurrentTime;
+                    delay = waitTime - command.CurrentTime;
+                }
+
+                if (resetAutoPing)
+                {
+                    autoPing = TimeSpan.Zero;
                 }
 
                 // Micro is currently paused
@@ -286,6 +311,11 @@ namespace Microdancer
 
             microInfo.Stop();
             microInfo.CurrentCommand = null;
+
+            if (Current == microInfo)
+            {
+                Current = null;
+            }
 
             if (_autoBusy == true)
             {

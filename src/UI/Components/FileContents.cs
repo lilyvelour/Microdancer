@@ -6,27 +6,17 @@ using ImGuiNET;
 
 namespace Microdancer
 {
-    public class FileContents : PluginUiBase, IDrawable<string[]>
+    public class FileContents : PluginUiBase, IDrawable<Micro>
     {
-        public bool Draw(string[] lines)
+        public bool Draw(Micro micro)
         {
-            Micro? micro = null;
-
-            if (Config.LibrarySelection != Guid.Empty)
-            {
-                micro = Library.Find<Micro>(Config.LibrarySelection);
-            }
-
-            if (micro == null)
-            {
-                return false;
-            }
-
             ImGui.InvisibleButton("file-contents-spacer", new(-1, 0.0f));
 
             var framePadding = ImGui.GetStyle().FramePadding;
             var fileContentsSize = ImGui.GetContentRegionAvail();
             fileContentsSize.X -= framePadding.X;
+
+            var lines = micro.GetBody().ToArray();
 
             if (lines.Length > 0)
             {

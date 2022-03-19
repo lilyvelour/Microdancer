@@ -22,6 +22,8 @@ namespace Microdancer
         public bool IsSingleRegion { get; }
         public MicroCommand[] Commands { get; } = Array.Empty<MicroCommand>();
         public MicroRegion[] Regions { get; } = Array.Empty<MicroRegion>();
+        public MicroCommand[] AllCommands { get; private set; } = Array.Empty<MicroCommand>();
+        public MicroRegion[] AllRegions { get; private set; } = Array.Empty<MicroRegion>();
 
         private readonly TimeSpan _offset;
 
@@ -48,6 +50,8 @@ namespace Microdancer
         public override TimeSpan CurrentTime =>
             TimeSpan.FromMilliseconds(Commands.Sum(c => c.CurrentTime.TotalMilliseconds)) + _offset;
 
+        public TimeSpan TotalTime { get; }
+
         public MicroInfo(Micro micro, string? region = null)
         {
             Id = Guid.NewGuid();
@@ -59,6 +63,7 @@ namespace Microdancer
             Commands = ParseCommands(body, region).ToArray();
             Regions = Commands.Select(c => c.Region).Distinct().ToArray();
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
+            TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
         }
 
         public MicroInfo(Micro micro, int lineNumber)
@@ -82,6 +87,7 @@ namespace Microdancer
 
             Regions = Commands.Select(c => c.Region).Distinct().ToArray();
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
+            TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
             _offset = TimeSpan.FromMilliseconds(offsetMs);
         }
 
@@ -106,15 +112,27 @@ namespace Microdancer
             _isPlaying = false;
         }
 
+        internal void Loop()
+        {
+            foreach (var command in Commands)
+            {
+                command.StopCommand();
+            }
+
+            CurrentCommand = Commands.FirstOrDefault();
+        }
+
         private IEnumerable<MicroCommand> ParseCommands(string[] body, string? region)
         {
+            var allCommands = new List<MicroCommand>();
+
             if (region?.StartsWith(":") == true)
             {
                 region = region[1..];
             }
 
             TimeSpan? defaultWait = null;
-            MicroRegion currentRegion = new();
+            var currentRegion = new MicroRegion();
 
             for (var i = 0; i < body.Length; ++i)
             {
@@ -155,14 +173,8 @@ namespace Microdancer
                 {
                     continue;
                 }
-                else if (region == null || region == currentRegion.Name)
+                else
                 {
-                    // Don't include named regions unless they are explicitly executed
-                    if (region == null && currentRegion.IsNamedRegion == true)
-                    {
-                        continue;
-                    }
-
                     if (line.StartsWith("/defaultwait"))
                     {
                         defaultWait = SetDefaultWait(defaultWait, line);
@@ -179,9 +191,26 @@ namespace Microdancer
                     var microCommand = new MicroCommand(line, lineNumber, wait, currentRegion);
                     currentRegion.AddCommand(microCommand);
 
-                    yield return microCommand;
+                    // Add to all commands
+                    allCommands.Add(microCommand);
+
+                    // Don't include named regions unless they are explicitly executed
+                    if (region == null && currentRegion.IsNamedRegion == true)
+                    {
+                        continue;
+                    }
+
+                    // Only include executable commands
+                    if (region == null || region == currentRegion.Name)
+                    {
+                        yield return microCommand;
+                    }
                 }
             }
+
+            // Get all regions
+            AllCommands = allCommands.ToArray();
+            AllRegions = AllCommands.Select(c => c.Region).Distinct().ToArray();
         }
 
         private static TimeSpan ExtractWait(ref string command, TimeSpan? defaultWait)
@@ -211,6 +240,19 @@ namespace Microdancer
             }
 
             command = re == _waitExp ? "/wait" : re.Replace(command, string.Empty);
+
+            // Special commands
+            if (
+                command == "/defaultwait"
+                || command == "/loop"
+                || command == "/autocountdown"
+                || command == "/autocd"
+                || command == "/autoping"
+                || command == "/busy"
+            )
+            {
+                return TimeSpan.Zero;
+            }
 
             try
             {
