@@ -14,17 +14,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Force Fetch Tags
-        run: git fetch --tags --force
-
-      - name: Find Tag
-        id: tag
-        uses: jimschubert/query-tag-action@v2
-        with:
-          abbrev: false
-          commit-ish: HEAD
-          skip-unshallow: true
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
@@ -40,7 +29,7 @@ jobs:
 
       - name: Edit package manifest
         run: |
-          $ver = ${{ steps.tagger.outputs.tag }}
+          $ver = $(Invoke-Expression 'git describe --tags --always')
           $path = './src/Microdancer.json'
           $content = Get-Content -path $path
           $content = $content -replace '1.0.0.0',$ver
@@ -48,12 +37,12 @@ jobs:
 
       - name: Build
         run: |
-          $ver = ${{ steps.tagger.outputs.tag }}
+          $ver = $(Invoke-Expression 'git describe --tags --always')
           Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
 
       - name: Create repo manifest
         run: |
-          $ver = ${{ steps.tagger.outputs.tag }}
+          $ver = $(Invoke-Expression 'git describe --tags --always')
           $path = './base_repo.json'
           $new_path = './bin/Release/Microdancer/Microdancer.json'
           $content = Get-Content -path $path
