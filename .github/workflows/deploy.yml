@@ -12,6 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Find Tag
+        id: tagger
+        uses: jimschubert/query-tag-action@v1
+        with:
+          commit-ish: 'HEAD~'
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
@@ -27,7 +33,7 @@ jobs:
 
       - name: Edit package manifest
         run: |
-          $ver = $(Invoke-Expression 'git describe --tags')
+          $ver = ${{ steps.tagger.outputs.tag }}
           $path = './src/Microdancer.json'
           $content = Get-Content -path $path
           $content = $content -replace '1.0.0.0',$ver
@@ -35,12 +41,12 @@ jobs:
 
       - name: Build
         run: |
-          $ver = $(Invoke-Expression 'git describe --tags')
+          $ver = ${{ steps.tagger.outputs.tag }}
           Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
 
       - name: Create repo manifest
         run: |
-          $ver = $(Invoke-Expression 'git describe --tags')
+          $ver = ${{ steps.tagger.outputs.tag }}
           $path = './base_repo.json'
           $new_path = './bin/Release/Microdancer/Microdancer.json'
           $content = Get-Content -path $path
