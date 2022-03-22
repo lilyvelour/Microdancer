@@ -14,8 +14,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Force Fetch Tags
+        run: git fetch --tags --force
+
       - name: Find Tag
-        id: tagger
+        id: tag
         uses: jimschubert/query-tag-action@v2
         with:
           abbrev: false
