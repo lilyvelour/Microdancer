@@ -27,12 +27,12 @@ jobs:
 
       - name: Build
         run: |
-          $ver = '${{ github.ref }}' -replace 'refs/tags/',''
+          $ver = (Invoke-Expression 'git describe --long --tags')
           Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
 
       - name: Create repo manifest
         run: |
-          $ver = '${{ github.ref }}' -replace 'refs/tags/',''
+          $ver = (Invoke-Expression 'git describe --long --tags')
           $path = './base_repo.json'
           $new_path = './bin/Release/Microdancer/Microdancer.json'
           $content = get-content -path $path
