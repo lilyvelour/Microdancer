@@ -11,6 +11,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Find Tag
         id: tagger
@@ -18,6 +20,7 @@ jobs:
         with:
           abbrev: false
           commit-ish: HEAD
+          skip-unshallow: true
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
