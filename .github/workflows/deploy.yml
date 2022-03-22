@@ -40,7 +40,7 @@ jobs:
           Set-Content -Path $new_path -Value $content
 
       - name: Upload to S3
-        uses: ochanje210/s3-upload-action@v1.0.0
+        uses: ochanje210/simple-s3-upload-action@v1.0.0
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
