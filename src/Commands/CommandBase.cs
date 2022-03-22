@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -31,7 +33,7 @@ namespace Microdancer
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                 .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
                 .SelectMany(GetCommands)
-                .ToDictionary(t => t.Item1, t => t.Item2);
+                .ToDictionary(t => t.Command, t => t.Info);
 
             foreach (var (command, commandInfo) in CommandInfo)
             {
@@ -65,30 +67,41 @@ namespace Microdancer
 
         protected CommandInfo GetCommandInfo(string cmd)
         {
-            if (!cmd.StartsWith("/"))
-            {
-                cmd = $"/{cmd}";
-            }
-
             return CommandInfo[cmd];
         }
 
-        protected void Print(string cmd, string msg)
+        protected void Print(string msg)
         {
-            if (!cmd.StartsWith("/"))
+            _chatGui.Print($"{GetPrefix()}{msg}");
+        }
+
+        protected void PrintError(string msg)
+        {
+            _chatGui.PrintError($"{GetPrefix()}{msg}");
+        }
+
+        private string GetPrefix()
+        {
+            var prefix = string.Empty;
+
+            var st = new StackTrace(1, true);
+            var frames = st.GetFrames();
+
+            foreach (var frame in frames)
             {
-                cmd = $"/{cmd}";
+                var attr = frame.GetMethod()?.GetCustomAttribute<CommandAttribute>();
+                if (attr == null)
+                {
+                    continue;
+                }
+
+                prefix = $"{attr.Command}: ";
             }
 
-            _chatGui.Print($"{cmd}: {msg}");
+            return prefix;
         }
 
-        protected void PrintError(string cmd, string msg)
-        {
-            _chatGui.PrintError($"{cmd}: {msg}");
-        }
-
-        private IEnumerable<(string, CommandInfo)> GetCommands(MethodInfo method)
+        private IEnumerable<(string Command, CommandInfo Info)> GetCommands(MethodInfo method)
         {
             var command = method.GetCustomAttribute<CommandAttribute>();
             if (command == null)
@@ -96,48 +109,34 @@ namespace Microdancer
                 yield break;
             }
 
-            var cmd = command.Command;
-            if (!cmd.StartsWith("/"))
+            var helpMessage = command.HelpMessage ?? "<No Description>";
+            if (command.Aliases.Length > 0)
             {
-                cmd = $"/{cmd}";
+                helpMessage = $"{string.Join(" → ", command.Aliases)} → {helpMessage}";
             }
 
-            var aliases =
-                command.Aliases?.Select(
-                    alias =>
-                    {
-                        if (!alias.StartsWith("/"))
-                        {
-                            alias = $"/{alias}";
-                        }
-
-                        return alias;
-                    }
-                ) ?? Array.Empty<string>();
-
-            var parameter = method.GetParameters().FirstOrDefault();
-            var commandInfo = new CommandInfo(GetHandler(cmd, command, method))
+            var commandInfo = new CommandInfo(GetHandler(command, method))
             {
-                HelpMessage = command.HelpMessage ?? string.Empty,
+                HelpMessage = helpMessage,
                 ShowInHelp = command.ShowInHelp,
             };
 
-            yield return (cmd, commandInfo);
+            yield return (command.Command, commandInfo);
 
-            foreach (var alias in aliases)
+            foreach (var alias in command.Aliases)
             {
                 yield return (
                     alias,
-                    new CommandInfo(GetHandler(alias, command, method))
+                    new CommandInfo(GetHandler(command, method))
                     {
-                        HelpMessage = $"Alias for {cmd}.",
-                        ShowInHelp = command.ShowInHelp,
+                        HelpMessage = $"Alias for {command.Command}.",
+                        ShowInHelp = false,
                     }
                 );
             }
         }
 
-        private CommandInfo.HandlerDelegate GetHandler(string cmd, CommandAttribute command, MethodInfo method)
+        private CommandInfo.HandlerDelegate GetHandler(CommandAttribute command, MethodInfo method)
         {
             return new CommandInfo.HandlerDelegate(
                 (_, args) =>
@@ -173,9 +172,8 @@ namespace Microdancer
 
                     if (argsArray.Length < parameters.Count(p => !p.HasDefaultValue))
                     {
-                        PrintError(
-                            cmd,
-                            $"Invalid parameter count. Command must have at least {parameters.Length} parameter(s)."
+                        _chatGui.PrintError(
+                            $"{command.Command}: Invalid parameter count. Command must have at least {parameters.Length} parameter(s)."
                         );
                     }
 
@@ -195,9 +193,8 @@ namespace Microdancer
                             }
                             catch (Exception e)
                             {
-                                PrintError(
-                                    cmd,
-                                    $"Invalid parameter type at position {i + 1} ({arg})."
+                                _chatGui.PrintError(
+                                    $"{command.Command}: Invalid parameter type at position {i + 1} ({arg})."
                                         + $" Type must be '{parameterType.Name}'\n{e.Message}."
                                 );
                             }

@@ -51,13 +51,13 @@ namespace Microdancer
         {
             if (_condition[ConditionFlag.InCombat])
             {
-                PrintError("useitem", "Not supported while in combat.");
+                PrintError("Not supported while in combat.");
                 return;
             }
 
             if (_usableItems == null || _gameManager.GetActionId == null || _gameManager.UseItem == null)
             {
-                PrintError("useitem", "Not yet initialized - try opening your inventory and using this command again.");
+                PrintError("Not yet initialized - try opening your inventory and using this command again.");
                 return;
             }
 
@@ -92,7 +92,7 @@ namespace Microdancer
 
                         if (DateTime.Now - t > TimeSpan.FromSeconds(1))
                         {
-                            PrintError("useitem", $"Unable to successfully use item \"{id}\"");
+                            PrintError($"Unable to successfully use item \"{id}\"");
                             return;
                         }
                     }
@@ -105,7 +105,7 @@ namespace Microdancer
             }
             else
             {
-                PrintError("useitem", "Invalid item specified.");
+                PrintError("Invalid item specified.");
                 return;
             }
         }

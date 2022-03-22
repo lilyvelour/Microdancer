@@ -1,25 +1,29 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace Microdancer
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class CommandAttribute : Attribute
     {
-        public string Command { get; set; }
-        public IEnumerable<string>? Aliases { get; set; }
+        public string Command { get; }
+        public string[] Aliases { get; }
         public string HelpMessage { get; set; } = string.Empty;
         public bool ShowInHelp { get; set; } = true;
         public bool Raw { get; set; } = false;
 
         public CommandAttribute(string command, params string[] aliases)
         {
-            Command = command.ToLowerInvariant();
-
-            if (aliases != null)
+            var cmd = command.ToLowerInvariant();
+            if (!cmd.StartsWith("/"))
             {
-                Aliases = aliases;
+                cmd = $"/{cmd}";
             }
+            Command = cmd;
+
+            Aliases =
+                aliases?.Select(alias => alias.StartsWith("/") ? alias : $"/{alias}").OrderBy(a => a).ToArray()
+                ?? Array.Empty<string>();
         }
     }
 }

@@ -22,14 +22,14 @@ namespace Microdancer
             var micro = _library.Find<Micro>(search);
             if (micro == null)
             {
-                PrintError("runmicro", $"No Micro with ID or name containing \"{search}\" found.");
+                PrintError($"No Micro with ID or name containing \"{search}\" found.");
                 return;
             }
 
             _microManager.StartMicro(micro, region);
         }
 
-        [Command("microcancel", HelpMessage = "Cancel the currently running micro.")]
+        [Command("microcancel", HelpMessage = "Cancel the currently running micro. Cannot be used in a Micro.")]
         public void CancelMicro()
         {
             _microManager.Current?.Stop();

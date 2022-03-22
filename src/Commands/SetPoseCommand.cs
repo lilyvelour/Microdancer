@@ -36,7 +36,7 @@ namespace Microdancer
             {
                 if (!int.TryParse(args[0], out whichPoseType) || whichPoseType < 0 || whichPoseType > poseTypes.Length)
                 {
-                    PrintError("setpose", $"Invalid pose type \"{poseType}\"");
+                    PrintError($"Invalid pose type \"{poseType}\"");
                     return;
                 }
                 poseType = poseTypes[whichPoseType];
@@ -44,14 +44,13 @@ namespace Microdancer
 
             if (!byte.TryParse(args[^1], out var whichPose))
             {
-                PrintError("setpose", "Pose must be a valid number");
+                PrintError("Pose must be a valid number");
                 return;
             }
 
             if (whichPose == 0 || whichPose > CPoseManager.NumPoses[whichPoseType])
             {
                 PrintError(
-                    "setpose",
                     $"Pose {whichPose} for {poseType} does not exist. Only {CPoseManager.NumPoses[whichPoseType]} poses are supported."
                 );
                 return;

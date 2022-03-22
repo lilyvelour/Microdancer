@@ -1,12 +1,7 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
-using System.Reflection;
+﻿using System.Reflection;
 using Dalamud.Plugin;
 using System;
 using System.Linq;
-using System.Net.Http.Json;
-using Dalamud.Game.ClientState;
-using Dalamud.Logging;
 
 namespace Microdancer
 {
