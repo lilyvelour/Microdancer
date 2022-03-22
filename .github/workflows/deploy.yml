@@ -1,0 +1,51 @@
+name: .NET Build
+
+on:
+  push:
+    branches: ['*']
+    tags-ignore: ['*']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.201
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Download Dalamud
+        run: |
+          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/stg/latest.zip -OutFile latest.zip
+          Expand-Archive -Force latest.zip "$env:AppData/XIVLauncher/addon/Hooks/dev/"
+
+      - name: Build
+        run: |
+          $ver = '${{ github.ref }}' -replace 'refs/tags/',''
+          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
+
+      - name: Write out repo.json
+        run: |
+          $ver = '${{ github.ref }}' -replace 'refs/tags/',''
+          $path = './base_repo.json'
+          $new_path = './bin/Release/Microdancer/Microdancer.json'
+          $content = get-content -path $path
+          $content = $content -replace '1.0.0.0',$ver
+          Set-Content -Path $new_path -Value $content
+
+      - name: Upload to S3
+        uses: jakejarvis/s3-sync-action@v0.5.1
+        with:
+          args: --acl public-read --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'us-east-1'
+          SOURCE_DIR: 'bin/Release/Microdancer'

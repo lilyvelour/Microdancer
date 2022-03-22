@@ -8,14 +8,14 @@
     ],
     "IconUrl": "https://microdancer.s3.amazonaws.com/icon.png",
     "InternalName": "Microdancer",
-    "AssemblyVersion": "0.2.3",
+    "AssemblyVersion": "1.0.0.0",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 5,
     "LoadPriority": 0,
     "IsHide": "False",
     "IsTestingExclusive": "False",
     "DownloadCount": 420,
-    "DownloadLinkInstall": "https://dance-mom.github.io/Microdancer/releases/latest.zip",
-    "DownloadLinkTesting": "https://dance-mom.github.io/Microdancer/releases/latest.zip",
-    "DownloadLinkUpdate": "https://dance-mom.github.io/Microdancer/releases/latest.zip"
+    "DownloadLinkInstall": "https://microdancer.s3.amazonaws.com/latest.zip",
+    "DownloadLinkTesting": "https://microdancer.s3.amazonaws.com/latest.zip",
+    "DownloadLinkUpdate": "https://microdancer.s3.amazonaws.com/latest.zip"
 }]

@@ -1,28 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Version>0.2.3</Version>
         <TargetFramework>net5.0-windows7.0</TargetFramework>
         <Platforms>x64</Platforms>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
+        <AssemblyTitle>Microdancer</AssemblyTitle>
+        <Company>Dance Mom</Company>
+        <Product>Microdancer</Product>
+        <Copyright>Copyright © 2022</Copyright>
+        <FileVersion>1.0.0.0</FileVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>CA1416;CA1822</NoWarn>
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<OutputPath>$(AppData)\XIVLauncher\devPlugins\Microdancer\</OutputPath>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugType>full</DebugType>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <OutputPath>$(AppData)/XIVLauncher/devPlugins/Microdancer/</OutputPath>
+    </PropertyGroup>
 
-     <ItemGroup>
-        <Content Include="../data/Microdancer.json" CopyToOutputDirectory="Always" Visible="false" />
-        <Content Include="../data/logo.png" Link="images/icon.png" CopyToOutputDirectory="Always" Visible="false" />
+    <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <Content Include="../images/icon.png" Link="images/icon.png" CopyToOutputDirectory="Always" Visible="false" />
+        <Content Include="./Microdancer.json" CopyToOutputDirectory="Always" Visible="false" />
     </ItemGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+        <OutputPath>../bin/$(Configuration)/</OutputPath>
+    </PropertyGroup>
+
     <PropertyGroup>
-		<DalamudLibPath>$(AppData)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+		<DalamudLibPath>$(AppData)/XIVLauncher/addon/Hooks/dev/</DalamudLibPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,27 +46,27 @@
 
     <ItemGroup>
         <Reference Include="Dalamud">
-            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
+            <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Dalamud.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina">
-            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Lumina.dll</HintPath>
+            <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina.Excel">
-            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Lumina.Excel.dll</HintPath>
+            <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.Excel.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="FFXIVClientStructs">
-            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+            <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/FFXIVClientStructs.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGui.NET">
-            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
+            <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGui.NET.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGuiScene">
-            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\ImGuiScene.dll</HintPath>
+            <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGuiScene.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>
