@@ -16,7 +16,8 @@ jobs:
         id: tagger
         uses: jimschubert/query-tag-action@v1
         with:
-          commit-ish: 'HEAD~'
+          abbrev: false
+          commit-ish: HEAD
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
