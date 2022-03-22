@@ -40,6 +40,10 @@ jobs:
           $ver = $(Invoke-Expression 'git describe --tags --always')
           Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
 
+      - name: Create icon
+        run: |
+          Copy-Item 'images/icon.png' 'bin/Release/Microdancer/icon.png'
+
       - name: Create repo manifest
         run: |
           $ver = $(Invoke-Expression 'git describe --tags --always')
