@@ -14,7 +14,7 @@ jobs:
 
       - name: Find Tag
         id: tagger
-        uses: jimschubert/query-tag-action@v1
+        uses: jimschubert/query-tag-action@v2
         with:
           abbrev: false
           commit-ish: HEAD
