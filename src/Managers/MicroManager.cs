@@ -260,8 +260,8 @@ namespace Microdancer
                     ++i;
                     continue;
                 }
-                // Send the command to the channel (ignore /wait)
-                else if (command.Text != "/wait")
+                // Send the command to the channel (ignore /wait and /microcancel)
+                else if (command.Text != "/wait" && command.Text != "/microcancel")
                 {
                     await _channel.Writer.WriteAsync(command.Text);
                 }
