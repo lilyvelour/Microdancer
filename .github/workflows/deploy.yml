@@ -29,7 +29,7 @@ jobs:
 
       - name: Edit package manifest
         run: |
-          $ver = $(Invoke-Expression 'git describe --tags --always')
+          $ver = $(Invoke-Expression './get-version.ps1')
           $path = './src/Microdancer.json'
           $content = Get-Content -path $path
           $content = $content -replace '1.0.0.0',$ver
@@ -37,7 +37,7 @@ jobs:
 
       - name: Build
         run: |
-          $ver = $(Invoke-Expression 'git describe --tags --always')
+          $ver = $(Invoke-Expression './get-version.ps1')
           Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
 
       - name: Create icon
@@ -46,7 +46,7 @@ jobs:
 
       - name: Create repo manifest
         run: |
-          $ver = $(Invoke-Expression 'git describe --tags --always')
+          $ver = $(Invoke-Expression './get-version.ps1')
           $path = './base_repo.json'
           $new_path = './bin/Release/Microdancer/Microdancer.json'
           $content = Get-Content -path $path
