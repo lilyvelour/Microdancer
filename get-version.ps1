@@ -8,4 +8,4 @@ $charCount = ($result.ToCharArray() | Where-Object { $_ -eq '.' } | Measure-Obje
 if ( $charCount -eq 2 ) {
     $result += '.0'
 }
-Write-Information -Message $result -InformationAction Continue
+New-Object PSObject -Property @{Version = $result }
