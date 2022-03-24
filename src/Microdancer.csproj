@@ -48,32 +48,32 @@
     <ItemGroup>
         <Reference Include="Dalamud">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Dalamud.dll</HintPath>
-            <HintPath>../dalamud-distrib/Dalamud.dll</HintPath>
+            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Dalamud.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.dll</HintPath>
-            <HintPath>../dalamud-distrib/Lumina.dll</HintPath>
+            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Lumina.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina.Excel">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.Excel.dll</HintPath>
-            <HintPath>../dalamud-distrib/Lumina.Excel.dll</HintPath>
+            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Lumina.Excel.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="FFXIVClientStructs">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/FFXIVClientStructs.dll</HintPath>
-            <HintPath>../dalamud-distrib/FFXIVClientStructs.dll</HintPath>
+            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/FFXIVClientStructs.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGui.NET">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGui.NET.dll</HintPath>
-            <HintPath>../dalamud-distrib/ImGui.NET.dll</HintPath>
+            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/ImGui.NET.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGuiScene">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGuiScene.dll</HintPath>
-            <HintPath>../dalamud-distrib/ImGuiScene.dll</HintPath>
+            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/ImGuiScene.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>
