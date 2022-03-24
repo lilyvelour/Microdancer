@@ -9,6 +9,8 @@ namespace Microdancer
     public class Timeline : PluginUiBase, IDrawable
     {
         private MicroInfo? _info;
+        private float _lastScrollPosition = -1;
+        private bool _resetScroll;
 
         public bool Draw()
         {
@@ -31,6 +33,7 @@ namespace Microdancer
             else if (_info?.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
             {
                 _info = new MicroInfo(micro);
+                _resetScroll = _lastScrollPosition >= 0;
             }
 
             var frameSize = ImGui.GetContentRegionAvail();
@@ -314,9 +317,19 @@ namespace Microdancer
                 }
                 ImGuiExt.TextTooltip(tooltip);
 
-                if (hasPlaybackCursor && MicroManager.PlaybackState != PlaybackState.Paused)
+                if (_resetScroll)
                 {
-                    ImGui.SetScrollHereX();
+                    ImGui.SetScrollX(_lastScrollPosition);
+                    _resetScroll = false;
+                }
+                else
+                {
+                    if (hasPlaybackCursor)
+                    {
+                        ImGui.SetScrollHereX();
+                    }
+
+                    _lastScrollPosition = ImGui.GetScrollX();
                 }
 
                 ImGui.SameLine();
