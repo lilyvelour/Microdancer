@@ -9,8 +9,9 @@
         <Company>Dance Mom</Company>
         <Product>Microdancer</Product>
         <Copyright>Copyright © 2022</Copyright>
-        <FileVersion>1.0.0.0</FileVersion>
+        <Version>1.0.0.0</Version>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>CA1416;CA1822</NoWarn>
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
@@ -47,26 +48,32 @@
     <ItemGroup>
         <Reference Include="Dalamud">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Dalamud.dll</HintPath>
+            <HintPath>../dalamud-distrib/Dalamud.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.dll</HintPath>
+            <HintPath>../dalamud-distrib/Lumina.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina.Excel">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.Excel.dll</HintPath>
+            <HintPath>../dalamud-distrib/Lumina.Excel.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="FFXIVClientStructs">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/FFXIVClientStructs.dll</HintPath>
+            <HintPath>../dalamud-distrib/FFXIVClientStructs.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGui.NET">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGui.NET.dll</HintPath>
+            <HintPath>../dalamud-distrib/ImGui.NET.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGuiScene">
             <HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGuiScene.dll</HintPath>
+            <HintPath>../dalamud-distrib/ImGuiScene.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>

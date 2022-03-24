@@ -1,14 +1,16 @@
-name: .NET Build
+name: Microdancer
 
 on:
   push:
     branches: ['*']
     tags-ignore: ['*']
-  pull_request:
 
 jobs:
-  build:
-    runs-on: windows-latest
+
+  build-and-deploy:
+    env:
+      ProgressPreference: "SilentlyContinue"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -20,41 +22,56 @@ jobs:
           dotnet-version: 6.0.201
 
       - name: Restore dependencies
-        run: dotnet restore
+        env:
+          HUSKY: 0
+        run: |
+          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+          dotnet restore
+        shell: pwsh
 
       - name: Download Dalamud
         run: |
-          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/stg/latest.zip -OutFile latest.zip
-          Expand-Archive -Force latest.zip "$env:AppData/XIVLauncher/addon/Hooks/dev/"
+          mkdir -p dalamud-distrib
+          wget -q https://goatcorp.github.io/dalamud-distrib/stg/latest.zip
+          unzip -d dalamud-distrib/ latest.zip
 
       - name: Edit package manifest
         run: |
-          $ver = (./get-version.ps1).Version
+          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+          $ver = (./scripts/get-version.ps1).Version
           $path = './src/Microdancer.json'
           $content = Get-Content -path $path
           $content = $content -replace '1.0.0.0',$ver
           Set-Content -Path $path -Value $content
+        shell: pwsh
 
       - name: Build
         run: |
-          $ver = (./get-version.ps1).Version
-          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:FileVersion=$ver'
+          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+          $ver = (./scripts/get-version.ps1).Version
+          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
+        shell: pwsh
 
       - name: Create icon
         run: |
+          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           Copy-Item 'images/icon.png' 'bin/Release/Microdancer/icon.png'
+        shell: pwsh
 
       - name: Create repo manifest
         run: |
-          $ver = (./get-version.ps1).Version
+          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+          $ver = (./scripts/get-version.ps1).Version
           $path = './base_repo.json'
           $new_path = './bin/Release/Microdancer/Microdancer.json'
           $content = Get-Content -path $path
           $content = $content -replace '1.0.0.0',$ver
           Set-Content -Path $new_path -Value $content
+        shell: pwsh
 
       - name: Upload to S3
         uses: reggionick/s3-deploy@v3
+        if: ${{ !env.ACT }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
