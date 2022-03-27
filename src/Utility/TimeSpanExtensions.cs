@@ -47,12 +47,16 @@ namespace Microdancer
                 }
                 else
                 {
-                    sb.Append(ts.TotalSeconds);
+                    sb.Append(ts.TotalSeconds.ToString("G3"));
                 }
             }
             else if (ts.Milliseconds > 0)
             {
                 sb.Append(ts.Milliseconds * 0.001);
+            }
+            else
+            {
+                sb.Append('0');
             }
 
             if (!hasMinutes)

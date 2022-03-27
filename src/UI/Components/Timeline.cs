@@ -288,7 +288,10 @@ namespace Microdancer
                     hasPlaybackCursor = false;
                 }
 
-                var tooltip = $"{label} <{item.WaitTime.ToSimpleString()}> [{timecode}]";
+                var tooltip =
+                    $"{timecode}"
+                    + $"\n{label} <{item.WaitTime.ToSimpleString()}>"
+                    + $"\nCurrent time: {item.CurrentTime.ToSimpleString()}";
 
                 var playbackCursorSize = new Vector2(2.0f, barSize.Y);
 
