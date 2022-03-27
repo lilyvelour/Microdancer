@@ -19,7 +19,7 @@ namespace Microdancer
 
         public Guid Id { get; }
         public Micro Micro { get; }
-        public bool IsSingleRegion { get; }
+        public bool IsSingleRegion { get; private set; }
         public MicroCommand[] Commands { get; } = Array.Empty<MicroCommand>();
         public MicroRegion[] Regions { get; } = Array.Empty<MicroRegion>();
         public MicroCommand[] AllCommands { get; private set; } = Array.Empty<MicroCommand>();
@@ -60,7 +60,7 @@ namespace Microdancer
             var body = Micro.GetBody().ToArray();
             IsSingleRegion = region != null;
 
-            Commands = ParseCommands(body, region).ToArray();
+            Commands = ParseCommands(body, region, -1).ToArray();
             Regions = Commands.Select(c => c.Region).Distinct().ToArray();
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
             TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
@@ -74,7 +74,7 @@ namespace Microdancer
             var body = Micro.GetBody().ToArray();
             IsSingleRegion = false;
 
-            var commands = ParseCommands(body, null);
+            var commands = ParseCommands(body, null, lineNumber);
             var offsetMs = commands.Sum(
                 c =>
                 {
@@ -122,7 +122,7 @@ namespace Microdancer
             CurrentCommand = Commands.FirstOrDefault();
         }
 
-        private IEnumerable<MicroCommand> ParseCommands(string[] body, string? region)
+        private IEnumerable<MicroCommand> ParseCommands(string[] body, string? region, int startLineNumber)
         {
             var allCommands = new List<MicroCommand>();
 
@@ -133,6 +133,8 @@ namespace Microdancer
 
             TimeSpan? defaultWait = null;
             var currentRegion = new MicroRegion();
+
+            bool? overrideInclude = null;
 
             for (var i = 0; i < body.Length; ++i)
             {
@@ -166,6 +168,11 @@ namespace Microdancer
                 }
                 else if (line.StartsWith("#endregion") || line.StartsWith("#region"))
                 {
+                    if (overrideInclude == true && startLineNumber >= 0)
+                    {
+                        overrideInclude = false;
+                        IsSingleRegion = currentRegion?.IsNamedRegion == true;
+                    }
                     currentRegion = new MicroRegion();
                     continue;
                 }
@@ -194,16 +201,29 @@ namespace Microdancer
                     // Add to all commands
                     allCommands.Add(microCommand);
 
-                    // Don't include named regions unless they are explicitly executed
-                    if (region == null && currentRegion.IsNamedRegion == true)
+                    // Include all commands above the start line number, until we've hit a region boundary
+                    if (startLineNumber >= 0 && overrideInclude == null && lineNumber >= startLineNumber)
                     {
-                        continue;
+                        overrideInclude = true;
                     }
 
-                    // Only include executable commands
-                    if (region == null || region == currentRegion.Name)
+                    if (overrideInclude == true)
                     {
                         yield return microCommand;
+                    }
+                    else
+                    {
+                        // Don't include named regions unless they are explicitly executed
+                        if (!IsSingleRegion && currentRegion.IsNamedRegion == true)
+                        {
+                            continue;
+                        }
+
+                        // Only include executable commands
+                        if (!IsSingleRegion || region == currentRegion.Name)
+                        {
+                            yield return microCommand;
+                        }
                     }
                 }
             }

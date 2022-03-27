@@ -10,6 +10,7 @@ namespace Microdancer
         string Path { get; }
         public INode? Parent { get; }
         List<INode> Children { get; }
+        bool IsReadOnly { get; }
         public void Move(string newPath);
     }
 }

@@ -13,17 +13,18 @@ namespace Microdancer
     {
         private bool _disposedValue;
 
-        private readonly Configuration _config;
+        private readonly DalamudPluginInterface _pluginInterface;
 
-        private IEnumerable<INode>? _cachedNodes;
+        private readonly List<INode> _cachedNodes = new();
         private bool _shouldRebuild;
-        private FileSystemWatcher? _fileSystemWatcher;
+        private FileSystemWatcher? _libraryWatcher;
+        private FileSystemWatcher? _sharedFolderWatcher;
 
         public LibraryManager(DalamudPluginInterface pluginInterface)
         {
-            _config = pluginInterface.Configuration();
+            _pluginInterface = pluginInterface;
 
-            EnsureWatcher();
+            EnsureWatchers();
         }
 
         public void Dispose()
@@ -42,11 +43,10 @@ namespace Microdancer
 
             if (disposing)
             {
-                if (_fileSystemWatcher != null)
-                {
-                    _fileSystemWatcher.Dispose();
-                    _fileSystemWatcher = null;
-                }
+                _libraryWatcher?.Dispose();
+                _sharedFolderWatcher?.Dispose();
+                _libraryWatcher = null;
+                _sharedFolderWatcher = null;
             }
 
             _disposedValue = true;
@@ -54,19 +54,30 @@ namespace Microdancer
 
         public IEnumerable<INode> GetNodes()
         {
-            var libraryPath = new DirectoryInfo(_config.LibraryPath);
-            if (!libraryPath.Exists)
-            {
-                return new List<INode>();
-            }
+            var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
+            var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
+            var sharedPath = Directory.CreateDirectory(sharedPathName);
 
             if (_shouldRebuild)
             {
-                _cachedNodes = BuildTree(libraryPath).Children;
+                _cachedNodes.Clear();
+
+                var library = BuildTree(libraryPath);
+                if (library.Children.Count > 0)
+                {
+                    _cachedNodes.Add(library);
+                }
+
+                var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
+                if (sharedWithMe.Children.Count > 0)
+                {
+                    _cachedNodes.Add(sharedWithMe);
+                }
+
                 _shouldRebuild = false;
             }
 
-            return _cachedNodes ?? new List<INode>();
+            return _cachedNodes;
         }
 
         public T? Find<T>(Guid id) where T : INode
@@ -120,13 +131,17 @@ namespace Microdancer
 
         internal void MarkAsDirty()
         {
-            EnsureWatcher();
+            EnsureWatchers();
             _shouldRebuild = true;
         }
 
-        private INode BuildTree(DirectoryInfo dir, INode? parent = null)
+        private INode BuildTree(DirectoryInfo dir, INode? parent = null, bool isSharedFolder = false)
         {
-            var node = new Folder(dir, parent);
+            var folder = isSharedFolder
+                ? new SharedFolder(dir, parent)
+                : parent == null
+                    ? new LibraryFolder(dir)
+                    : new Folder(dir, parent, isReadOnly: isSharedFolder);
 
             foreach (var subDir in dir.GetDirectories())
             {
@@ -134,7 +149,7 @@ namespace Microdancer
                 {
                     continue;
                 }
-                node.Children.Add(BuildTree(subDir, node));
+                folder.Children.Add(BuildTree(subDir, folder, isSharedFolder));
             }
 
             foreach (var microFile in dir.GetFiles("*.micro"))
@@ -143,30 +158,34 @@ namespace Microdancer
                 {
                     continue;
                 }
-                node.Children.Add(new Micro(microFile, node));
+                folder.Children.Add(new Micro(microFile, folder, isReadOnly: isSharedFolder));
             }
 
-            return node;
+            return folder;
         }
 
-        private void EnsureWatcher()
+        private void EnsureWatchers()
         {
-            if (_fileSystemWatcher == null)
+            var libraryPath = _pluginInterface.Configuration().LibraryPath;
+            var sharedPath = _pluginInterface.SharedFolderPath();
+
+            if (_libraryWatcher == null || _libraryWatcher.Path != libraryPath)
             {
-                CreateWatcher();
+                _libraryWatcher?.Dispose();
+                _libraryWatcher = CreateWatcher(libraryPath);
             }
-            else if (_fileSystemWatcher.Path != _config.LibraryPath)
+            if (_sharedFolderWatcher == null || _sharedFolderWatcher.Path != sharedPath)
             {
-                _fileSystemWatcher.Dispose();
-                CreateWatcher();
+                _sharedFolderWatcher?.Dispose();
+                _sharedFolderWatcher = CreateWatcher(sharedPath);
             }
         }
 
-        private void CreateWatcher()
+        private FileSystemWatcher? CreateWatcher(string path)
         {
-            if (Directory.Exists(_config.LibraryPath))
+            if (Directory.Exists(path))
             {
-                _fileSystemWatcher = new FileSystemWatcher(_config.LibraryPath)
+                var watcher = new FileSystemWatcher(path)
                 {
                     IncludeSubdirectories = true,
                     EnableRaisingEvents = true,
@@ -181,13 +200,17 @@ namespace Microdancer
                         | NotifyFilters.Security
                 };
 
-                _fileSystemWatcher.Changed += WatcherEvent;
-                _fileSystemWatcher.Created += WatcherEvent;
-                _fileSystemWatcher.Deleted += WatcherEvent;
-                _fileSystemWatcher.Renamed += WatcherEvent;
+                watcher.Changed += WatcherEvent;
+                watcher.Created += WatcherEvent;
+                watcher.Deleted += WatcherEvent;
+                watcher.Renamed += WatcherEvent;
 
                 _shouldRebuild = true;
+
+                return watcher;
             }
+
+            return null;
         }
 
         private void WatcherEvent(object _, FileSystemEventArgs _1)

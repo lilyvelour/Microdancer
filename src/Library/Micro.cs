@@ -13,7 +13,7 @@ namespace Microdancer
 
         private DateTime? _modifiedTime;
 
-        public Micro(FileInfo file, INode? parent = null) : base(file, parent)
+        public Micro(FileInfo file, INode? parent = null, bool isReadOnly = false) : base(file, parent, isReadOnly)
         {
             Name = IOPath.GetFileNameWithoutExtension(file.FullName);
             _modifiedTime = file.LastWriteTime;

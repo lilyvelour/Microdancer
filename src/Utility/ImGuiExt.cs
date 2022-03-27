@@ -7,14 +7,21 @@ namespace Microdancer
 {
     public static class ImGuiExt
     {
-        public static bool IconButton(FontAwesomeIcon icon, string tooltip)
+        public static bool IconButton(FontAwesomeIcon icon, Vector2 size)
+        {
+            return IconButton(icon, null, size);
+        }
+
+        public static bool IconButton(FontAwesomeIcon icon, string? tooltip = null, Vector2 size = default)
         {
             ImGui.PushFont(UiBuilder.IconFont);
-            var result = ImGui.Button($"{icon.ToIconString()}##{icon.ToIconString()}-{tooltip}");
+            var result = ImGui.Button($"{icon.ToIconString()}##{icon.ToIconString()}-{tooltip}", size);
             ImGui.PopFont();
 
             if (tooltip != null)
+            {
                 TextTooltip(tooltip);
+            }
 
             return result;
         }
@@ -27,6 +34,18 @@ namespace Microdancer
                 ImGui.TextUnformatted(text);
                 ImGui.EndTooltip();
             }
+        }
+
+        public static void PushDisableButtonBg()
+        {
+            ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
+        }
+
+        public static void PopDisableButtonBg()
+        {
+            ImGui.PopStyleColor(3);
         }
 
         public static bool TintButton(string label, Vector4 color)
@@ -61,10 +80,7 @@ namespace Microdancer
 
             var pressed = button();
 
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
+            ImGui.PopStyleColor(4);
 
             return pressed;
         }

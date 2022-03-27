@@ -6,10 +6,12 @@ namespace Microdancer
     public class DisplayNode : PluginUiBase, IDrawable<INode>, IDrawable<INode, string>
     {
         private readonly string _idPrefix;
+        private readonly NodeContextMenu _contextMenu;
 
         public DisplayNode(string idPrefix)
         {
             _idPrefix = idPrefix;
+            _contextMenu = new NodeContextMenu();
         }
 
         bool IDrawable<INode>.Draw(INode node)
@@ -41,41 +43,7 @@ namespace Microdancer
                 PluginInterface.SavePluginConfig(Config);
             }
 
-            if (ImGui.BeginPopupContextItem())
-            {
-                if (ImGui.Selectable("Select"))
-                {
-                    Config.LibrarySelection = node.Id;
-                    PluginInterface.SavePluginConfig(Config);
-                }
-
-                if (ImGui.Selectable("Open"))
-                {
-                    OpenNode(node);
-                }
-
-                if (ImGui.Selectable("Reveal in File Explorer"))
-                {
-                    RevealNode(node);
-                }
-
-                if (node is Micro micro)
-                {
-                    if (ImGui.Selectable("Play"))
-                    {
-                        Config.LibrarySelection = micro.Id;
-                        PluginInterface.SavePluginConfig(Config);
-                        MicroManager.StartMicro(micro);
-                    }
-
-                    if (ImGui.Selectable($"Copy run command"))
-                    {
-                        ImGui.SetClipboardText($"/runmicro {micro.Id}");
-                    }
-                }
-
-                ImGui.EndPopup();
-            }
+            _contextMenu.Draw(node);
 
             ImGui.PopID();
 
@@ -94,7 +62,18 @@ namespace Microdancer
 
         private ImGuiTreeNodeFlags GetFlags(INode root, string? filter, ref bool shouldDraw)
         {
-            return GetFlags(root, root, filter, ref shouldDraw, ImGuiTreeNodeFlags.SpanAvailWidth);
+            var flags = GetFlags(root, root, filter, ref shouldDraw, ImGuiTreeNodeFlags.SpanAvailWidth);
+
+            if (
+                root.Children.Count > 0
+                && !string.IsNullOrWhiteSpace(filter)
+                && !flags.HasFlag(ImGuiTreeNodeFlags.Bullet)
+            )
+            {
+                shouldDraw = false;
+            }
+
+            return flags;
         }
 
         private ImGuiTreeNodeFlags GetFlags(
@@ -105,12 +84,12 @@ namespace Microdancer
             ImGuiTreeNodeFlags flags
         )
         {
-            var emptyFilter = string.IsNullOrWhiteSpace(filter);
-            var matchesFilter = !emptyFilter && node.Name.Contains(filter!, StringComparison.CurrentCultureIgnoreCase);
-            shouldDraw |= emptyFilter || matchesFilter;
-
             var hasChildren = node.Children.Count > 0;
             var isSelected = Config.LibrarySelection == node.Id;
+
+            var emptyFilter = string.IsNullOrWhiteSpace(filter);
+            var matchesFilter = !emptyFilter && node.Path.Contains(filter!, StringComparison.CurrentCultureIgnoreCase);
+            shouldDraw |= emptyFilter || matchesFilter;
 
             if (node == root && !hasChildren)
             {
@@ -119,13 +98,15 @@ namespace Microdancer
                 {
                     flags |= ImGuiTreeNodeFlags.Selected;
                 }
+
+                shouldDraw = emptyFilter || matchesFilter;
             }
 
             if (matchesFilter || (node != root && isSelected))
             {
                 flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.Bullet;
 
-                if (node == root)
+                if (node == root && node.Parent != null)
                 {
                     flags &= ~ImGuiTreeNodeFlags.Bullet;
                 }

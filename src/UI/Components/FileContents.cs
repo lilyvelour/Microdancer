@@ -110,6 +110,15 @@ namespace Microdancer
                         ImGuiExt.TextTooltip($"{waitTime:#.###} sec");
                     }
 
+                    if (ImGui.BeginPopupContextItem())
+                    {
+                        if (ImGui.Selectable("Open at Line Number"))
+                        {
+                            
+                        }
+                        ImGui.EndPopup();
+                    }
+
                     ImGui.PopFont();
 
                     ImGui.PopStyleVar();

@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Numerics;
 using ImGuiNET;
 
 namespace Microdancer
@@ -20,48 +18,64 @@ namespace Microdancer
                     PluginInterface.SavePluginConfig(Config);
                 }
 
-                ImGui.Text("Library");
+                ImGui.Text("Home");
             }
             else if (node != null)
             {
-                if (ImGui.Selectable("Library", false, ImGuiSelectableFlags.None, ImGui.CalcTextSize("Library")))
+                if (ImGui.Selectable("Home", false, ImGuiSelectableFlags.None, ImGui.CalcTextSize("Home")))
                 {
                     Config.LibrarySelection = Guid.Empty;
                     PluginInterface.SavePluginConfig(Config);
                 }
 
-                var relativePath = node.Path[(Config.LibraryPath.Length + 1)..];
-                var breadCrumb = relativePath.Split(new[] { '/', '\\' });
+                ImGui.SameLine();
+                ImGui.Text("»");
+                ImGui.SameLine();
 
-                var currentPath = string.Empty;
-                foreach (var segment in breadCrumb)
+                var label = node.IsReadOnly ? "Shared With Me" : "Library";
+                if (ImGui.Selectable(label, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(label)))
                 {
-                    if (string.IsNullOrWhiteSpace(segment))
+                    Config.LibrarySelection = Library.Find<Node>(label)?.Id ?? Guid.Empty;
+                    PluginInterface.SavePluginConfig(Config);
+                }
+
+                var basePath = node.IsReadOnly ? PluginInterface.SharedFolderPath() : Config.LibraryPath;
+                var first = basePath.Length + 1;
+                if (first < node.Path.Length)
+                {
+                    var relativePath = node.Path[first..];
+                    var breadCrumb = relativePath.Split(new[] { '/', '\\' });
+
+                    var currentPath = string.Empty;
+                    foreach (var segment in breadCrumb)
                     {
-                        continue;
-                    }
-
-                    ImGui.SameLine();
-                    ImGui.Text("»");
-                    ImGui.SameLine();
-
-                    currentPath += $"/{segment}";
-
-                    var parent = Library.Find<Folder>(Path.GetFullPath(Config.LibraryPath + currentPath));
-
-                    if (segment.EndsWith(".micro"))
-                    {
-                        ImGui.Text(segment[..^6]);
-                    }
-                    else
-                    {
-                        if (
-                            ImGui.Selectable(segment, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(segment))
-                            && parent != null
-                        )
+                        if (string.IsNullOrWhiteSpace(segment))
                         {
-                            Config.LibrarySelection = parent.Id;
-                            PluginInterface.SavePluginConfig(Config);
+                            continue;
+                        }
+
+                        ImGui.SameLine();
+                        ImGui.Text("»");
+                        ImGui.SameLine();
+
+                        currentPath += $"/{segment}";
+
+                        var parent = node.Parent;
+
+                        if (segment.EndsWith(".micro"))
+                        {
+                            ImGui.Text(segment[..^6]);
+                        }
+                        else
+                        {
+                            if (
+                                ImGui.Selectable(segment, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(segment))
+                                && parent != null
+                            )
+                            {
+                                Config.LibrarySelection = parent.Id;
+                                PluginInterface.SavePluginConfig(Config);
+                            }
                         }
                     }
                 }

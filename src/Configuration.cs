@@ -1,6 +1,7 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.IoC;
 using System;
+using System.Collections.Generic;
 
 namespace Microdancer
 {
@@ -14,5 +15,8 @@ namespace Microdancer
         public Guid LibrarySelection { get; set; }
         public Guid QueueSelection { get; set; }
         public float TimelineZoom { get; set; } = 50.0f;
+        public bool IgnoreLooping { get; set; }
+        public bool IgnoreAutoCountdown { get; set; }
+        public Dictionary<string, bool> SharedContent { get; set; } = new();
     }
 }

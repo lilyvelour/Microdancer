@@ -29,14 +29,15 @@ namespace Microdancer
             Theme = new BurgundyTheme(); // TODO: Configurable themes
         }
 
-        protected void OpenNode(INode? node, bool parent = false)
+        protected void Open(string path)
         {
-            var path = Config.LibraryPath;
-            if (node != null)
-            {
-                path = parent ? Path.GetDirectoryName(node.Path) ?? path : node.Path;
-            }
             using var _ = Process.Start("explorer", $"\"{path}\"");
+        }
+
+        protected void OpenNode(INode node, bool parent = false)
+        {
+            var path = parent ? Path.GetDirectoryName(node.Path)! : node.Path;
+            Open(path);
         }
 
         protected void RevealNode(INode node)

@@ -2,6 +2,7 @@
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.IoC;
+using Dalamud.Plugin;
 using System;
 using System.Linq;
 using System.Threading.Channels;
@@ -17,6 +18,7 @@ namespace Microdancer
 
         private bool _disposedValue;
         private bool _ready;
+        private readonly DalamudPluginInterface _pluginInterface;
         private readonly Framework _framework;
         private readonly ClientState _clientState;
         private readonly GameManager _gameManager;
@@ -28,8 +30,15 @@ namespace Microdancer
 
         public MicroInfo? Current { get; private set; }
 
-        public MicroManager(Framework framework, ClientState clientState, GameManager gameManager, Condition condition)
+        public MicroManager(
+            DalamudPluginInterface pluginInterface,
+            Framework framework,
+            ClientState clientState,
+            GameManager gameManager,
+            Condition condition
+        )
         {
+            _pluginInterface = pluginInterface;
             _framework = framework;
             _clientState = clientState;
             _gameManager = gameManager;
@@ -226,6 +235,12 @@ namespace Microdancer
                 // Go back to the beginning if the command is a loop
                 if (command.Text == "/loop" && microInfo.Commands.Length > 1)
                 {
+                    if (_pluginInterface.Configuration().IgnoreLooping)
+                    {
+                        ++i;
+                        continue;
+                    }
+
                     if (_autoBusy == true)
                     {
                         _autoBusy = false;
@@ -370,8 +385,14 @@ namespace Microdancer
                     {
                         await Task.Delay(delay);
 
-                        if (Current != microInfo || PlaybackState != PlaybackState.Playing)
+                        if (
+                            _pluginInterface.Configuration().IgnoreAutoCountdown
+                            || Current != microInfo
+                            || PlaybackState != PlaybackState.Playing
+                        )
+                        {
                             return;
+                        }
 
                         await _channel.Writer.WriteAsync("/cd 5");
                     }

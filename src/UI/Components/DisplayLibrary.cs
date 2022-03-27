@@ -19,21 +19,17 @@ namespace Microdancer
 
         public bool Draw()
         {
-            var searchIcon = FontAwesomeIcon.Search.ToIconString();
-
             ImGui.PushFont(UiBuilder.IconFont);
-            var searchButtonWidth = ImGuiHelpers.GetButtonSize(searchIcon).X + ImGui.GetStyle().FrameBorderSize;
+            ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
+            ImGuiExt.TintButton(FontAwesomeIcon.Search.ToIconString(), Vector4.Zero);
+            ImGui.PopStyleColor();
             ImGui.PopFont();
-
-            ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - searchButtonWidth);
-            ImGui.InputText("##search", ref _search, 1024);
-            ImGui.PopItemWidth();
 
             ImGui.SameLine();
 
-            ImGui.PushFont(UiBuilder.IconFont);
-            ImGui.Text(searchIcon);
-            ImGui.PopFont();
+            ImGui.PushItemWidth(-1);
+            ImGui.InputText("##search", ref _search, 1024);
+            ImGui.PopItemWidth();
 
             ImGui.BeginChildFrame(
                 1,

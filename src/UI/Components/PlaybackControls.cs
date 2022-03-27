@@ -9,10 +9,12 @@ namespace Microdancer
     public class PlaybackControls : PluginUiBase, IDrawable
     {
         private MicroInfo? _info;
+        private MicroInfo? _current;
 
         public bool Draw()
         {
             Micro? micro = null;
+            _current = MicroManager.Current;
 
             if (Config.LibrarySelection != Guid.Empty)
             {
@@ -21,9 +23,9 @@ namespace Microdancer
 
             if (micro != null)
             {
-                if (MicroManager.Current?.Micro == micro)
+                if (_current?.Micro == micro)
                 {
-                    _info = MicroManager.Current;
+                    _info = _current;
                 }
                 else if (_info?.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
                 {
@@ -59,6 +61,8 @@ namespace Microdancer
         {
             var playPauseLabel = $"{FontAwesomeIcon.Play.ToIconString()}##PlayPause";
             var playPauseTooltip = MicroManager.PlaybackState == PlaybackState.Paused ? "Resume" : "Play";
+            var highlightColor = Vector4.One;
+            var dimColor = new Vector4(1, 1, 1, 0.25f);
 
             var controlButtonColor = new Vector4(0.8f, 0.8f, 0.8f, 1.0f);
 
@@ -69,7 +73,7 @@ namespace Microdancer
             }
 
             var buttonSize = ImGuiHelpers.ScaledVector2(38, 38);
-            const float buttonCount = 4;
+            const float buttonCount = 6;
 
             var spacer = ImGui.GetContentRegionAvail();
             spacer.X -= buttonSize.X * buttonCount;
@@ -86,37 +90,46 @@ namespace Microdancer
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, buttonSize.X * 0.5f);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
             ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(0, 0, 0, 0));
+            ImGuiExt.PushDisableButtonBg();
 
             ImGui.PushFont(UiBuilder.IconFont);
-            if (ImGuiExt.TintButton(FontAwesomeIcon.FastBackward.ToIconString(), buttonSize, Vector4.Zero))
+            ImGui.PushStyleColor(ImGuiCol.Text, Config.IgnoreAutoCountdown ? dimColor : highlightColor);
+            if (ImGuiExt.IconButton(FontAwesomeIcon.Clock, buttonSize))
             {
-                var current = MicroManager.Current;
-                if (current != null && _info != null && current.Commands.Length > 0)
+                Config.IgnoreAutoCountdown ^= true;
+                PluginInterface.SavePluginConfig(Config);
+            }
+            ImGui.PopStyleColor();
+            ImGui.PopFont();
+
+            ImGuiExt.TextTooltip($"{(Config.IgnoreAutoCountdown ? "Allow" : "Ignore")} Automatic Countdowns");
+
+            ImGui.SameLine();
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.PushButtonRepeat(true);
+            if (ImGuiExt.IconButton(FontAwesomeIcon.FastBackward, buttonSize))
+            {
+                if (_current?.IsPlaying == true && _current.Commands.Length > 0)
                 {
-                    var command = current.CurrentCommand ?? current.Commands.FirstOrDefault();
+                    var command = _current.CurrentCommand ?? _current.Commands[0];
                     if (command != null)
                     {
-                        var lineNumber = Math.Max(
-                            _info.Commands
-                                .LastOrDefault(
-                                    c =>
-                                        c.LineNumber < command.LineNumber && c.WaitTime > TimeSpan.FromMilliseconds(100)
-                                )
-                                ?.LineNumber ?? 0,
-                            0
+                        var resolution = TimeSpan.FromMilliseconds(100);
+                        var previousCommand = _current.AllCommands.LastOrDefault(
+                            c => c.LineNumber < command.LineNumber && c.WaitTime > resolution // HACK
                         );
-                        MicroManager.StartMicro(current.Micro, lineNumber);
+                        var lineNumber = previousCommand?.LineNumber ?? command.LineNumber;
+                        var minimumWaitTime = _current.CurrentCommand?.WaitTime ?? resolution;
+
+                        if (!_current.IsPlaying || _current.CurrentTime > minimumWaitTime)
+                        {
+                            MicroManager.StartMicro(_current.Micro, lineNumber);
+                        }
                     }
-                    else
-                    {
-                        MicroManager.StartMicro(current.Micro);
-                    }
-                }
-                else if (micro != null)
-                {
-                    MicroManager.StartMicro(micro);
                 }
             }
+            ImGui.PopButtonRepeat();
             ImGui.PopFont();
 
             ImGuiExt.TextTooltip("Previous Line");
@@ -128,11 +141,11 @@ namespace Microdancer
             {
                 if (MicroManager.PlaybackState == PlaybackState.Playing)
                 {
-                    MicroManager.Current?.Pause();
+                    _current?.Pause();
                 }
                 else if (MicroManager.PlaybackState == PlaybackState.Paused)
                 {
-                    MicroManager.Current?.Resume();
+                    _current?.Resume();
                 }
                 else if (micro != null)
                 {
@@ -148,7 +161,7 @@ namespace Microdancer
             ImGui.PushFont(UiBuilder.IconFont);
             if (ImGuiExt.TintButton(FontAwesomeIcon.Stop.ToIconString(), buttonSize, controlButtonColor))
             {
-                MicroManager.Current?.Stop();
+                _current?.Stop();
             }
             ImGui.PopFont();
 
@@ -157,22 +170,22 @@ namespace Microdancer
             ImGui.SameLine();
 
             ImGui.PushFont(UiBuilder.IconFont);
-            if (ImGuiExt.TintButton(FontAwesomeIcon.FastForward.ToIconString(), buttonSize, Vector4.Zero))
+            ImGui.PushButtonRepeat(true);
+            if (ImGuiExt.IconButton(FontAwesomeIcon.FastForward, buttonSize))
             {
-                var current = MicroManager.Current;
-                if (current != null)
+                if (_current?.IsPlaying == true)
                 {
-                    var command = current.CurrentCommand ?? current.Commands.FirstOrDefault();
+                    var command = _current.CurrentCommand;
                     if (command != null)
                     {
-                        MicroManager.StartMicro(
-                            current.Micro,
-                            Math.Clamp(command.LineNumber + 1, 0, current.Commands.Last().LineNumber)
-                        );
-                    }
-                    else
-                    {
-                        MicroManager.StartMicro(current.Micro);
+                        var resolution = TimeSpan.FromMilliseconds(100);
+                        var nextCommand = _current.AllCommands.FirstOrDefault(c => c.LineNumber > command.LineNumber);
+                        var lastCommand = _current.AllCommands.LastOrDefault();
+
+                        if (nextCommand != null && (nextCommand != lastCommand || lastCommand.WaitTime > resolution))
+                        {
+                            MicroManager.StartMicro(_current.Micro, nextCommand.LineNumber);
+                        }
                     }
                 }
                 else if (micro != null)
@@ -180,9 +193,24 @@ namespace Microdancer
                     MicroManager.StartMicro(micro);
                 }
             }
+            ImGui.PopButtonRepeat();
             ImGui.PopFont();
 
             ImGuiExt.TextTooltip("Next Line");
+
+            ImGui.SameLine();
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.PushStyleColor(ImGuiCol.Text, Config.IgnoreLooping ? dimColor : highlightColor);
+            if (ImGuiExt.IconButton((FontAwesomeIcon)0xf01e, buttonSize))
+            {
+                Config.IgnoreLooping ^= true;
+                PluginInterface.SavePluginConfig(Config);
+            }
+            ImGui.PopStyleColor();
+            ImGui.PopFont();
+
+            ImGuiExt.TextTooltip($"{(Config.IgnoreLooping ? "Allow" : "Ignore")} Looping");
 
             if (spacer.X > 0)
             {
@@ -190,6 +218,7 @@ namespace Microdancer
                 ImGui.InvisibleButton("controls-after", spacer);
             }
 
+            ImGuiExt.PopDisableButtonBg();
             ImGui.PopStyleColor();
             ImGui.PopStyleVar(2);
         }
@@ -200,9 +229,9 @@ namespace Microdancer
 
             var label = micro?.Name ?? "------";
             var playing = true;
-            if (MicroManager.Current != null && MicroManager.PlaybackState != PlaybackState.Stopped)
+            if (_current != null && MicroManager.PlaybackState != PlaybackState.Stopped)
             {
-                label = MicroManager.Current.Micro.Name ?? "<Unknown Micro>";
+                label = _current.Micro.Name ?? "<Unknown Micro>";
             }
             else
             {
@@ -218,9 +247,9 @@ namespace Microdancer
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
             if (ImGuiExt.TintButton(label, labelSize, new(0, 0, 0, 0)))
             {
-                if (MicroManager.Current != null)
+                if (_current != null)
                 {
-                    Config.LibrarySelection = MicroManager.Current.Micro.Id;
+                    Config.LibrarySelection = _current.Micro.Id;
                     PluginInterface.SavePluginConfig(Config);
                 }
             }
@@ -240,11 +269,11 @@ namespace Microdancer
             var duration = time;
             var progress = 0.0f;
             var playing = true;
-            if (MicroManager.Current != null && MicroManager.PlaybackState != PlaybackState.Stopped)
+            if (_current != null && MicroManager.PlaybackState != PlaybackState.Stopped)
             {
-                time = MicroManager.Current.CurrentTime.ToTimeCode();
-                duration = MicroManager.Current.WaitTime.ToTimeCode();
-                progress = MicroManager.Current.GetProgress();
+                time = _current.CurrentTime.ToTimeCode();
+                duration = _current.WaitTime.ToTimeCode();
+                progress = _current.GetProgress();
             }
             else
             {

@@ -175,9 +175,11 @@ namespace Microdancer
 
                         if (ImGui.BeginPopupContextItem())
                         {
-                            if (ImGuiExt.IconButton(FontAwesomeIcon.Copy, $"Copy run command for {region}"))
+                            if (ImGui.Selectable($"Copy run command"))
                             {
-                                ImGui.SetClipboardText($"/runmicro {micro.Id} \"{region}\"");
+                                ImGui.SetClipboardText(
+                                    $"/runmicro {micro.Id} \"{(region.IsNamedRegion ? ":" : string.Empty)}{region.Name}\""
+                                );
                             }
 
                             ImGui.EndPopup();

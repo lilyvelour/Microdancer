@@ -8,6 +8,7 @@ namespace Microdancer
 {
     public class Timeline : PluginUiBase, IDrawable
     {
+        private MicroInfo? _currentInfo;
         private MicroInfo? _info;
         private float _lastScrollPosition = -1;
         private bool _resetScroll;
@@ -26,11 +27,12 @@ namespace Microdancer
                 return false;
             }
 
-            if (MicroManager.Current?.Micro == micro)
+            _currentInfo = MicroManager.Current;
+            if (_currentInfo != null && _currentInfo.Micro == micro)
             {
-                _info = MicroManager.Current;
+                _info = _currentInfo;
             }
-            else if (_info?.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
+            else if (_info == null || _info.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
             {
                 _info = new MicroInfo(micro);
                 _resetScroll = _lastScrollPosition >= 0;
@@ -53,11 +55,13 @@ namespace Microdancer
             ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0.0f, 0.0f));
 
-            ImGui.BeginChildFrame(
-                (uint)(_info?.Id.GetHashCode() ?? 9999),
-                frameSize,
-                ImGuiWindowFlags.AlwaysHorizontalScrollbar
-            );
+            ImGui.BeginChildFrame((uint)_info.Id.GetHashCode(), frameSize, ImGuiWindowFlags.AlwaysHorizontalScrollbar);
+
+            if (_resetScroll)
+            {
+                ImGui.SetScrollX(_lastScrollPosition);
+                _resetScroll = false;
+            }
 
             ImGui.PopStyleColor(4);
 
@@ -67,7 +71,7 @@ namespace Microdancer
             var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * ImGuiHelpers.GlobalScale;
             ImGui.SetWindowFontScale(1.0f);
 
-            var duration = _info?.AllCommands.Length > 0 ? (float)_info.TotalTime.TotalSeconds : 5.0f;
+            var duration = _info.AllCommands.Length > 0 ? (float)_info.TotalTime.TotalSeconds : 5.0f;
             float increment = Config.TimelineZoom;
 
             var usableWidth = duration / increment * timecodeWidth * 2.0f;
@@ -124,10 +128,10 @@ namespace Microdancer
 
             ImGuiExt.TintButton("##blocks-separator-0", new(separatorWidth, 1.0f), new(0.0f, 0.0f, 0.0f, 1.0f));
 
-            if (_info?.AllCommands.Length > 0)
+            if (_info.AllCommands.Length > 0)
             {
-                var commandProgress = MicroManager.Current?.CurrentCommand?.GetProgress() ?? 0.0f;
-                var regionProgress = MicroManager.Current?.CurrentCommand?.Region.GetProgress() ?? 0.0f;
+                var commandProgress = _currentInfo?.CurrentCommand?.GetProgress() ?? 0.0f;
+                var regionProgress = _currentInfo?.CurrentCommand?.Region.GetProgress() ?? 0.0f;
 
                 DrawBlocks(micro, _info, _info.AllRegions, regionProgress, regionsSize);
 
@@ -184,7 +188,7 @@ namespace Microdancer
             var startMousePos = ImGui.GetCursorScreenPos().X;
             var endMousePos = startMousePos + size.X;
             var hasPlaybackCursor = false;
-            var isCurrent = MicroManager.Current?.Micro == micro;
+            var isCurrent = _currentInfo?.Micro == micro;
             var mousePos = ImGui.GetMousePos().X;
             var t = MathExt.InvLerp(startMousePos, endMousePos, mousePos);
             var timecode = MathExt.Lerp(TimeSpan.Zero, info.TotalTime, t).ToTimeCode();
@@ -215,8 +219,7 @@ namespace Microdancer
                     label = region.IsDefaultRegion ? "(No Region)" : region.Name;
                     lineNumber = region.Commands[0].LineNumber;
                     hasPlaybackCursor =
-                        isCurrent
-                        && region.Commands.Any(c => c.LineNumber == MicroManager.Current?.CurrentCommand?.LineNumber);
+                        isCurrent && region.Commands.Any(c => c.LineNumber == _currentInfo?.CurrentCommand?.LineNumber);
                     barColor = ImGuiExt.RandomColor(label.GetHashCode());
 
                     if (info.CurrentTime > TimeSpan.Zero)
@@ -224,7 +227,7 @@ namespace Microdancer
                         var dim = true;
                         foreach (var c in info.Commands)
                         {
-                            if (c.Text == "/loop")
+                            if (c.Text == "/loop" && !Config.IgnoreLooping)
                             {
                                 break;
                             }
@@ -253,7 +256,7 @@ namespace Microdancer
                 {
                     label = command.Text.Replace(" motion", string.Empty);
                     lineNumber = command.LineNumber;
-                    hasPlaybackCursor = isCurrent && MicroManager.Current?.CurrentCommand?.LineNumber == lineNumber;
+                    hasPlaybackCursor = isCurrent && _currentInfo?.CurrentCommand?.LineNumber == lineNumber;
                     barColor = ImGuiExt.RandomColor(
                         command.Text.Replace("\"", string.Empty).Replace(" motion", string.Empty).GetHashCode()
                     );
@@ -263,7 +266,7 @@ namespace Microdancer
                         var dim = true;
                         foreach (var c in info.Commands)
                         {
-                            if (c.Text == "/loop")
+                            if (c.Text == "/loop" && !Config.IgnoreLooping)
                             {
                                 break;
                             }
@@ -294,13 +297,14 @@ namespace Microdancer
 
                 if (hasPlaybackCursor)
                 {
-                    beforeSize.X = Math.Max((barSize.X * progress) - 1.0f, 0.0f);
-                    afterSize.X = Math.Max(barSize.X - beforeSize.X + 1.0f, 0.0f);
+                    beforeSize.X = Math.Max((barSize.X * progress) - 1.0f, 0.1f);
+                    afterSize.X = Math.Max(barSize.X - beforeSize.X + 1.0f, 0.1f);
                 }
                 else
                 {
-                    beforeSize.X = 0.0f;
-                    playbackCursorSize.X = 0.0f;
+                    beforeSize.X = 0.1f;
+                    playbackCursorSize.X = 0.1f;
+                    afterSize.X -= 0.2f;
                 }
 
                 var cursorColor = hasPlaybackCursor ? Theme.GetColor(ImGuiCol.TextSelectedBg) : barColor;
@@ -317,20 +321,12 @@ namespace Microdancer
                 }
                 ImGuiExt.TextTooltip(tooltip);
 
-                if (_resetScroll)
+                if (hasPlaybackCursor && _currentInfo?.IsPlaying == true && _currentInfo?.IsPaused == false)
                 {
-                    ImGui.SetScrollX(_lastScrollPosition);
-                    _resetScroll = false;
+                    ImGui.SetScrollHereX();
                 }
-                else
-                {
-                    if (hasPlaybackCursor)
-                    {
-                        ImGui.SetScrollHereX();
-                    }
 
-                    _lastScrollPosition = ImGui.GetScrollX();
-                }
+                _lastScrollPosition = ImGui.GetScrollX();
 
                 ImGui.SameLine();
                 if (ImGuiExt.TintButton($"{label}##{i}_after", afterSize, barColor))

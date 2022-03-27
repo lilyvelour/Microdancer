@@ -29,7 +29,7 @@ namespace Microdancer
             if (ImGui.Button(hasLibrary ? "Open Library" : "Create New Library"))
             {
                 Directory.CreateDirectory(Config.LibraryPath);
-                OpenNode(null);
+                Open(Config.LibraryPath);
             }
             ImGui.EndChildFrame();
 
