@@ -68,13 +68,13 @@ namespace Microdancer
             ImGui.PushStyleColor(ImGuiCol.Border, Theme.GetColor(ImGuiCol.ScrollbarGrab));
 
             ImGui.SetWindowFontScale(0.85f);
-            var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * ImGuiHelpers.GlobalScale;
+            var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * 1.25f * ImGuiHelpers.GlobalScale;
             ImGui.SetWindowFontScale(1.0f);
 
             var duration = _info.AllCommands.Length > 0 ? (float)_info.TotalTime.TotalSeconds : 5.0f;
             float increment = Config.TimelineZoom;
 
-            var usableWidth = duration / increment * timecodeWidth * 2.0f;
+            var usableWidth = duration / increment * timecodeWidth * 1.5f;
             var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
 
             var regionsSize = new Vector2(usableWidth, usableHeight * 0.33f);
@@ -124,7 +124,7 @@ namespace Microdancer
             }
             ImGui.SetWindowFontScale(1.0f);
 
-            var separatorWidth = Math.Max(usableWidth + timecodeWidth, frameSize.X);
+            var separatorWidth = Math.Max(usableWidth + timecodeWidth * 2.0f, frameSize.X);
 
             ImGuiExt.TintButton("##blocks-separator-0", new(separatorWidth, 1.0f), new(0.0f, 0.0f, 0.0f, 1.0f));
 
@@ -170,7 +170,7 @@ namespace Microdancer
             ImGui.PopButtonRepeat();
 
             Config.TimelineZoom = Math.Max(
-                MathExt.Snap(Math.Clamp(Config.TimelineZoom, duration * 0.01f, duration * 0.1f), 0.1f),
+                MathExt.Snap(Math.Clamp(Config.TimelineZoom, duration * 0.05f, duration * 0.25f), 0.01f),
                 0.1f
             );
 
@@ -302,14 +302,13 @@ namespace Microdancer
 
                 if (hasPlaybackCursor)
                 {
-                    beforeSize.X = Math.Max((barSize.X * progress) - 1.0f, 0.1f);
-                    afterSize.X = Math.Max(barSize.X - beforeSize.X + 1.0f, 0.1f);
+                    beforeSize.X = (barSize.X * progress) - 1.0f;
+                    afterSize.X = barSize.X - beforeSize.X + 1.0f;
                 }
                 else
                 {
-                    beforeSize.X = 0.1f;
-                    playbackCursorSize.X = 0.1f;
-                    afterSize.X -= 0.2f;
+                    beforeSize.X = 0f;
+                    playbackCursorSize.X = 0f;
                 }
 
                 var cursorColor = hasPlaybackCursor ? Theme.GetColor(ImGuiCol.TextSelectedBg) : barColor;

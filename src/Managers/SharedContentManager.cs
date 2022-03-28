@@ -81,7 +81,6 @@ namespace Microdancer
                         .Select(o => (PlayerCharacter)o)
                         .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
                         .ToHashSet();
-                    ;
 
                     foreach (
                         var partyMember in _partyManager
