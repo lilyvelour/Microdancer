@@ -72,7 +72,7 @@ namespace Microdancer
 
                     var nearby = _objectTable
                         .Where(o => o.ObjectKind == ObjectKind.Player)
-                        //.Where(o => o.ObjectId != player.ObjectId)
+                        .Where(o => o.ObjectId != player.ObjectId)
                         .Where(o => Vector3.Distance(o.Position, player.Position) < 40.0f)
                         .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
                         .Take(20)
@@ -111,21 +111,6 @@ namespace Microdancer
                             var sharedWithMe = await response.Content.ReadFromJsonAsync<SharedContentResponse>(
                                 cancellationToken: cancellationToken
                             );
-
-                            // var sharedWithMe = new SharedContentResponse
-                            // {
-                            //     Content = nearby
-                            //         .Select(
-                            //             name =>
-                            //                 new SharedContent
-                            //                 {
-                            //                     Name = name.Split("@")[0],
-                            //                     World = name.Split("@")[1],
-                            //                     Micros = shared,
-                            //                 }
-                            //         )
-                            //         .ToArray(),
-                            // };
 
                             if (sharedWithMe != null)
                             {
