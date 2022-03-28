@@ -27,6 +27,7 @@ namespace Microdancer
             }
 
             CustomService.Set(pluginInterface.Create<GameManager>());
+            CustomService.Set(pluginInterface.Create<PartyManager>());
             CustomService.Set(pluginInterface.Create<CPoseManager>());
             CustomService.Set(pluginInterface.Create<MicroManager>());
             CustomService.Set(pluginInterface.Create<LibraryManager>());

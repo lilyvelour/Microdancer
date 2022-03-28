@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +23,7 @@ namespace Microdancer
         private readonly DalamudPluginInterface _pluginInterface;
         private readonly LibraryManager _library;
         private readonly ClientState _clientState;
+        private readonly PartyManager _partyManager;
         private readonly ObjectTable _objectTable;
 
         private readonly CancellationTokenSource _tokenSource = new();
@@ -35,12 +35,14 @@ namespace Microdancer
             DalamudPluginInterface pluginInterface,
             LibraryManager libraryManager,
             ClientState clientState,
+            PartyManager partyManager,
             ObjectTable objectTable
         )
         {
             _pluginInterface = pluginInterface;
             _library = libraryManager;
             _clientState = clientState;
+            _partyManager = partyManager;
             _objectTable = objectTable;
 
             var cancellationToken = _tokenSource.Token;
@@ -78,7 +80,23 @@ namespace Microdancer
                         .Take(20)
                         .Select(o => (PlayerCharacter)o)
                         .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
-                        .ToArray();
+                        .ToHashSet();
+                    ;
+
+                    foreach (
+                        var partyMember in _partyManager
+                            .GetInfoFromParty()
+                            .Where(
+                                p =>
+                                    !(
+                                        p.Name == player.Name.ToString()
+                                        && p.World == player.HomeWorld.GameData?.Name.RawString
+                                    )
+                            )
+                    )
+                    {
+                        nearby.Add($"{partyMember.Name}@{partyMember.World}");
+                    }
 
                     var shared = _pluginInterface
                         .Configuration()
@@ -92,7 +110,7 @@ namespace Microdancer
                         Name = player.Name.ToString(),
                         World = player.HomeWorld.GameData?.Name.RawString ?? string.Empty,
                         Timestamp = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds(),
-                        Nearby = nearby,
+                        Nearby = nearby.ToArray(),
                         Shared = shared,
                     };
 
