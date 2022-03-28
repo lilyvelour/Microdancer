@@ -169,10 +169,7 @@ namespace Microdancer
 
             ImGui.PopButtonRepeat();
 
-            Config.TimelineZoom = Math.Max(
-                MathExt.Snap(Math.Clamp(Config.TimelineZoom, duration * 0.05f, duration * 0.25f), 0.01f),
-                0.1f
-            );
+            Config.TimelineZoom = Math.Max(MathExt.Snap(Math.Min(Config.TimelineZoom, duration * 0.1f), 0.05f), 0.25f);
 
             if (changedZoom)
             {
@@ -302,8 +299,8 @@ namespace Microdancer
 
                 if (hasPlaybackCursor)
                 {
-                    beforeSize.X = (barSize.X * progress) - 1.0f;
-                    afterSize.X = barSize.X - beforeSize.X + 1.0f;
+                    beforeSize.X = Math.Max((barSize.X * progress) - 1.0f, 0.0f);
+                    afterSize.X = Math.Max(barSize.X - beforeSize.X + 1.0f, 0.0f);
                 }
                 else
                 {
