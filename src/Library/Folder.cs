@@ -4,19 +4,17 @@ using System.IO;
 
 namespace Microdancer
 {
-    public sealed class LibraryFolder : Folder
+    public sealed class LibraryFolderRoot : Folder
     {
-        public LibraryFolder(DirectoryInfo dir, INode? parent = null, List<INode>? children = null)
-            : base(dir, parent, children, false)
+        public LibraryFolderRoot(DirectoryInfo dir, List<INode>? children = null) : base(dir, null, children, false)
         {
             Name = "Library";
         }
     }
 
-    public sealed class SharedFolder : Folder
+    public sealed class SharedFolderRoot : Folder
     {
-        public SharedFolder(DirectoryInfo dir, INode? parent = null, List<INode>? children = null)
-            : base(dir, parent, children, true)
+        public SharedFolderRoot(DirectoryInfo dir, List<INode>? children = null) : base(dir, null, children, true)
         {
             Name = "Shared with Me";
         }

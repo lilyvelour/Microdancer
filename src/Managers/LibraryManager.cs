@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 
 namespace Microdancer
@@ -54,27 +55,35 @@ namespace Microdancer
 
         public IEnumerable<INode> GetNodes()
         {
-            var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
-            var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
-            var sharedPath = Directory.CreateDirectory(sharedPathName);
-
-            if (_shouldRebuild)
+            try
             {
-                _cachedNodes.Clear();
+                var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
+                var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
+                var sharedPath = Directory.CreateDirectory(sharedPathName);
 
-                var library = BuildTree(libraryPath);
-                if (library.Children.Count > 0)
+                if (_shouldRebuild)
                 {
-                    _cachedNodes.Add(library);
-                }
+                    _cachedNodes.Clear();
 
-                var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
-                if (sharedWithMe.Children.Count > 0)
-                {
-                    _cachedNodes.Add(sharedWithMe);
-                }
+                    var library = BuildTree(libraryPath);
+                    if (library.Children.Count > 0)
+                    {
+                        _cachedNodes.Add(library);
+                    }
 
-                _shouldRebuild = false;
+                    var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
+                    if (sharedWithMe.Children.Count > 0)
+                    {
+                        _cachedNodes.Add(sharedWithMe);
+                    }
+
+                    _shouldRebuild = false;
+                }
+            }
+            catch
+            {
+                PluginLog.LogWarning("Unable to update nodes - skipping");
+                _shouldRebuild = true;
             }
 
             return _cachedNodes;
@@ -82,9 +91,16 @@ namespace Microdancer
 
         public T? Find<T>(Guid id) where T : INode
         {
-            return GetNodes()
-                .Select(node => (T?)Traverse(node, n => n.Children).FirstOrDefault(n => n is T && n.Id == id))
-                .FirstOrDefault(micro => micro != null);
+            try
+            {
+                return GetNodes()
+                    .Select(node => (T?)Traverse(node, n => n.Children).FirstOrDefault(n => n is T && n.Id == id))
+                    .FirstOrDefault(micro => micro != null);
+            }
+            catch
+            {
+                return default;
+            }
         }
 
         public T? Find<T>(string? search) where T : INode
@@ -137,11 +153,15 @@ namespace Microdancer
 
         private INode BuildTree(DirectoryInfo dir, INode? parent = null, bool isSharedFolder = false)
         {
-            var folder = isSharedFolder
-                ? new SharedFolder(dir, parent)
-                : parent == null
-                    ? new LibraryFolder(dir)
-                    : new Folder(dir, parent, isReadOnly: isSharedFolder);
+            Folder folder;
+            if (parent == null)
+            {
+                folder = isSharedFolder ? new SharedFolderRoot(dir) : new LibraryFolderRoot(dir);
+            }
+            else
+            {
+                folder = new Folder(dir, parent, isReadOnly: isSharedFolder);
+            }
 
             foreach (var subDir in dir.GetDirectories())
             {

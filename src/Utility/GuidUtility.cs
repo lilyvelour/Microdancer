@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography;
@@ -10,7 +9,7 @@ namespace Microdancer
     public static class GuidUtility
     {
         /// <summary>
-        /// /// Creates a name-based UUID using the algorithm from RFC 4122 §4.3.
+        /// Creates a name-based UUID using the algorithm from RFC 4122 §4.3.
         /// </summary>
         /// <param name="namespaceId">The ID of the namespace.</param>
         /// <param name="name">The name (within that namespace).</param>

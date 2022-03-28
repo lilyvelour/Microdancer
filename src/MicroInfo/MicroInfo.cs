@@ -132,7 +132,7 @@ namespace Microdancer
             }
 
             TimeSpan? defaultWait = null;
-            var currentRegion = new MicroRegion();
+            var currentRegion = new MicroRegion(1);
 
             bool? overrideInclude = null;
 
@@ -164,7 +164,7 @@ namespace Microdancer
                         isNamedRegion = true;
                     }
 
-                    currentRegion = new MicroRegion(regionName, isNamedRegion);
+                    currentRegion = new MicroRegion(regionName, isNamedRegion, lineNumber);
                 }
                 else if (line.StartsWith("#endregion") || line.StartsWith("#region"))
                 {
@@ -173,7 +173,11 @@ namespace Microdancer
                         overrideInclude = false;
                         IsSingleRegion = currentRegion?.IsNamedRegion == true;
                     }
-                    currentRegion = new MicroRegion();
+                    if (currentRegion != null)
+                    {
+                        currentRegion.EndLineNumber = lineNumber;
+                    }
+                    currentRegion = new MicroRegion(lineNumber + 1);
                     continue;
                 }
                 else if (line.StartsWith("#"))
@@ -226,6 +230,11 @@ namespace Microdancer
                         }
                     }
                 }
+            }
+
+            if (currentRegion != null && currentRegion.EndLineNumber < 0)
+            {
+                currentRegion.EndLineNumber = body.Length;
             }
 
             // Get all regions

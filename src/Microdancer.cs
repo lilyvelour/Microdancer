@@ -30,6 +30,7 @@ namespace Microdancer
             CustomService.Set(pluginInterface.Create<CPoseManager>());
             CustomService.Set(pluginInterface.Create<MicroManager>());
             CustomService.Set(pluginInterface.Create<LibraryManager>());
+            CustomService.Set(pluginInterface.Create<SharedContentManager>());
             CustomService.Set(pluginInterface.Create<MicrodancerUi>());
 
             var commandTypes = Assembly

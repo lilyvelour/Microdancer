@@ -251,10 +251,19 @@ namespace Microdancer
                     continue;
                 }
                 // Set auto-busy
-                else if (command.Text.StartsWith("/autobusy"))
+                else if (command.Text.StartsWith("/autobusy") || command.Text.StartsWith("/autobussy"))
                 {
                     _autoBusy = true;
                     await _channel.Writer.WriteAsync("/busy on");
+
+                    if (command.Text.StartsWith("/autobussy"))
+                    {
+                        for (var s = 1; s <= 12; ++s)
+                        {
+                            // This is Kibby's fault
+                            await _channel.Writer.WriteAsync($"/echo Bussy Gang Bussy Gang Bussy Gang <se.{s}>");
+                        }
+                    }
 
                     ++i;
                     continue;

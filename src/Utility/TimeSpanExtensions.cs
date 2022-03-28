@@ -52,7 +52,7 @@ namespace Microdancer
             }
             else if (ts.Milliseconds > 0)
             {
-                sb.Append(ts.Milliseconds * 0.001);
+                sb.Append((ts.Milliseconds * 0.001).ToString("G3"));
             }
             else
             {
@@ -63,6 +63,28 @@ namespace Microdancer
             {
                 sb.Append(" sec");
             }
+
+            return sb.ToString();
+        }
+
+        public static string ToSecondsString(this TimeSpan ts)
+        {
+            var sb = new StringBuilder();
+
+            if (ts.Seconds > 0)
+            {
+                sb.Append(ts.TotalSeconds.ToString("G3"));
+            }
+            else if (ts.Milliseconds > 0)
+            {
+                sb.Append((ts.Milliseconds * 0.001).ToString("G3"));
+            }
+            else
+            {
+                sb.Append('0');
+            }
+
+            sb.Append(" sec");
 
             return sb.ToString();
         }

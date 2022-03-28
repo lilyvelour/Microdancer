@@ -9,8 +9,10 @@ namespace Microdancer
         public string Name { get; }
         public bool IsNamedRegion { get; }
         public bool IsDefaultRegion { get; }
-        public int StartLineNumber { get; private set; }
-        public int EndLineNumber { get; private set; }
+        public int StartLineNumber { get; }
+        public int EndLineNumber { get; internal set; } = -1;
+        public int CommandStartLineNumber { get; private set; }
+        public int CommandEndLineNumber { get; private set; }
 
         public IList<MicroCommand> Commands { get; } = new List<MicroCommand>();
 
@@ -42,20 +44,21 @@ namespace Microdancer
             }
         }
 
-        public MicroRegion() : this(null, false) { }
+        public MicroRegion(int lineNumber) : this(null, false, lineNumber) { }
 
-        public MicroRegion(string? name, bool isNamedRegion)
+        public MicroRegion(string? name, bool isNamedRegion, int lineNumber)
         {
             Name = name ?? string.Empty;
             IsNamedRegion = isNamedRegion;
             IsDefaultRegion = name == null;
+            StartLineNumber = lineNumber;
         }
 
         internal MicroCommand AddCommand(MicroCommand command)
         {
             Commands.Add(command);
-            StartLineNumber = Commands.Min(c => c.LineNumber);
-            EndLineNumber = Commands.Max(c => c.LineNumber);
+            CommandStartLineNumber = Commands.Min(c => c.LineNumber);
+            CommandEndLineNumber = Commands.Max(c => c.LineNumber);
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
             return command;
         }

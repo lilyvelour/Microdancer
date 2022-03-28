@@ -8,8 +8,15 @@ namespace Microdancer
 {
     public class FileContents : PluginUiBase, IDrawable<Micro>
     {
+        private MicroInfo? _info;
+
         public bool Draw(Micro micro)
         {
+            if (_info?.Micro != micro)
+            {
+                _info = new MicroInfo(micro);
+            }
+
             ImGui.InvisibleButton("file-contents-spacer", new(-1, 0.0f));
 
             var framePadding = ImGui.GetStyle().FramePadding;
@@ -55,11 +62,15 @@ namespace Microdancer
 
                 for (var i = 0; i < len; ++i)
                 {
+                    var lineNumber = i + 1;
+                    var command = _info.AllCommands.FirstOrDefault(c => c.LineNumber == lineNumber);
+
                     var prefixColor = Vector4.Zero;
                     var textColor = Theme.GetColor(ImGuiCol.Text) * 0.75f;
                     textColor.W = 1.0f;
+                    var currentLineNumber = MicroManager.Current?.CurrentCommand?.LineNumber ?? 0;
 
-                    if (isRunning && MicroManager.Current?.CurrentCommand?.LineNumber == i + 1)
+                    if (isRunning && currentLineNumber == lineNumber)
                     {
                         prefixColor = Theme.GetColor(ImGuiCol.TitleBgActive);
                         textColor = Theme.GetColor(ImGuiCol.Text);
@@ -94,34 +105,72 @@ namespace Microdancer
                     ImGui.PushFont(UiBuilder.MonoFont);
 
                     ImGui.PushStyleColor(ImGuiCol.Text, textColor * 0.75f);
-                    ImGui.Text($"{(i + 1).ToString().PadLeft(maxChars)}");
+                    ImGui.Text($"{lineNumber.ToString().PadLeft(maxChars)}");
                     ImGui.PopStyleColor();
 
                     ImGui.SameLine();
 
                     ImGui.PushStyleColor(ImGuiCol.Text, textColor);
-                    ImGui.Text($"{lines[i]}");
+                    if (ImGui.Selectable($"{lines[i]}##{i}", currentLineNumber == lineNumber))
+                    {
+                        MicroManager.StartMicro(micro, i + 1);
+                    }
                     ImGui.PopStyleColor();
-
-                    if (lines[i].StartsWith("#region "))
-                    {
-                        var mi = new MicroInfo(micro, lines[i][8..]);
-                        var waitTime = mi.Commands.Sum(c => c.WaitTime.TotalSeconds);
-                        ImGuiExt.TextTooltip($"{waitTime:#.###} sec");
-                    }
-
-                    if (ImGui.BeginPopupContextItem())
-                    {
-                        if (ImGui.Selectable("Open at Line Number"))
-                        {
-                            
-                        }
-                        ImGui.EndPopup();
-                    }
 
                     ImGui.PopFont();
 
                     ImGui.PopStyleVar();
+
+                    if (command != null)
+                    {
+                        var startTimeInRegionMs = command.Region.Commands
+                            .Where(c => c.LineNumber < command.LineNumber)
+                            .Sum(c => (int)c.WaitTime.TotalMilliseconds);
+                        var startTimeInRegion = TimeSpan.FromMilliseconds(startTimeInRegionMs);
+
+                        var tooltip =
+                            $"{command.Text.Replace(" motion", string.Empty)} <{command.WaitTime.ToSimpleString()}>";
+
+                        if (!command.Region.IsDefaultRegion)
+                        {
+                            tooltip += $"\n- In {command.Region.Name}: {startTimeInRegion.ToSecondsString()}";
+                        }
+
+                        if (!command.Region.IsNamedRegion)
+                        {
+                            var startTimeInMicroMs = _info.Commands
+                                .Where(c => c.LineNumber < command.LineNumber)
+                                .Sum(c => (int)c.WaitTime.TotalMilliseconds);
+                            var startTimeInMicro = TimeSpan.FromMilliseconds(startTimeInMicroMs);
+
+                            tooltip += $"\n- In {_info.Micro.Name}: {startTimeInMicro.ToSecondsString()}";
+                        }
+
+                        ImGuiExt.TextTooltip(tooltip);
+                    }
+                    else
+                    {
+                        var region = _info.AllRegions.FirstOrDefault(
+                            r => r.StartLineNumber == lineNumber || r.EndLineNumber == lineNumber
+                        );
+
+                        if (region != null)
+                        {
+                            var tooltip = $"{region.Name} <{region.WaitTime.ToSimpleString()}>";
+
+                            if (!region.IsNamedRegion)
+                            {
+                                var startTimeInMicroMs = _info.Commands
+                                    .Where(c => c.LineNumber < lineNumber)
+                                    .Sum(c => (int)c.WaitTime.TotalMilliseconds);
+                                var startTimeInMicro = TimeSpan.FromMilliseconds(startTimeInMicroMs);
+
+                                tooltip += $"\n- In {_info.Micro.Name}: {startTimeInMicro.ToSecondsString()}";
+                            }
+
+                            ImGuiExt.TextTooltip(tooltip);
+                        }
+                    }
                 }
                 ImGui.EndChildFrame();
             }

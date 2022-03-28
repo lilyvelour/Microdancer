@@ -1,4 +1,5 @@
 using System;
+using Dalamud.Interface;
 using ImGuiNET;
 
 namespace Microdancer
@@ -62,9 +63,18 @@ namespace Microdancer
 
                         var parent = node.Parent;
 
-                        if (segment.EndsWith(".micro"))
+                        if (node is Micro && segment.EndsWith(".micro"))
                         {
                             ImGui.Text(segment[..^6]);
+                            var isShared = Config.SharedItems.Contains(node.Id);
+                            if (isShared)
+                            {
+                                ImGui.SameLine();
+
+                                ImGui.PushFont(UiBuilder.IconFont);
+                                ImGui.Text(FontAwesomeIcon.UserFriends.ToIconString());
+                                ImGui.PopFont();
+                            }
                         }
                         else
                         {

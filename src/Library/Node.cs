@@ -52,11 +52,12 @@ namespace Microdancer
 
         public virtual bool Equals(Node? other)
         {
-            if (other == null)
+            if (other is null)
             {
                 return false;
             }
-            if (Equals(this, other))
+
+            if (ReferenceEquals(this, other))
             {
                 return true;
             }
@@ -65,6 +66,7 @@ namespace Microdancer
             {
                 return false;
             }
+
             if (Children.Count != other.Children.Count)
             {
                 return false;
@@ -72,8 +74,13 @@ namespace Microdancer
 
             for (var i = 0; i < Children.Count; ++i)
             {
-                if (!Children[i].Equals(other.Children[i]))
+                Node? child = Children[i] as Node;
+                Node? otherChild = other.Children[i] as Node;
+
+                if (child?.Equals(otherChild) != true)
+                {
                     return false;
+                }
             }
 
             return true;
@@ -88,6 +95,21 @@ namespace Microdancer
         {
             return HashCode.Combine(Id);
         }
+
+        public static bool operator ==(Node? obj1, Node? obj2)
+        {
+            if (ReferenceEquals(obj1, obj2))
+            {
+                return true;
+            }
+            if (obj1 is null || obj2 is null)
+            {
+                return false;
+            }
+            return obj1.Equals(obj2);
+        }
+
+        public static bool operator !=(Node? obj1, Node? obj2) => !(obj1 == obj2);
 
         private static Guid GenerateId(string? path)
         {

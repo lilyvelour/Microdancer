@@ -84,9 +84,16 @@ namespace Microdancer
                 if (regions.Length == 0 || regions.All(r => r.IsDefaultRegion))
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.68f, 0.68f, 0.68f, 1.0f));
-                    ImGui.TextWrapped(
-                        "Add a region to your file (using #region [name] and #endregion) to have it show up here.\n\nRegions starting with \":\" will show up as special buttons that are not part of the timeline."
-                    );
+                    if (micro.IsReadOnly)
+                    {
+                        ImGui.TextWrapped("- No regions -");
+                    }
+                    else
+                    {
+                        ImGui.TextWrapped(
+                            "Add a region to your file (using #region [name] and #endregion) to have it show up here.\n\nRegions starting with \":\" will show up as special buttons that are not part of the timeline."
+                        );
+                    }
                     ImGui.PopStyleColor();
                 }
                 else
@@ -236,19 +243,22 @@ namespace Microdancer
 
                 ImGui.Spacing();
 
-                if (ImGui.Button("Create new Micro"))
+                if (node?.IsReadOnly == false)
                 {
-                    Directory.CreateDirectory(basePath);
-                    File.CreateText(IOUtility.MakeUniqueFile(basePath, "New Micro ({0}).micro", "New Micro.micro"));
-                    Library.MarkAsDirty();
-                }
+                    if (ImGui.Button("Create new Micro"))
+                    {
+                        Directory.CreateDirectory(basePath);
+                        File.CreateText(IOUtility.MakeUniqueFile(basePath, "New Micro ({0}).micro", "New Micro.micro"));
+                        Library.MarkAsDirty();
+                    }
 
-                ImGui.SameLine();
+                    ImGui.SameLine();
 
-                if (ImGui.Button("Create new Folder"))
-                {
-                    Directory.CreateDirectory(IOUtility.MakeUniqueDir(basePath, "New Folder ({0})", "New Folder"));
-                    Library.MarkAsDirty();
+                    if (ImGui.Button("Create new Folder"))
+                    {
+                        Directory.CreateDirectory(IOUtility.MakeUniqueDir(basePath, "New Folder ({0})", "New Folder"));
+                        Library.MarkAsDirty();
+                    }
                 }
             }
 

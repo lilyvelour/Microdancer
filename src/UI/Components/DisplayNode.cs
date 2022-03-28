@@ -1,4 +1,5 @@
 using System;
+using Dalamud.Interface;
 using ImGuiNET;
 
 namespace Microdancer
@@ -22,20 +23,23 @@ namespace Microdancer
         public bool Draw(INode node, string? filter = null)
         {
             var shouldDraw = false;
-            return DrawImpl(node, filter, ref shouldDraw);
+            var isShared = false;
+            return DrawImpl(node, filter, ref shouldDraw, ref isShared);
         }
 
-        private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
+        private bool DrawImpl(INode node, string? filter, ref bool shouldDraw, ref bool isShared)
         {
-            var flags = GetFlags(node, filter, ref shouldDraw);
+            var flags = GetFlags(node, filter, ref shouldDraw, ref isShared);
             if (!shouldDraw)
             {
                 return false;
             }
 
-            ImGui.PushID($"{node.Id}{filter ?? string.Empty}");
+            ImGui.PushID($"{node.Id}{filter ?? string.Empty}item");
 
             var open = ImGui.TreeNodeEx($"{_idPrefix}{node.Id}", flags, $"{node.Name}");
+
+            ImGui.PopID();
 
             if (ImGui.IsItemClicked() && (node.Children.Count == 0 || _idPrefix == "library"))
             {
@@ -45,13 +49,22 @@ namespace Microdancer
 
             _contextMenu.Draw(node);
 
-            ImGui.PopID();
+            if (isShared)
+            {
+                ImGui.SameLine();
+
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.PushID($"{node.Id}{filter ?? string.Empty}icon");
+                ImGui.Text(FontAwesomeIcon.UserFriends.ToIconString());
+                ImGui.PopID();
+                ImGui.PopFont();
+            }
 
             if (open)
             {
                 foreach (var child in node.Children)
                 {
-                    DrawImpl(child, filter, ref shouldDraw);
+                    DrawImpl(child, filter, ref shouldDraw, ref isShared);
                 }
 
                 ImGui.TreePop();
@@ -60,9 +73,9 @@ namespace Microdancer
             return true;
         }
 
-        private ImGuiTreeNodeFlags GetFlags(INode root, string? filter, ref bool shouldDraw)
+        private ImGuiTreeNodeFlags GetFlags(INode root, string? filter, ref bool shouldDraw, ref bool isShared)
         {
-            var flags = GetFlags(root, root, filter, ref shouldDraw, ImGuiTreeNodeFlags.SpanAvailWidth);
+            var flags = GetFlags(root, root, filter, ref shouldDraw, ref isShared, ImGuiTreeNodeFlags.SpanAvailWidth);
 
             if (
                 root.Children.Count > 0
@@ -81,6 +94,7 @@ namespace Microdancer
             INode node,
             string? filter,
             ref bool shouldDraw,
+            ref bool isShared,
             ImGuiTreeNodeFlags flags
         )
         {
@@ -90,6 +104,11 @@ namespace Microdancer
             var emptyFilter = string.IsNullOrWhiteSpace(filter);
             var matchesFilter = !emptyFilter && node.Path.Contains(filter!, StringComparison.CurrentCultureIgnoreCase);
             shouldDraw |= emptyFilter || matchesFilter;
+
+            if (node is Micro)
+            {
+                isShared = Config.SharedItems.Contains(node.Id);
+            }
 
             if (node == root && !hasChildren)
             {
@@ -114,7 +133,7 @@ namespace Microdancer
 
             foreach (var child in node.Children)
             {
-                flags |= GetFlags(root, child, filter, ref shouldDraw, flags);
+                flags |= GetFlags(root, child, filter, ref shouldDraw, ref isShared, flags);
             }
 
             return flags;

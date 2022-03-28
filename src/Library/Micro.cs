@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using IOPath = System.IO.Path;
 
@@ -50,7 +51,7 @@ namespace Microdancer
                         if (File.Exists(Path))
                         {
                             var fi = new FileInfo(Path);
-                            _cache = File.ReadAllLines(Path);
+                            _cache = File.ReadAllLines(Path).Take(10000).ToArray();
                             _cacheTime = DateTime.Now;
                             _modifiedTime = fi.LastWriteTime;
                             break;

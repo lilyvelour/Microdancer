@@ -17,6 +17,6 @@ namespace Microdancer
         public float TimelineZoom { get; set; } = 50.0f;
         public bool IgnoreLooping { get; set; }
         public bool IgnoreAutoCountdown { get; set; }
-        public Dictionary<string, bool> SharedContent { get; set; } = new();
+        public List<Guid> SharedItems { get; set; } = new();
     }
 }

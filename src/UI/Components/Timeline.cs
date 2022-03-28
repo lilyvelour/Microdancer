@@ -231,7 +231,7 @@ namespace Microdancer
                             {
                                 break;
                             }
-                            if (c.Region.StartLineNumber == region.StartLineNumber)
+                            if (c.Region.CommandStartLineNumber == region.CommandStartLineNumber)
                             {
                                 dim = false;
                                 break;
@@ -246,7 +246,7 @@ namespace Microdancer
 
                     if (
                         info.CurrentTime > TimeSpan.Zero
-                        && info.Regions.All(r => r.StartLineNumber != region.StartLineNumber)
+                        && info.Regions.All(r => r.CommandStartLineNumber != region.CommandStartLineNumber)
                     )
                     {
                         barColor *= 0.5f;
@@ -288,10 +288,12 @@ namespace Microdancer
                     hasPlaybackCursor = false;
                 }
 
-                var tooltip =
-                    $"{timecode}"
-                    + $"\n{label} <{item.WaitTime.ToSimpleString()}>"
-                    + $"\nCurrent time: {item.CurrentTime.ToSimpleString()}";
+                var tooltip = $"{timecode}\n{label} <{item.WaitTime.ToSimpleString()}>";
+
+                if (hasPlaybackCursor)
+                {
+                    tooltip += $"\n{item.CurrentTime.ToSimpleString()}";
+                }
 
                 var playbackCursorSize = new Vector2(2.0f, barSize.Y);
 
