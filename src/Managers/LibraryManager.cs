@@ -86,7 +86,7 @@ namespace Microdancer
                 _shouldRebuild = true;
             }
 
-            return _cachedNodes;
+            return _cachedNodes.ToArray();
         }
 
         public T? Find<T>(Guid id) where T : INode

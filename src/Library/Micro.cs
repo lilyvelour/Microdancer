@@ -71,7 +71,7 @@ namespace Microdancer
                 }
             }
 
-            return _cache ?? new[] { string.Empty };
+            return _cache?.ToArray() ?? new[] { string.Empty };
         }
 
         public Micro(FileSystemInfo info, INode? parent = null) : base(info, parent) { }
