@@ -204,23 +204,32 @@ namespace Microdancer
 
         private void ClearSharedFolder(HashSet<string>? pathsToKeep = null, string? root = null)
         {
-            var folder = new DirectoryInfo(root ?? _pluginInterface.SharedFolderPath());
-            foreach (DirectoryInfo dir in folder.EnumerateDirectories())
+            try
             {
-                if (pathsToKeep?.Contains(dir.FullName) == true)
+                var path = root ?? _pluginInterface.SharedFolderPath();
+                Directory.CreateDirectory(path);
+                var folder = new DirectoryInfo(path);
+                foreach (DirectoryInfo dir in folder.EnumerateDirectories())
                 {
-                    foreach (FileInfo file in dir.EnumerateFiles())
+                    if (pathsToKeep?.Contains(dir.FullName) == true)
                     {
-                        if (pathsToKeep?.Contains(file.FullName) != true)
+                        foreach (FileInfo file in dir.EnumerateFiles())
                         {
-                            file.Delete();
+                            if (pathsToKeep?.Contains(file.FullName) != true)
+                            {
+                                file.Delete();
+                            }
                         }
                     }
+                    else
+                    {
+                        dir.Delete(true);
+                    }
                 }
-                else
-                {
-                    dir.Delete(true);
-                }
+            }
+            catch (Exception e)
+            {
+                PluginLog.Error(e, e.Message);
             }
         }
 
