@@ -12,81 +12,35 @@ namespace Microdancer
 
         public static string ToSimpleString(this TimeSpan ts)
         {
+            if ((int)ts.TotalMinutes < 1)
+            {
+                return ToSecondsString(ts);
+            }
+
             var sb = new StringBuilder();
 
             var hasDays = false;
             var hasHours = false;
-            var hasMinutes = false;
 
             if ((int)ts.TotalDays > 0)
             {
                 hasDays = true;
-                sb.Append((int)ts.TotalDays);
-                sb.Append(':');
+                sb.Append((int)ts.TotalDays).Append(':');
             }
 
             if ((int)ts.TotalHours > 0)
             {
                 hasHours = true;
-                sb.Append(ts.Hours.ToString(hasDays ? "D2" : "D1"));
-                sb.Append(':');
+                sb.Append(ts.Hours.ToString(hasDays ? "D2" : "D1")).Append(':');
             }
-
-            if ((int)ts.TotalMinutes > 0)
-            {
-                hasMinutes = true;
-                sb.Append(ts.Minutes.ToString(hasHours ? "D2" : "D1"));
-                sb.Append(':');
-            }
-
-            if (ts.Seconds > 0)
-            {
-                if (hasMinutes)
-                {
-                    sb.Append(ts.Seconds.ToString("D2"));
-                }
-                else
-                {
-                    sb.Append(ts.TotalSeconds.ToString("G3"));
-                }
-            }
-            else if (ts.Milliseconds > 0)
-            {
-                sb.Append((ts.Milliseconds * 0.001).ToString("G3"));
-            }
-            else
-            {
-                sb.Append('0');
-            }
-
-            if (!hasMinutes)
-            {
-                sb.Append(" sec");
-            }
+            sb.Append($"{ts.Minutes.ToString(hasHours ? "D2" : "D1")}:{ts.Seconds:D2}");
 
             return sb.ToString();
         }
 
         public static string ToSecondsString(this TimeSpan ts)
         {
-            var sb = new StringBuilder();
-
-            if (ts.Seconds > 0)
-            {
-                sb.Append(ts.TotalSeconds.ToString("G3"));
-            }
-            else if (ts.Milliseconds > 0)
-            {
-                sb.Append((ts.Milliseconds * 0.001).ToString("G3"));
-            }
-            else
-            {
-                sb.Append('0');
-            }
-
-            sb.Append(" sec");
-
-            return sb.ToString();
+            return $"{ts.TotalSeconds:0.###} sec";
         }
     }
 }
