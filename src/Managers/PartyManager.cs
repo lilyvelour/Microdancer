@@ -16,18 +16,14 @@ namespace Microdancer
 {
     public struct PartyMember
     {
-        public PartyMember(string name, string world, string region)
+        public PartyMember(string name, string world)
         {
             Name = name;
             World = world;
-            Region = region;
         }
 
         public string Name { get; }
         public string World { get; }
-        public string Region { get; }
-
-        public override string ToString() => $"{Name} [{World}, {Region}]";
     }
 
     // https://github.com/SyntaxVoid/FFLogsPartyLookup/blob/e2a3174bed5ef1e9277ef796e9b3648559780764/FFLogsPartyLookup/PartyHandler.cs
@@ -91,12 +87,11 @@ namespace Microdancer
                 var playerPtr = InfoProxyCrossRealm_GetPtrDelegate() + 0x3c2 + 0x50 * index;
                 var playerName = Marshal.PtrToStringUTF8(playerPtr + 0x8) ?? "NotFound";
                 var world = WorldNameFromByte(*(byte*)playerPtr);
-                var region = RegionFromWorld(world);
-                return new PartyMember(playerName, world, region);
+                return new PartyMember(playerName, world);
             }
             catch
             {
-                return new PartyMember("NotFound", "NotFound", "NotFound");
+                return new PartyMember("NotFound", "NotFound");
             }
         }
 
@@ -161,156 +156,49 @@ namespace Microdancer
 #pragma warning restore 8632
         }
 
-        public string RegionFromWorld(string world)
-        {
-            // Returns a region code for the specified world/server. This method
-            // exists because FFLogs includes the region code within the url for
-            // characters. This will have to be manually updated if any changes
-            // are made to the existing worlds.
-
-#pragma warning disable IDE0066
-            switch (world)
-#pragma warning restore IDE0066
-            {
-                // Primal DC
-                case "Behemoth":
-                case "Excalibur":
-                case "Exodus":
-                case "Famfrit":
-                case "Hyperion":
-                case "Lamia":
-                case "Leviathan":
-                case "Ultros":
-
-                // Aether DC
-                case "Adamantoise":
-                case "Cactuar":
-                case "Faerie":
-                case "Gilgamesh":
-                case "Jenova":
-                case "Midgardsormr":
-                case "Sargatanas":
-                case "Siren":
-
-                // Crystal DC
-                case "Balmung":
-                case "Brynhildr":
-                case "Coeurl":
-                case "Diabolos":
-                case "Goblin":
-                case "Malboro":
-                case "Mateus":
-                case "Zalera":
-
-                    return "na";
-
-                // Elemental DC
-                case "Aegis":
-                case "Atomos":
-                case "Carbuncle":
-                case "Garuda":
-                case "Gungnir":
-                case "Kujata":
-                case "Ramuh":
-                case "Tonberry":
-                case "Typhon":
-                case "Unicorn":
-
-                // Gaia DC
-                case "Alexander":
-                case "Bahamut":
-                case "Durandal":
-                case "Fenrir":
-                case "Ifrit":
-                case "Ridill":
-                case "Tiamat":
-                case "Ultima":
-                case "Valefor":
-                case "Yojimbo":
-                case "Zeromus":
-
-                // Mana DC
-                case "Anima":
-                case "Asura":
-                case "Belias":
-                case "Chocobo":
-                case "Hades":
-                case "Ixon":
-                case "Mandragora":
-                case "Masamune":
-                case "Pandaemonium":
-                case "Shinryu":
-                case "Titan":
-
-                    return "jp";
-
-                // Chaos DC
-                case "Cerberus":
-                case "Louisoix":
-                case "Moogle":
-                case "Omega":
-                case "Ragnarok":
-                case "Spriggan":
-
-                // Light DC
-                case "Lich":
-                case "Odin":
-                case "Phoenix":
-                case "Shiva":
-                case "Twintania":
-                case "Zodiark":
-
-                    return "eu";
-
-                // Materia DC
-                case "Bismarck":
-                case "Ravana":
-                case "Sephirot":
-                case "Sophia":
-                case "Zurvan":
-
-                    return "oc";
-
-                default:
-                    return "RegionNotFound";
-            }
-        }
-
         private int GetPartyType()
         {
-            // Gets the type of party by inspecting the _PartyList object
-            // Returns:
-            //     0: Player is in a solo party
-            //     1: Player is in a normal party (non-cross world)
-            //     2: Player is in a cross-world party
-            //     3: Player is in an alliance group
-            //    -1: Player is in none of the above. Trust party maybe?
-            var pList = (AddonPartyList*)_gameGui.GetAddonByName("_PartyList", 1);
-            var pTypeNode = pList->PartyTypeTextNode;
-            string pType = pTypeNode->NodeText.ToString();
-            switch (pType)
+            try
             {
-                case "Solo":
-                    return 0;
-                case "Party":
-                case "Light Party":
-                case "Full Party":
-                    return 1;
-                case "Cross-world Party":
-                    return 2;
-                case "Alliance A":
-                case "Alliance B":
-                case "Alliance C":
-                case "Alliance D":
-                case "Alliance E":
-                case "Alliance F":
-                case "Alliance G":
-                case "Alliance H":
-                case "Alliance I":
-                    return 3;
-                default:
-                    PluginLog.Debug($"FFLogsPartyLookup: Warning (Unexpected party type): {pType}");
-                    return -1;
+                // Gets the type of party by inspecting the _PartyList object
+                // Returns:
+                //     0: Player is in a solo party
+                //     1: Player is in a normal party (non-cross world)
+                //     2: Player is in a cross-world party
+                //     3: Player is in an alliance group
+                //    -1: Player is in none of the above. Trust party maybe?
+                var pList = (AddonPartyList*)_gameGui.GetAddonByName("_PartyList", 1);
+                var pTypeNode = pList->PartyTypeTextNode;
+                string pType = pTypeNode->NodeText.ToString();
+                switch (pType)
+                {
+                    case "Solo":
+                        return 0;
+                    case "Party":
+                    case "Light Party":
+                    case "Full Party":
+                        return 1;
+                    case "Cross-world Party":
+                        return 2;
+                    case "Alliance A":
+                    case "Alliance B":
+                    case "Alliance C":
+                    case "Alliance D":
+                    case "Alliance E":
+                    case "Alliance F":
+                    case "Alliance G":
+                    case "Alliance H":
+                    case "Alliance I":
+                        return 3;
+                    default:
+                        PluginLog.Debug($"PartyLookup: Warning (Unexpected party type): {pType}");
+                        return -1;
+                }
+            }
+            catch (Exception e)
+            {
+                PluginLog.Error(e, e.Message);
+                return -1;
             }
         }
 
@@ -325,8 +213,7 @@ namespace Microdancer
 
             var localPlayerName = localPlayer.Name.ToString();
             var localPlayerWorld = WorldNameFromByte((byte)localPlayer.HomeWorld.Id);
-            var localPlayerRegion = RegionFromWorld(localPlayerWorld);
-            var localPlayerInfo = new PartyMember(localPlayerName, localPlayerWorld, localPlayerRegion);
+            var localPlayerInfo = new PartyMember(localPlayerName, localPlayerWorld);
             output.Add(localPlayerInfo);
 
             return output;
@@ -338,7 +225,6 @@ namespace Microdancer
             // assuming the party is a normal party (light/full/etc.)
             string tempName;
             string tempWorld;
-            string tempRegion;
             var output = new List<PartyMember>();
             var pCount = _partyList.Length;
 
@@ -354,8 +240,7 @@ namespace Microdancer
 
                 tempName = member.Name.ToString();
                 tempWorld = WorldNameFromByte((byte)member.World.Id);
-                tempRegion = RegionFromWorld(tempWorld);
-                output.Add(new PartyMember(tempName, tempWorld, tempRegion));
+                output.Add(new PartyMember(tempName, tempWorld));
             }
             return output;
         }
