@@ -186,7 +186,7 @@ namespace Microdancer
                     DriftCompensation = false;
                     continue;
                 }
-                else if (line.StartsWith("#") && !line.StartsWith("#!"))
+                else if (line.StartsWith("#"))
                 {
                     continue;
                 }
