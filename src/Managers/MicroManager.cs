@@ -189,6 +189,7 @@ namespace Microdancer
             microInfo.Start();
 
             var autoPing = TimeSpan.Zero;
+            var delay = TimeSpan.Zero;
 
             while (i < microInfo.Commands.Length)
             {
@@ -291,14 +292,18 @@ namespace Microdancer
                 }
 
                 var waitTime = command.WaitTime - autoPing;
-                var delay = waitTime - command.CurrentTime;
-                var resetAutoPing = false;
-
+                if (!microInfo.DriftCompensation)
+                {
+                    delay = TimeSpan.Zero;
+                }
+                delay += waitTime - command.CurrentTime;
                 while (delay > TimeSpan.Zero)
                 {
-                    resetAutoPing = true;
+                    autoPing = TimeSpan.Zero;
 
+                    var t = command.CurrentTime;
                     await Task.Delay(Math.Min((int)delay.TotalMilliseconds, FRAME_TIME));
+                    var dt = command.CurrentTime - t;
 
                     // Micro is currently paused
                     if (GetPlaybackState(microInfo, out shouldBreakLoop) == PlaybackState.Paused)
@@ -311,12 +316,7 @@ namespace Microdancer
                         break;
                     }
 
-                    delay = waitTime - command.CurrentTime;
-                }
-
-                if (resetAutoPing)
-                {
-                    autoPing = TimeSpan.Zero;
+                    delay -= dt;
                 }
 
                 // Micro is currently paused

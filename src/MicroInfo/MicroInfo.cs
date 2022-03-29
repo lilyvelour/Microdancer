@@ -20,6 +20,7 @@ namespace Microdancer
         public Guid Id { get; }
         public Micro Micro { get; }
         public bool IsSingleRegion { get; private set; }
+        public bool DriftCompensation { get; private set; } = true;
         public MicroCommand[] Commands { get; } = Array.Empty<MicroCommand>();
         public MicroRegion[] Regions { get; } = Array.Empty<MicroRegion>();
         public MicroCommand[] AllCommands { get; private set; } = Array.Empty<MicroCommand>();
@@ -180,7 +181,12 @@ namespace Microdancer
                     currentRegion = new MicroRegion(lineNumber + 1);
                     continue;
                 }
-                else if (line.StartsWith("#"))
+                else if (line.StartsWith("#! disable-drift-comp"))
+                {
+                    DriftCompensation = false;
+                    continue;
+                }
+                else if (line.StartsWith("#") && !line.StartsWith("#!"))
                 {
                     continue;
                 }
@@ -277,7 +283,8 @@ namespace Microdancer
                 || command == "/autocountdown"
                 || command == "/autocd"
                 || command == "/autoping"
-                || command == "/busy"
+                || command == "/autobusy"
+                || command == "/autobusy"
             )
             {
                 return TimeSpan.Zero;
