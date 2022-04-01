@@ -172,7 +172,6 @@ namespace Microdancer
                                             await File.WriteAllTextAsync(path, sharedMicro.Body, cancellationToken);
                                         }
 
-                                        pathsToKeep.Add(userFolder.FullName);
                                         pathsToKeep.Add(path);
                                     }
                                 }
@@ -219,29 +218,31 @@ namespace Microdancer
             _disposedValue = true;
         }
 
-        private void ClearSharedFolder(HashSet<string>? pathsToKeep = null, string? root = null)
+        private void ClearSharedFolder(HashSet<string>? pathsToKeep = null, DirectoryInfo? folder = null)
         {
             try
             {
-                var path = root ?? _pluginInterface.SharedFolderPath();
-                Directory.CreateDirectory(path);
-                var folder = new DirectoryInfo(path);
-                foreach (DirectoryInfo dir in folder.EnumerateDirectories())
+                folder ??= new DirectoryInfo(_pluginInterface.SharedFolderPath());
+                Directory.CreateDirectory(folder.FullName);
+
+                if (pathsToKeep?.Any(p => p.StartsWith(folder.FullName)) == true)
                 {
-                    if (pathsToKeep?.Contains(dir.FullName) == true)
+                    foreach (var file in folder.EnumerateFiles())
                     {
-                        foreach (FileInfo file in dir.EnumerateFiles())
+                        if (pathsToKeep?.Any(p => p.StartsWith(file.FullName)) != true)
                         {
-                            if (pathsToKeep?.Contains(file.FullName) != true)
-                            {
-                                file.Delete();
-                            }
+                            file.Delete();
                         }
                     }
-                    else
+
+                    foreach (var child in folder.EnumerateDirectories())
                     {
-                        dir.Delete(true);
+                        ClearSharedFolder(pathsToKeep, child);
                     }
+                }
+                else
+                {
+                    folder.Delete(true);
                 }
             }
             catch (Exception e)

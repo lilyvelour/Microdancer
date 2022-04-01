@@ -20,18 +20,18 @@
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugType>full</DebugType>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <OutputPath>$(AppData)/XIVLauncher/devPlugins/Microdancer/</OutputPath>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <Content Include="../images/icon.png" Link="images/icon.png" CopyToOutputDirectory="Always" Visible="false" />
         <Content Include="./Microdancer.json" CopyToOutputDirectory="Always" Visible="false" />
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugType>pdbonly</DebugType>
         <OutputPath>../bin/$(Configuration)/</OutputPath>
     </PropertyGroup>
