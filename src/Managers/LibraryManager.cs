@@ -16,7 +16,7 @@ namespace Microdancer
 
         private readonly DalamudPluginInterface _pluginInterface;
 
-        private readonly HashSet<INode> _cachedNodes;
+        private readonly HashSet<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
@@ -24,7 +24,6 @@ namespace Microdancer
         public LibraryManager(DalamudPluginInterface pluginInterface)
         {
             _pluginInterface = pluginInterface;
-            _cachedNodes = CompareHashSet<INode>.Create(n => n.Id);
 
             EnsureWatchers();
         }
@@ -65,12 +64,13 @@ namespace Microdancer
                 if (_shouldRebuild)
                 {
                     var library = BuildTree(libraryPath);
+                    var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
+
+                    _cachedNodes.Clear();
                     if (library.Children.Count > 0)
                     {
                         _cachedNodes.Add(library);
                     }
-
-                    var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
                     if (sharedWithMe.Children.Count > 0)
                     {
                         _cachedNodes.Add(sharedWithMe);
