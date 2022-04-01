@@ -25,7 +25,6 @@ jobs:
         env:
           HUSKY: 0
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           dotnet restore
         shell: pwsh
 
@@ -37,7 +36,6 @@ jobs:
 
       - name: Edit package manifest
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           $ver = (./scripts/get-version.ps1).Version
           $path = './src/Microdancer.json'
           $content = Get-Content -path $path
@@ -47,14 +45,12 @@ jobs:
 
       - name: Build
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           $ver = (./scripts/get-version.ps1).Version
           Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
         shell: pwsh
 
       - name: Create icon
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           Copy-Item 'images/icon.png' 'bin/Release/Microdancer/icon.png'
         shell: pwsh
 

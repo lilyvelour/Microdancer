@@ -23,12 +23,13 @@ namespace Microdancer
         public bool Draw(INode node, string? filter = null)
         {
             var shouldDraw = false;
-            var isShared = false;
-            return DrawImpl(node, filter, ref shouldDraw, ref isShared);
+            return DrawImpl(node, filter, ref shouldDraw);
         }
 
-        private bool DrawImpl(INode node, string? filter, ref bool shouldDraw, ref bool isShared)
+        private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
         {
+            var isShared = false;
+
             var flags = GetFlags(node, filter, ref shouldDraw, ref isShared);
             if (!shouldDraw)
             {
@@ -49,7 +50,7 @@ namespace Microdancer
 
             _contextMenu.Draw(node);
 
-            if (isShared)
+            if (isShared && node is not LibraryFolderRoot)
             {
                 ImGui.SameLine();
 
@@ -64,7 +65,7 @@ namespace Microdancer
             {
                 foreach (var child in node.Children)
                 {
-                    DrawImpl(child, filter, ref shouldDraw, ref isShared);
+                    DrawImpl(child, filter, ref shouldDraw);
                 }
 
                 ImGui.TreePop();
@@ -105,20 +106,23 @@ namespace Microdancer
             var matchesFilter = !emptyFilter && node.Path.Contains(filter!, StringComparison.CurrentCultureIgnoreCase);
             shouldDraw |= emptyFilter || matchesFilter;
 
-            if (node is Micro)
+            if (node == root)
             {
-                isShared = Config.SharedItems.Contains(node.Id);
-            }
-
-            if (node == root && !hasChildren)
-            {
-                flags = ImGuiTreeNodeFlags.Leaf;
-                if (isSelected)
+                if (node is Micro)
                 {
-                    flags |= ImGuiTreeNodeFlags.Selected;
+                    isShared = Config.SharedItems.Contains(node.Id);
                 }
 
-                shouldDraw = emptyFilter || matchesFilter;
+                if (!hasChildren)
+                {
+                    flags = ImGuiTreeNodeFlags.Leaf;
+                    if (isSelected)
+                    {
+                        flags |= ImGuiTreeNodeFlags.Selected;
+                    }
+
+                    shouldDraw = emptyFilter || matchesFilter;
+                }
             }
 
             if (matchesFilter || (node != root && isSelected))
@@ -134,6 +138,10 @@ namespace Microdancer
             foreach (var child in node.Children)
             {
                 flags |= GetFlags(root, child, filter, ref shouldDraw, ref isShared, flags);
+                if (child is Micro)
+                {
+                    isShared |= Config.SharedItems.Contains(child.Id);
+                }
             }
 
             return flags;

@@ -16,7 +16,7 @@ namespace Microdancer
 
         private readonly DalamudPluginInterface _pluginInterface;
 
-        private readonly List<INode> _cachedNodes = new();
+        private readonly HashSet<INode> _cachedNodes;
         private bool _shouldRebuild;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
@@ -24,6 +24,7 @@ namespace Microdancer
         public LibraryManager(DalamudPluginInterface pluginInterface)
         {
             _pluginInterface = pluginInterface;
+            _cachedNodes = CompareHashSet<INode>.Create(n => n.Id);
 
             EnsureWatchers();
         }
@@ -63,8 +64,6 @@ namespace Microdancer
 
                 if (_shouldRebuild)
                 {
-                    _cachedNodes.Clear();
-
                     var library = BuildTree(libraryPath);
                     if (library.Children.Count > 0)
                     {

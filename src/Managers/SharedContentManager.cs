@@ -14,6 +14,7 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using IOPath = System.IO.Path;
 
 namespace Microdancer
 {
@@ -74,7 +75,7 @@ namespace Microdancer
 
                     var nearby = _objectTable
                         .Where(o => o.ObjectKind == ObjectKind.Player)
-                        .Where(o => o.ObjectId != player.ObjectId)
+                        //.Where(o => o.ObjectId != player.ObjectId)
                         .Where(o => Vector3.Distance(o.Position, player.Position) < 40.0f)
                         .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
                         .Take(20)
@@ -101,7 +102,7 @@ namespace Microdancer
                         .Configuration()
                         .SharedItems.Select(id => _library.Find<Micro>(id))
                         .Where(micro => micro != null)
-                        .Select(micro => new SharedMicro(micro!))
+                        .Select(micro => new SharedMicro(micro!, _pluginInterface.Configuration().LibraryPath))
                         .ToArray();
 
                     var request = new SharedContent
@@ -138,21 +139,37 @@ namespace Microdancer
                                     var folderName = $"{content.Name}@{content.World}";
 
                                     var userFolder = sharedFolder.CreateSubdirectory(folderName);
-                                    foreach (var micro in content.Shared)
+                                    foreach (var sharedMicro in content.Shared)
                                     {
-                                        var fileName = $"{micro.Name}.micro";
-                                        var path = Path.Combine(userFolder.FullName, fileName);
+                                        var fileName = $"{sharedMicro.Name}.micro";
+                                        string? dir = null;
+                                        string path;
+                                        if (!string.IsNullOrWhiteSpace(sharedMicro.Path))
+                                        {
+                                            dir = IOPath.Combine(userFolder.FullName, sharedMicro.Path);
+                                            path = IOPath.Combine(dir, fileName);
+                                        }
+                                        else
+                                        {
+                                            path = IOPath.Combine(userFolder.FullName, fileName);
+                                        }
+
                                         var skipWrite = false;
+
+                                        if (dir != null)
+                                        {
+                                            Directory.CreateDirectory(dir);
+                                        }
 
                                         if (File.Exists(path))
                                         {
                                             var current = await File.ReadAllTextAsync(path, cancellationToken);
-                                            skipWrite = current == micro.Body;
+                                            skipWrite = current == sharedMicro.Body;
                                         }
 
                                         if (!skipWrite)
                                         {
-                                            await File.WriteAllTextAsync(path, micro.Body, cancellationToken);
+                                            await File.WriteAllTextAsync(path, sharedMicro.Body, cancellationToken);
                                         }
 
                                         pathsToKeep.Add(userFolder.FullName);
@@ -250,13 +267,16 @@ namespace Microdancer
         private class SharedMicro
         {
             public string Name { get; set; } = string.Empty;
+            public string Path { get; set; } = string.Empty;
             public string Body { get; set; } = string.Empty;
 
             public SharedMicro() { }
 
-            public SharedMicro(Micro micro)
+            public SharedMicro(Micro micro, string libraryPath)
             {
                 Name = micro.Name;
+                var relPath = IOPath.GetRelativePath(libraryPath, micro.Path);
+                Path = relPath != null ? IOPath.GetDirectoryName(relPath) ?? string.Empty : string.Empty;
                 Body = string.Join('\n', micro.GetBody());
             }
         }
