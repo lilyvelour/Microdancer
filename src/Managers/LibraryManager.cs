@@ -16,7 +16,7 @@ namespace Microdancer
 
         private readonly DalamudPluginInterface _pluginInterface;
 
-        private readonly HashSet<INode> _cachedNodes = new();
+        private readonly List<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
@@ -57,12 +57,12 @@ namespace Microdancer
         {
             try
             {
-                var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
-                var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
-                var sharedPath = Directory.CreateDirectory(sharedPathName);
-
                 if (_shouldRebuild)
                 {
+                    var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
+                    var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
+                    var sharedPath = Directory.CreateDirectory(sharedPathName);
+
                     var library = BuildTree(libraryPath);
                     var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
 
@@ -73,9 +73,9 @@ namespace Microdancer
                     _shouldRebuild = false;
                 }
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogWarning("Unable to update nodes - skipping");
+                PluginLog.LogError(e, e.Message);
                 _shouldRebuild = true;
             }
 

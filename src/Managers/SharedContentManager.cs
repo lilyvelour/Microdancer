@@ -65,10 +65,16 @@ namespace Microdancer
                         break;
                     }
 
+                    if (!_clientState.IsLoggedIn)
+                    {
+                        ClearSharedFolder();
+                        await Task.Delay(tickRate, cancellationToken);
+                        continue;
+                    }
+
                     var player = _clientState.LocalPlayer;
                     if (player == null)
                     {
-                        ClearSharedFolder();
                         await Task.Delay(tickRate, cancellationToken);
                         continue;
                     }
@@ -175,15 +181,13 @@ namespace Microdancer
                                         pathsToKeep.Add(path);
                                     }
                                 }
+
+                                ClearSharedFolder(pathsToKeep);
                             }
                         }
                         catch (Exception e)
                         {
                             PluginLog.Warning(e.Message);
-                        }
-                        finally
-                        {
-                            ClearSharedFolder(pathsToKeep);
                         }
                     }
 
@@ -218,31 +222,40 @@ namespace Microdancer
             _disposedValue = true;
         }
 
-        private void ClearSharedFolder(HashSet<string>? pathsToKeep = null, DirectoryInfo? folder = null)
+        private void ClearSharedFolder()
+        {
+            ClearSharedFolder(new HashSet<string>());
+        }
+
+        private void ClearSharedFolder(HashSet<string> pathsToKeep, DirectoryInfo? folder = null)
         {
             try
             {
+                var canDelete = folder != null;
+
                 folder ??= new DirectoryInfo(_pluginInterface.SharedFolderPath());
                 Directory.CreateDirectory(folder.FullName);
 
-                if (pathsToKeep?.Any(p => p.StartsWith(folder.FullName)) == true)
+                foreach (var file in folder.EnumerateFiles())
                 {
-                    foreach (var file in folder.EnumerateFiles())
+                    if (!pathsToKeep.Contains(file.FullName))
                     {
-                        if (pathsToKeep?.Any(p => p.EndsWith(file.FullName)) != true)
-                        {
-                            file.Delete();
-                        }
-                    }
-
-                    foreach (var child in folder.EnumerateDirectories())
-                    {
-                        ClearSharedFolder(pathsToKeep, child);
+                        file.Delete();
                     }
                 }
-                else
+
+                foreach (var dir in folder.EnumerateDirectories())
                 {
-                    folder.Delete(true);
+                    ClearSharedFolder(pathsToKeep, dir);
+                }
+
+                if (canDelete && !folder.EnumerateFileSystemInfos().Any())
+                {
+                    try
+                    {
+                        folder.Delete();
+                    }
+                    catch { }
                 }
             }
             catch (Exception e)
