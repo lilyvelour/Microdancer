@@ -229,7 +229,7 @@ namespace Microdancer
                 {
                     foreach (var file in folder.EnumerateFiles())
                     {
-                        if (pathsToKeep?.Any(p => p.StartsWith(file.FullName)) != true)
+                        if (pathsToKeep?.Any(p => p.EndsWith(file.FullName)) != true)
                         {
                             file.Delete();
                         }

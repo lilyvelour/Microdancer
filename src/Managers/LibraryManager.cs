@@ -67,14 +67,8 @@ namespace Microdancer
                     var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
 
                     _cachedNodes.Clear();
-                    if (library.Children.Count > 0)
-                    {
-                        _cachedNodes.Add(library);
-                    }
-                    if (sharedWithMe.Children.Count > 0)
-                    {
-                        _cachedNodes.Add(sharedWithMe);
-                    }
+                    _cachedNodes.Add(library);
+                    _cachedNodes.Add(sharedWithMe);
 
                     _shouldRebuild = false;
                 }
