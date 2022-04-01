@@ -75,7 +75,7 @@ namespace Microdancer
 
                     var nearby = _objectTable
                         .Where(o => o.ObjectKind == ObjectKind.Player)
-                        //.Where(o => o.ObjectId != player.ObjectId)
+                        .Where(o => o.ObjectId != player.ObjectId)
                         .Where(o => Vector3.Distance(o.Position, player.Position) < 40.0f)
                         .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
                         .Take(20)
