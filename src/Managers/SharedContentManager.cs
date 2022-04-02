@@ -79,27 +79,22 @@ namespace Microdancer
                         continue;
                     }
 
+                    var playerName = player.Name.ToString();
+                    var playerWorld = player.HomeWorld.GameData?.Name.RawString;
+
                     var nearby = _objectTable
                         .Where(o => o.ObjectKind == ObjectKind.Player)
                         .Where(o => o.ObjectId != player.ObjectId)
-                        .Where(o => Vector3.Distance(o.Position, player.Position) < 40.0f)
                         .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
-                        .Take(20)
                         .Select(o => (PlayerCharacter)o)
                         .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
                         .ToHashSet();
 
-                    foreach (
-                        var partyMember in _partyManager
-                            .GetInfoFromParty()
-                            .Where(
-                                p =>
-                                    !(
-                                        p.Name == player.Name.ToString()
-                                        && p.World == player.HomeWorld.GameData?.Name.RawString
-                                    )
-                            )
-                    )
+                    var party = _partyManager
+                        .GetInfoFromParty()
+                        .Where(p => p.Name != playerName && p.World != playerWorld);
+
+                    foreach (var partyMember in party)
                     {
                         nearby.Add($"{partyMember.Name}@{partyMember.World}");
                     }
@@ -235,12 +230,17 @@ namespace Microdancer
 
                 folder ??= new DirectoryInfo(_pluginInterface.SharedFolderPath());
                 Directory.CreateDirectory(folder.FullName);
+                var selection = (_pluginInterface?.GetPluginConfig() as Configuration)?.LibrarySelection;
 
                 foreach (var file in folder.EnumerateFiles())
                 {
                     if (!pathsToKeep.Contains(file.FullName))
                     {
-                        file.Delete();
+                        var id = Node.GenerateId(file.FullName);
+                        if (selection != id)
+                        {
+                            file.Delete();
+                        }
                     }
                 }
 

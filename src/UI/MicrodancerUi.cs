@@ -69,12 +69,7 @@ namespace Microdancer
 
         private void DrawWindowContent()
         {
-            if (Config.QueueSelection != Guid.Empty && MicroManager.Current != null)
-            {
-                Config.QueueSelection = Guid.Empty;
-                PluginInterface.SavePluginConfig(Config);
-            }
-            else if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
+            if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
             {
                 ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
                 return;

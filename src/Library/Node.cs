@@ -111,7 +111,7 @@ namespace Microdancer
 
         public static bool operator !=(Node? obj1, Node? obj2) => !(obj1 == obj2);
 
-        private static Guid GenerateId(string? path)
+        public static Guid GenerateId(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
