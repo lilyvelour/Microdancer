@@ -285,6 +285,33 @@ namespace Microdancer
                     ++i;
                     continue;
                 }
+                else if (command.Text.StartsWith("/acancel")) // Animation cancel
+                {
+                    await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
+                    await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
+                }
+                else if (command.Text.StartsWith("/snapchange "))
+                {
+                    var gearset = command.Text[12..];
+                    if (!string.IsNullOrWhiteSpace(gearset))
+                    {
+#pragma warning disable CS4014
+                        Task.Run(
+                            async () =>
+                            {
+                                await _channel.Writer.WriteAsync("/bm off");
+                                await Task.Delay(TimeSpan.FromSeconds(0.3));
+                                await _channel.Writer.WriteAsync("/snap motion");
+                                await Task.Delay(TimeSpan.FromSeconds(1.3));
+                                await _channel.Writer.WriteAsync("/guard motion");
+                                await _channel.Writer.WriteAsync($"/gs change {gearset}");
+                                await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
+                                await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
+                            }
+                        );
+#pragma warning restore CS4014
+                    }
+                }
                 // Send the command to the channel (ignore /microcancel)
                 else if (command.Text != "/microcancel")
                 {
