@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
+using Dalamud.Logging;
 using ImGuiNET;
 
 namespace Microdancer
@@ -13,6 +14,9 @@ namespace Microdancer
         private readonly Breadcrumb _breadcrumb;
         private readonly DisplayNode _node;
         private readonly FileContents _fileContents;
+        private readonly CreateButtons _createButtons;
+        private readonly NodeContextMenu _contextMenu;
+
         private MicroInfo? _info;
 
         private float _lastColumnWidth;
@@ -20,19 +24,15 @@ namespace Microdancer
         public ContentArea()
         {
             _breadcrumb = new Breadcrumb();
-            _node = new DisplayNode("content-area");
+            _node = new DisplayNode("content-area", grid: true);
             _fileContents = new FileContents();
+            _createButtons = new CreateButtons();
+            _contextMenu = new NodeContextMenu("content-area-context-menu", allowSelectRenameDelete: false);
         }
 
         public bool Draw()
         {
-            INode? node = null;
-
-            if (Config.LibrarySelection != Guid.Empty)
-            {
-                node = Library.Find<INode>(Config.LibrarySelection);
-            }
-
+            var node = Library.Find<INode>(Config.LibrarySelection);
             var micro = node as Micro;
 
             if (micro != null)
@@ -229,35 +229,47 @@ namespace Microdancer
 
                 if (nodes.Count > 0)
                 {
-                    foreach (var child in nodes)
+                    if (node != null)
                     {
+                        var cursorPos = ImGui.GetCursorPos();
+
+                        ImGui.Selectable("test", false, ImGuiSelectableFlags.Disabled, ImGui.GetContentRegionAvail());
+
+                        _contextMenu.Draw(node);
+
+                        ImGui.SetCursorPos(cursorPos);
+                    }
+
+                    var usableSpace =
+                        ImGui.GetContentRegionAvail()
+                        - Theme.GetStyle<Vector2>(ImGuiStyleVar.WindowPadding) * 2.0f
+                        - Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding) * 4.0f;
+
+                    var colCount = Math.Max((int)(usableSpace.X / (128 * ImGuiHelpers.GlobalScale)), 1);
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        if (i != 0 && i % colCount != 0)
+                        {
+                            ImGui.SameLine();
+                        }
+                        var child = nodes[i];
                         _node.Draw(child);
                     }
+                }
+                else if (node is SharedFolderRoot)
+                {
+                    ImGui.Text("No shared content available.");
                 }
                 else
                 {
                     ImGui.Text("This folder is lonely...let's get started!");
-                }
 
-                var basePath = (node as Folder)?.Path ?? Config.LibraryPath;
+                    ImGui.Spacing();
 
-                ImGui.Spacing();
-
-                if (node?.IsReadOnly == false)
-                {
-                    if (ImGui.Button("Create new Micro"))
+                    if (node?.IsReadOnly == false)
                     {
-                        Directory.CreateDirectory(basePath);
-                        File.CreateText(IOUtility.MakeUniqueFile(basePath, "New Micro ({0}).micro", "New Micro.micro"));
-                        Library.MarkAsDirty();
-                    }
-
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Create new Folder"))
-                    {
-                        Directory.CreateDirectory(IOUtility.MakeUniqueDir(basePath, "New Folder ({0})", "New Folder"));
-                        Library.MarkAsDirty();
+                        var basePath = (node as Folder)?.Path ?? Config.LibraryPath;
+                        _createButtons.Draw(basePath);
                     }
                 }
             }

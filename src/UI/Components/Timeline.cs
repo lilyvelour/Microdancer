@@ -15,12 +15,7 @@ namespace Microdancer
 
         public bool Draw()
         {
-            Micro? micro = null;
-
-            if (Config.LibrarySelection != Guid.Empty)
-            {
-                micro = Library.Find<Micro>(Config.LibrarySelection);
-            }
+            var micro = Library.Find<Micro>(Config.LibrarySelection);
 
             if (micro == null)
             {
@@ -28,11 +23,12 @@ namespace Microdancer
             }
 
             _currentInfo = MicroManager.Current;
-            if (_currentInfo != null && _currentInfo.Micro == micro)
+            if (_currentInfo?.Micro.Id == Config.LibrarySelection)
             {
                 _info = _currentInfo;
+                micro = _info.Micro;
             }
-            else if (_info == null || _info.Micro != micro || _info.CurrentTime > TimeSpan.Zero)
+            else if (_info?.Micro.Id != Config.LibrarySelection || _info.CurrentTime > TimeSpan.Zero)
             {
                 _info = new MicroInfo(micro);
                 _resetScroll = _lastScrollPosition >= 0;

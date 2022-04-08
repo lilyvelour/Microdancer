@@ -189,7 +189,7 @@ namespace Microdancer
                     await Task.Delay(tickRate, cancellationToken);
                 }
             }
-            catch (TaskCanceledException) { }
+            catch { }
         }
 
         public void Dispose()

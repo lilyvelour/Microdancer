@@ -41,15 +41,10 @@ namespace Microdancer
             var windowVisible = true;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
-            var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible);
+
+            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(400, 400), ImGui.GetMainViewport().WorkSize);
+            var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible, ImGuiWindowFlags.DockNodeHost);
             ImGui.PopStyleVar();
-
-            var windowSize = ImGui.GetWindowSize();
-
-            if (!ImGui.IsWindowCollapsed())
-            {
-                ImGui.SetWindowSize(Vector2.Max(windowSize, ImGuiHelpers.ScaledVector2(400, 400)));
-            }
 
             if (draw)
             {
@@ -94,7 +89,7 @@ namespace Microdancer
 
             ImGui.BeginChildFrame(
                 101010,
-                new(-1, ImGui.GetContentRegionAvail().Y - 112),
+                new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
                 ImGuiWindowFlags.NoBackground
             );
 
@@ -106,7 +101,7 @@ namespace Microdancer
 
             ImGui.BeginChildFrame(
                 101011,
-                new(-1, ImGui.GetContentRegionAvail().Y - 112),
+                new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
                 ImGuiWindowFlags.NoBackground
             );
 

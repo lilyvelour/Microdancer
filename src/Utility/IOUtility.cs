@@ -5,25 +5,43 @@ namespace Microdancer
 {
     public static class IOUtility
     {
-        public static string MakeUniqueDir(string dir, string name, string? first = null)
+        public static string SanitizePath(string path, string basePath = "")
+        {
+            foreach (var invalid in Path.GetInvalidPathChars())
+            {
+                path = path.Replace(invalid, '_');
+            }
+
+            foreach (var invalid in Path.GetInvalidFileNameChars())
+            {
+                path = path.Replace(invalid, '_');
+            }
+
+            return Path.Combine(basePath, path.TrimEnd('.'));
+        }
+
+        public static string MakeUniqueDir(string dir, string name, string first)
         {
             return MakeUniquePath(dir, name, first, Directory.Exists);
         }
 
-        public static string MakeUniqueFile(string dir, string name, string? first = null)
+        public static string MakeUniqueFile(string dir, string name, string first)
         {
             return MakeUniquePath(dir, name, first, File.Exists);
         }
 
-        private static string MakeUniquePath(string dir, string name, string? first, Func<string, bool> predicate)
+        private static string MakeUniquePath(string dir, string name, string first, Func<string, bool> exists)
         {
-            for (int i = 0; ; ++i)
-            {
-                var path = Path.Combine(dir, i == 0 && first != null ? first : string.Format(name, i));
+            var i = 2;
+            var path = Path.Combine(dir, first);
 
-                if (!predicate(path))
-                    return path;
+            while (exists(path) && i < 1000)
+            {
+                path = Path.Combine(dir, string.Format(name, i));
+                i++;
             }
+
+            return path;
         }
     }
 }

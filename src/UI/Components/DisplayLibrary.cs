@@ -9,12 +9,14 @@ namespace Microdancer
     public class DisplayLibrary : PluginUiBase, IDrawable
     {
         private readonly DisplayNode _node;
+        private readonly CreateButtons _createButtons;
 
         private string _search = string.Empty;
 
         public DisplayLibrary()
         {
             _node = new DisplayNode("library");
+            _createButtons = new CreateButtons(CreateButtons.ButtonStyle.Icons);
         }
 
         public bool Draw()
@@ -82,33 +84,17 @@ namespace Microdancer
             var path = Config.LibraryPath;
             if (Directory.Exists(path))
             {
-                if (Config.LibrarySelection != Guid.Empty)
+                var node = Library.Find<INode>(Config.LibrarySelection);
+                if (node is Micro)
                 {
-                    INode? node = Library.Find<INode>(Config.LibrarySelection);
-                    if (node is Micro)
-                    {
-                        path = Path.GetDirectoryName(node.Path)!;
-                    }
-                    else if (node != null)
-                    {
-                        path = node.Path;
-                    }
+                    path = Path.GetDirectoryName(node.Path)!;
+                }
+                else if (node != null)
+                {
+                    path = node.Path;
                 }
 
-                if (ImGuiExt.IconButton(FontAwesomeIcon.Plus, "Create new Micro"))
-                {
-                    Directory.CreateDirectory(path);
-                    File.CreateText(IOUtility.MakeUniqueFile(path, "New Micro ({0}).micro", "New Micro.micro"));
-                    Library.MarkAsDirty();
-                }
-
-                ImGui.SameLine();
-
-                if (ImGuiExt.IconButton(FontAwesomeIcon.FolderPlus, "Create new Folder"))
-                {
-                    Directory.CreateDirectory(IOUtility.MakeUniqueDir(path, "New Folder ({0})", "New Folder"));
-                    Library.MarkAsDirty();
-                }
+                _createButtons.Draw(path);
             }
 
             return true;

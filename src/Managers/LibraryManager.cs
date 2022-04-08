@@ -84,6 +84,11 @@ namespace Microdancer
 
         public T? Find<T>(Guid id) where T : INode
         {
+            if (id == Guid.Empty)
+            {
+                return default;
+            }
+
             try
             {
                 return GetNodes()

@@ -12,10 +12,20 @@ namespace Microdancer
             return IconButton(icon, null, size);
         }
 
+        public static bool IconButton(string icon, Vector2 size)
+        {
+            return IconButton(icon, null, size);
+        }
+
         public static bool IconButton(FontAwesomeIcon icon, string? tooltip = null, Vector2 size = default)
         {
+            return IconButton(icon.ToIconString(), tooltip, size);
+        }
+
+        public static bool IconButton(string icon, string? tooltip = null, Vector2 size = default)
+        {
             ImGui.PushFont(UiBuilder.IconFont);
-            var result = ImGui.Button($"{icon.ToIconString()}##{icon.ToIconString()}-{tooltip}", size);
+            var result = ImGui.Button($"{icon}##{icon}-{tooltip}", size);
             ImGui.PopFont();
 
             if (tooltip != null)
@@ -46,6 +56,30 @@ namespace Microdancer
         public static void PopDisableButtonBg()
         {
             ImGui.PopStyleColor(3);
+        }
+
+        public static bool BeginCursorPopup(string name)
+        {
+            ImGui.SetNextWindowPos(ImGui.GetCursorScreenPos());
+
+            bool _ = false;
+            var open = ImGui.Begin(
+                name,
+                ref _,
+                ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Popup
+            );
+
+            if (open && !ImGui.IsWindowFocused())
+            {
+                return false;
+            }
+
+            return open;
+        }
+
+        public static void EndCursorPopup()
+        {
+            ImGui.End();
         }
 
         public static bool TintButton(string label, Vector4 color)

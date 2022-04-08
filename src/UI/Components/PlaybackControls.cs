@@ -13,13 +13,8 @@ namespace Microdancer
 
         public bool Draw()
         {
-            Micro? micro = null;
+            var micro = Library.Find<Micro>(Config.LibrarySelection);
             _current = MicroManager.Current;
-
-            if (Config.LibrarySelection != Guid.Empty)
-            {
-                micro = Library.Find<Micro>(Config.LibrarySelection);
-            }
 
             if (micro != null)
             {

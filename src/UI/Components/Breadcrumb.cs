@@ -13,12 +13,6 @@ namespace Microdancer
 
             if (node == null)
             {
-                if (Config.LibrarySelection != Guid.Empty)
-                {
-                    Config.LibrarySelection = Guid.Empty;
-                    PluginInterface.SavePluginConfig(Config);
-                }
-
                 ImGui.Text("Home");
             }
             else if (node != null)

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -7,12 +8,19 @@ namespace Microdancer
     public class DisplayNode : PluginUiBase, IDrawable<INode>, IDrawable<INode, string>
     {
         private readonly string _idPrefix;
-        private readonly NodeContextMenu _contextMenu;
+        private readonly bool _grid;
 
-        public DisplayNode(string idPrefix)
+        private readonly NodeContextMenu _contextMenu;
+        private Guid _renaming = Guid.Empty;
+        private bool _shouldSetRenameFocus = false;
+
+        private string _newName = string.Empty;
+
+        public DisplayNode(string idPrefix, bool grid = false)
         {
             _idPrefix = idPrefix;
-            _contextMenu = new NodeContextMenu();
+            _grid = grid;
+            _contextMenu = new NodeContextMenu($"{_idPrefix}node-context-menu");
         }
 
         bool IDrawable<INode>.Draw(INode node)
@@ -23,14 +31,25 @@ namespace Microdancer
         public bool Draw(INode node, string? filter = null)
         {
             var shouldDraw = false;
-            return DrawImpl(node, filter, ref shouldDraw);
+            var result = DrawImpl(node, filter, ref shouldDraw);
+
+            return result;
         }
 
         private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
         {
-            var isShared = false;
+            if (node == null)
+            {
+                return false;
+            }
 
+            var isShared = false;
+            var isFolderRoot = node is LibraryFolderRoot || node is SharedFolderRoot;
+
+            bool open;
+            bool rename;
             var flags = GetFlags(node, filter, ref shouldDraw, ref isShared);
+
             if (!shouldDraw)
             {
                 return false;
@@ -38,21 +57,186 @@ namespace Microdancer
 
             ImGui.PushID($"{node.Id}{filter ?? string.Empty}item");
 
-            var open = ImGui.TreeNodeEx($"{_idPrefix}{node.Id}", flags, $"{node.Name}");
+            if (_grid)
+            {
+                open = false;
+
+                ImGui.BeginGroup();
+
+                ImGui.SetWindowFontScale(2.0f);
+                if (
+                    ImGuiExt.IconButton(
+                        node is Folder ? FontAwesomeIcon.Folder : FontAwesomeIcon.FileAlt,
+                        node.Name,
+                        ImGuiHelpers.ScaledVector2(128, 128)
+                    )
+                )
+                {
+                    Config.LibrarySelection = node.Id;
+                }
+                ImGui.SetWindowFontScale(1.0f);
+
+                _contextMenu.Draw(node, out rename, showCreateButtons: false);
+
+                if (rename && _renaming != node.Id)
+                {
+                    _renaming = node.Id;
+                    _newName = node.Name;
+                    _shouldSetRenameFocus = true;
+                }
+
+                if (_renaming != node.Id)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.FrameBg, Vector4.Zero);
+                    ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
+
+                    ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
+                    ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
+                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+                    ImGui.BeginChildFrame(
+                        (uint)HashCode.Combine(8429234, node),
+                        new(128 * ImGuiHelpers.GlobalScale, 30 * ImGuiHelpers.GlobalScale),
+                        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse
+                    );
+                    ImGui.PopStyleVar(3);
+
+                    var buttonName = node.Name;
+
+                    while (
+                        buttonName.Length > 6
+                        && ImGuiHelpers.GetButtonSize($"{buttonName}...").X > ImGui.GetContentRegionAvail().X
+                    )
+                    {
+                        buttonName = buttonName[..^1];
+                    }
+
+                    if (buttonName != node.Name)
+                    {
+                        buttonName += "...";
+                    }
+
+                    if (ImGuiExt.TintButton(buttonName, new(-1, -1), Vector4.Zero))
+                    {
+                        Config.LibrarySelection = node.Id;
+                    }
+
+                    ImGui.PopStyleColor(2);
+
+                    ImGui.EndChildFrame();
+                }
+            }
+            else
+            {
+                if (Config.LibrarySelection == node.Id || flags.HasFlag(ImGuiTreeNodeFlags.Bullet))
+                {
+                    ImGui.SetNextItemOpen(true);
+                }
+
+                if (isFolderRoot)
+                {
+                    flags |= ImGuiTreeNodeFlags.CollapsingHeader;
+                    flags &= ~ImGuiTreeNodeFlags.Bullet;
+                    flags &= ~ImGuiTreeNodeFlags.Leaf;
+                }
+                else
+                {
+                    flags |= ImGuiTreeNodeFlags.FramePadding;
+                }
+
+                open = ImGui.TreeNodeEx(
+                    $"{_idPrefix}{node.Id}",
+                    flags,
+                    _renaming == node.Id ? string.Empty : $"{node.Name}"
+                );
+            }
 
             ImGui.PopID();
 
-            if (ImGui.IsItemClicked() && (node.Children.Count == 0 || _idPrefix == "library"))
+            if (_renaming == node.Id)
             {
-                Config.LibrarySelection = node.Id;
-                PluginInterface.SavePluginConfig(Config);
+                if (ImGui.IsItemClicked())
+                {
+                    _shouldSetRenameFocus = true;
+                }
+
+                if (!_grid)
+                {
+                    ImGui.SameLine();
+                }
+
+                ImGui.PushItemWidth(_grid ? 128 * ImGuiHelpers.GlobalScale : 0);
+                if (_shouldSetRenameFocus)
+                {
+                    ImGui.SetKeyboardFocusHere();
+                    _shouldSetRenameFocus = false;
+                }
+                if (
+                    ImGui.InputText(
+                        $"##{_idPrefix}{node.Id}rename",
+                        ref _newName,
+                        1024,
+                        ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue
+                    )
+                )
+                {
+                    RenameNode(node, _newName);
+
+                    _renaming = Guid.Empty;
+                    _newName = string.Empty;
+                }
+                ImGui.PopItemWidth();
+
+                if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && !ImGui.IsItemHovered())
+                {
+                    RenameNode(node, _newName);
+
+                    _renaming = Guid.Empty;
+                    _newName = string.Empty;
+                }
+
+                if (ImGui.IsKeyPressed(ImGui.GetKeyIndex(ImGuiKey.Escape)))
+                {
+                    _renaming = Guid.Empty;
+                    _newName = string.Empty;
+                }
+            }
+            else
+            {
+                if (ImGui.IsItemActivated())
+                {
+                    if (Config.LibrarySelection == node.Id)
+                    {
+                        Config.LibrarySelection = Guid.Empty;
+                    }
+                    else
+                    {
+                        Config.LibrarySelection = node.Id;
+                    }
+
+                    PluginInterface.SavePluginConfig(Config);
+                }
             }
 
-            _contextMenu.Draw(node);
+            _contextMenu.Draw(node, out rename);
 
-            if (isShared && node is not LibraryFolderRoot)
+            if (rename && _renaming != node.Id)
             {
-                ImGui.SameLine();
+                _renaming = node.Id;
+                _newName = node.Name;
+                _shouldSetRenameFocus = true;
+            }
+
+            if (isShared && _renaming != node.Id && node is not LibraryFolderRoot)
+            {
+                if (_grid)
+                {
+                    ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 100 * ImGuiHelpers.GlobalScale);
+                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 60 * ImGuiHelpers.GlobalScale);
+                }
+                else
+                {
+                    ImGui.SameLine();
+                }
 
                 ImGui.PushFont(UiBuilder.IconFont);
                 ImGui.PushID($"{node.Id}{filter ?? string.Empty}icon");
@@ -61,14 +245,37 @@ namespace Microdancer
                 ImGui.PopFont();
             }
 
-            if (open)
+            if (_grid)
+            {
+                ImGui.EndGroup();
+            }
+
+            if (Config.LibrarySelection == node.Id && !open)
+            {
+                if (!isFolderRoot && !_grid)
+                {
+                    ImGui.TreePush();
+                }
+                open = true;
+            }
+
+            if (open && !_grid)
             {
                 foreach (var child in node.Children)
                 {
                     DrawImpl(child, filter, ref shouldDraw);
                 }
 
-                ImGui.TreePop();
+                if (!isFolderRoot)
+                {
+                    ImGui.TreePop();
+                }
+                else if (node is SharedFolderRoot && node.Children.Count == 0)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Text, Theme.GetColor(ImGuiCol.TextDisabled));
+                    ImGui.TreeNodeEx($"{_idPrefix}{node.Id}empty", ImGuiTreeNodeFlags.Leaf, "- None -");
+                    ImGui.PopStyleColor();
+                }
             }
 
             return true;
@@ -116,18 +323,18 @@ namespace Microdancer
                 if (!hasChildren)
                 {
                     flags = ImGuiTreeNodeFlags.Leaf;
-                    if (isSelected)
-                    {
-                        flags |= ImGuiTreeNodeFlags.Selected;
-                    }
-
                     shouldDraw = emptyFilter || matchesFilter;
+                }
+
+                if (isSelected)
+                {
+                    flags |= ImGuiTreeNodeFlags.Selected;
                 }
             }
 
             if (matchesFilter || (node != root && isSelected))
             {
-                flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.Bullet;
+                flags |= ImGuiTreeNodeFlags.Bullet;
 
                 if (node == root && node.Parent != null)
                 {
