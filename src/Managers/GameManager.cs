@@ -88,18 +88,18 @@ namespace Microdancer
             {
                 uiModule = _gameGui.GetUIModule();
                 ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(
-                    _sigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9")
+                    _sigScanner.ScanText(Signatures.ProcessChatBox)
                 );
             }
             catch
             {
-                PluginLog.LogError("Failed to load /qexec");
+                PluginLog.LogError("Failed to load ProcessChatBox");
             }
 
             try
             {
                 // also found around g_PlayerMoveController+523
-                walkingBoolPtr = _sigScanner.GetStaticAddressFromSig("88 83 ?? ?? ?? ?? 0F B6 05 ?? ?? ?? ?? 88 83");
+                walkingBoolPtr = _sigScanner.GetStaticAddressFromSig(Signatures.IsWalking);
             }
             catch
             {
@@ -113,7 +113,7 @@ namespace Microdancer
                 try
                 {
                     DoEmote = Marshal.GetDelegateForFunctionPointer<DoEmoteDelegate>(
-                        _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B8 0A 00 00 00")
+                        _sigScanner.ScanText(Signatures.DoEmote)
                     );
                     emoteAgent = (IntPtr)agentModule->GetAgentByInternalID(19);
                 }
@@ -125,12 +125,12 @@ namespace Microdancer
                 try
                 {
                     UseItem = Marshal.GetDelegateForFunctionPointer<UseItemDelegate>(
-                        _sigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 41 B0 01 BA 13 00 00 00")
+                        _sigScanner.ScanText(Signatures.UseItem)
                     );
                     itemContextMenuAgent = (IntPtr)agentModule->GetAgentByInternalID(10);
 
                     GetActionId = Marshal.GetDelegateForFunctionPointer<GetActionIdDelegate>(
-                        _sigScanner.ScanText("E8 ?? ?? ?? ?? 44 8B 4B 2C")
+                        _sigScanner.ScanText(Signatures.GetActionId)
                     );
                 }
                 catch
@@ -146,7 +146,7 @@ namespace Microdancer
             // Located 1 function deep in Client__UI__Shell__ShellCommandAction_ExecuteCommand
             try
             {
-                actionCommandRequestTypePtr = _sigScanner.ScanText("02 00 00 00 41 8B D7 89");
+                actionCommandRequestTypePtr = _sigScanner.ScanText(Signatures.ActionCommandRequestType);
             }
             catch
             {
@@ -164,7 +164,7 @@ namespace Microdancer
 
             try
             {
-                CPoseSettings = _sigScanner.GetStaticAddressFromSig("48 8D 05 ?? ?? ?? ?? 0F B6 1C 38");
+                CPoseSettings = _sigScanner.GetStaticAddressFromSig(Signatures.CPoseSettings);
             }
             catch
             {

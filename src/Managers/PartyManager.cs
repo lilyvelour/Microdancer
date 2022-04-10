@@ -36,7 +36,7 @@ namespace Microdancer
         // cross world parties, and any other parties you can think of, a bit
         // differently and special considerations need to be made for a couple of the
         // cases. To get a list of members from whatever party you're in, just call
-        // PartyHandler.getInfoFromParty()
+        // PartyManager.getInfoFromParty()
         // which will delegate the fetching of info to one of several internal
         // methods depending on the party type (which you don't need to worry about)
         private delegate IntPtr InfoProxyCrossRealm_GetPtr();
@@ -68,11 +68,11 @@ namespace Microdancer
             // probably break if SE ever changes the offsets or the layout
             // of the CrossRealmGroup class.
             // src: gist.github.com/Eternita-S/c21192996d181c41740c6322f2760e16
-            var ipcr_ptr = sigScanner.ScanText("48 8B 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 40 53 41 57");
+            var ipcr_ptr = sigScanner.ScanText(Signatures.InfoProxyCrossRealm);
             InfoProxyCrossRealm_GetPtrDelegate = Marshal.GetDelegateForFunctionPointer<InfoProxyCrossRealm_GetPtr>(
                 ipcr_ptr
             );
-            var gcrps_ptr = sigScanner.ScanText("48 83 EC 28 E8 ?? ?? ?? ?? 84 C0 74 3C");
+            var gcrps_ptr = sigScanner.ScanText(Signatures.GetCrossRealmPartySize);
             getCrossRealmPartySize = Marshal.GetDelegateForFunctionPointer<GetCrossRealmPartySize>(gcrps_ptr);
         }
 

@@ -133,7 +133,7 @@ namespace Microdancer
                 }
 
                 _gameManager.ActionCommandRequestType = 0;
-                _xiv.Functions.Chat.SendMessage(command);
+                _gameManager.ExecuteCommand(command);
                 _gameManager.ActionCommandRequestType = 2;
             }
         }
