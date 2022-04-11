@@ -23,7 +23,6 @@ namespace Microdancer
         private readonly ClientState _clientState;
         private readonly GameManager _gameManager;
         private readonly Condition _condition;
-        private readonly XivCommonBase _xiv;
         private readonly Channel<string> _channel = Channel.CreateUnbounded<string>();
 
         private bool? _autoBusy;
@@ -43,7 +42,6 @@ namespace Microdancer
             _clientState = clientState;
             _gameManager = gameManager;
             _condition = condition;
-            _xiv = new XivCommonBase((Hooks)~0);
 
             _framework.Update += Update;
             _clientState.Login += Login;

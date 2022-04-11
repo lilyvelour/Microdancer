@@ -230,7 +230,7 @@ namespace Microdancer
 
                 folder ??= new DirectoryInfo(_pluginInterface.SharedFolderPath());
                 Directory.CreateDirectory(folder.FullName);
-                var selection = (_pluginInterface?.GetPluginConfig() as Configuration)?.LibrarySelection;
+                var selection = _pluginInterface.Configuration().LibrarySelection;
 
                 foreach (var file in folder.EnumerateFiles())
                 {

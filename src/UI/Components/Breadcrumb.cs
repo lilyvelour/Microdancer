@@ -19,18 +19,21 @@ namespace Microdancer
             {
                 if (ImGui.Selectable("Home", false, ImGuiSelectableFlags.None, ImGui.CalcTextSize("Home")))
                 {
-                    Config.LibrarySelection = Guid.Empty;
-                    PluginInterface.SavePluginConfig(Config);
+                    DeselectAll();
                 }
 
                 ImGui.SameLine();
                 ImGui.Text("»");
                 ImGui.SameLine();
-
-                var label = node.IsReadOnly ? "Shared With Me" : "Library";
+                string label = node switch
+                {
+                    SharedFolderRoot => "Shared with Me",
+                    StarredFolderRoot => "Starred",
+                    _ => "Library",
+                };
                 if (ImGui.Selectable(label, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(label)))
                 {
-                    Config.LibrarySelection = Library.Find<Node>(label)?.Id ?? Guid.Empty;
+                    Select(Library.Find<Node>(label)?.Id ?? Guid.Empty);
                     PluginInterface.SavePluginConfig(Config);
                 }
 
@@ -77,8 +80,7 @@ namespace Microdancer
                                 && parent != null
                             )
                             {
-                                Config.LibrarySelection = parent.Id;
-                                PluginInterface.SavePluginConfig(Config);
+                                Select(parent);
                             }
                         }
                     }

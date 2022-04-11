@@ -48,6 +48,11 @@ namespace Microdancer
 
             foreach (var node in Library.GetNodes())
             {
+                if (!string.IsNullOrWhiteSpace(_search) && node is StarredFolderRoot)
+                {
+                    continue;
+                }
+
                 hasResults |= _node.Draw(node, _search);
             }
 
@@ -60,8 +65,7 @@ namespace Microdancer
 
             if (ImGui.IsItemClicked())
             {
-                Config.LibrarySelection = Guid.Empty;
-                PluginInterface.SavePluginConfig(Config);
+                DeselectAll();
             }
 
             ImGui.PushFont(UiBuilder.IconFont);

@@ -4,7 +4,16 @@ using System.IO;
 
 namespace Microdancer
 {
-    public sealed class LibraryFolderRoot : Folder
+    public sealed class StarredFolderRoot : LibraryFolderRoot
+    {
+        public StarredFolderRoot(DirectoryInfo dir, List<INode>? children = null) : base(dir, children)
+        {
+            Name = "Starred";
+            Id = GenerateId(dir + "/Starred");
+        }
+    }
+
+    public class LibraryFolderRoot : Folder
     {
         public LibraryFolderRoot(DirectoryInfo dir, List<INode>? children = null) : base(dir, null, children, false)
         {

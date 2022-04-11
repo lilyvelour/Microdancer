@@ -43,6 +43,62 @@ namespace Microdancer
             Open(path);
         }
 
+        protected void Select(INode node)
+        {
+            Select(node.Id);
+        }
+
+        protected void DeselectAll()
+        {
+            Select(Guid.Empty);
+        }
+
+        protected void Select(Guid id)
+        {
+            Config.LibrarySelection = id;
+            PluginInterface.SavePluginConfig(Config);
+        }
+
+        protected bool SelectByName(string name)
+        {
+            var node = Library.Find<Node>(name);
+            if (node != null)
+            {
+                Select(node);
+                return true;
+            }
+
+            return false;
+        }
+
+        protected void ToggleSelect(INode node)
+        {
+            ToggleSelect(node.Id);
+        }
+
+        protected void ToggleSelect(Guid id)
+        {
+            if (Config.LibrarySelection == id)
+            {
+                DeselectAll();
+            }
+            else
+            {
+                Select(id);
+            }
+        }
+
+        protected bool ToggleSelectByName(string name)
+        {
+            var success = SelectByName(name);
+            if (!success)
+            {
+                DeselectAll();
+            }
+
+            return success;
+        }
+
         protected void RevealNode(INode node)
         {
             using var _ = Process.Start("explorer", $"/select, \"{node.Path}\"");
@@ -80,7 +136,23 @@ namespace Microdancer
                     Directory.Move(path, newPath);
                 }
 
-                Config.LibrarySelection = Node.GenerateId(newPath);
+                var newId = Node.GenerateId(newPath);
+
+                Config.LibrarySelection = newId;
+
+                if (Config.SharedItems.Contains(node.Id))
+                {
+                    Config.SharedItems.Add(newId);
+                    Config.SharedItems.RemoveAll(id => id == node.Id);
+                }
+
+                if (Config.StarredItems.Contains(node.Id))
+                {
+                    Config.StarredItems.Add(newId);
+                    Config.StarredItems.RemoveAll(id => id == node.Id);
+                }
+
+                PluginInterface.SavePluginConfig(Config);
             }
             catch
             {
@@ -117,6 +189,18 @@ namespace Microdancer
                 {
                     Config.LibrarySelection = node.Parent?.Id ?? Guid.Empty;
                 }
+
+                if (Config.SharedItems.Contains(node.Id))
+                {
+                    Config.SharedItems.RemoveAll(id => id == node.Id);
+                }
+
+                if (Config.StarredItems.Contains(node.Id))
+                {
+                    Config.StarredItems.RemoveAll(id => id == node.Id);
+                }
+
+                PluginInterface.SavePluginConfig(Config);
             }
             catch
             {

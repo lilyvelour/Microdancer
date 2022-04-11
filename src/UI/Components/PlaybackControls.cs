@@ -244,8 +244,7 @@ namespace Microdancer
             {
                 if (_current != null)
                 {
-                    Config.LibrarySelection = _current.Micro.Id;
-                    PluginInterface.SavePluginConfig(Config);
+                    Select(_current.Micro);
                 }
             }
             ImGui.PopStyleVar(2);

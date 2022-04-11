@@ -15,6 +15,7 @@ namespace Microdancer
         private bool _shouldSetRenameFocus = false;
 
         private string _newName = string.Empty;
+        private bool _ignoreClick;
 
         public DisplayNode(string idPrefix, bool grid = false)
         {
@@ -45,6 +46,7 @@ namespace Microdancer
 
             var isShared = false;
             var isFolderRoot = node is LibraryFolderRoot || node is SharedFolderRoot;
+            var micro = node as Micro;
 
             bool open;
             bool rename;
@@ -60,19 +62,23 @@ namespace Microdancer
             if (_grid)
             {
                 open = false;
-
+                var icon = node switch
+                {
+                    StarredFolderRoot => FontAwesomeIcon.Star,
+                    LibraryFolderRoot => FontAwesomeIcon.Book,
+                    SharedFolderRoot => FontAwesomeIcon.UserFriends,
+                    _ => FontAwesomeIcon.FileAlt,
+                };
                 ImGui.BeginGroup();
 
                 ImGui.SetWindowFontScale(2.0f);
-                if (
-                    ImGuiExt.IconButton(
-                        node is Folder ? FontAwesomeIcon.Folder : FontAwesomeIcon.FileAlt,
-                        node.Name,
-                        ImGuiHelpers.ScaledVector2(128, 128)
-                    )
-                )
+                if (ImGuiExt.IconButton(icon, node.Name, ImGuiHelpers.ScaledVector2(128, 128)))
                 {
-                    Config.LibrarySelection = node.Id;
+                    if (!_ignoreClick)
+                    {
+                        Select(node);
+                    }
+                    _ignoreClick = false;
                 }
                 ImGui.SetWindowFontScale(1.0f);
 
@@ -100,24 +106,24 @@ namespace Microdancer
                     );
                     ImGui.PopStyleVar(3);
 
-                    var buttonName = node.Name;
+                    var label = node.Name;
 
                     while (
-                        buttonName.Length > 6
-                        && ImGuiHelpers.GetButtonSize($"{buttonName}...").X > ImGui.GetContentRegionAvail().X
+                        label.Length > 3
+                        && ImGuiHelpers.GetButtonSize($"{label}...").X > ImGui.GetContentRegionAvail().X
                     )
                     {
-                        buttonName = buttonName[..^1];
+                        label = label[..^1];
                     }
 
-                    if (buttonName != node.Name)
+                    if (label != node.Name)
                     {
-                        buttonName += "...";
+                        label += "...";
                     }
 
-                    if (ImGuiExt.TintButton(buttonName, new(-1, -1), Vector4.Zero))
+                    if (ImGuiExt.TintButton(label, new(-1, -1), Vector4.Zero))
                     {
-                        Config.LibrarySelection = node.Id;
+                        Select(node);
                     }
 
                     ImGui.PopStyleColor(2);
@@ -143,11 +149,21 @@ namespace Microdancer
                     flags |= ImGuiTreeNodeFlags.FramePadding;
                 }
 
-                open = ImGui.TreeNodeEx(
-                    $"{_idPrefix}{node.Id}",
-                    flags,
-                    _renaming == node.Id ? string.Empty : $"{node.Name}"
-                );
+                var label = _renaming == node.Id ? string.Empty : $"{node.Name}";
+
+                if (micro != null && !node.IsReadOnly)
+                {
+                    label = $"  {label}";
+
+                    var cursorPos = ImGui.GetCursorPosX();
+                    DrawStar(micro);
+
+                    ImGui.SameLine();
+
+                    ImGui.SetCursorPosX(cursorPos);
+                }
+
+                open = ImGui.TreeNodeEx($"{_idPrefix}{node.Id}", flags, label);
             }
 
             ImGui.PopID();
@@ -202,15 +218,22 @@ namespace Microdancer
             }
             else
             {
-                if (ImGui.IsItemActivated())
+                if (ImGui.IsItemClicked())
                 {
                     if (Config.LibrarySelection == node.Id)
                     {
-                        Config.LibrarySelection = Guid.Empty;
+                        DeselectAll();
                     }
                     else
                     {
-                        Config.LibrarySelection = node.Id;
+                        var _ = false;
+                        var _1 = false;
+                        var otherFlags = GetFlags(node, filter, ref _, ref _1);
+
+                        if (node.Children.Count == 0 || !open || otherFlags.HasFlag(ImGuiTreeNodeFlags.Bullet))
+                        {
+                            Select(node);
+                        }
                     }
 
                     PluginInterface.SavePluginConfig(Config);
@@ -228,10 +251,13 @@ namespace Microdancer
 
             if (isShared && _renaming != node.Id && node is not LibraryFolderRoot)
             {
+                var cursorPos = ImGui.GetCursorPos();
+
                 if (_grid)
                 {
-                    ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 100 * ImGuiHelpers.GlobalScale);
-                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 60 * ImGuiHelpers.GlobalScale);
+                    ImGui.SetCursorPos(
+                        new(cursorPos.X + 100 * ImGuiHelpers.GlobalScale, cursorPos.Y - 64 * ImGuiHelpers.GlobalScale)
+                    );
                 }
                 else
                 {
@@ -243,6 +269,24 @@ namespace Microdancer
                 ImGui.Text(FontAwesomeIcon.UserFriends.ToIconString());
                 ImGui.PopID();
                 ImGui.PopFont();
+
+                if (_grid)
+                {
+                    ImGui.SetCursorPos(cursorPos);
+                }
+            }
+
+            if (micro != null && _grid && !node.IsReadOnly)
+            {
+                var cursorPos = ImGui.GetCursorPos();
+
+                ImGui.SetCursorPos(
+                    new(cursorPos.X + 2 * ImGuiHelpers.GlobalScale, cursorPos.Y - 68 * ImGuiHelpers.GlobalScale)
+                );
+
+                DrawStar(micro);
+
+                ImGui.SetCursorPos(cursorPos);
             }
 
             if (_grid)
@@ -279,6 +323,51 @@ namespace Microdancer
             }
 
             return true;
+        }
+
+        private void DrawStar(Micro micro)
+        {
+            var isStarred = Config.StarredItems.Contains(micro.Id);
+            if (!isStarred)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Theme.GetColor(ImGuiCol.TextDisabled) * 0.75f);
+            }
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
+            ImGui.Button(FontAwesomeIcon.Star.ToIconString());
+
+            if (
+                ImGui.IsMouseHoveringRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax())
+                && ImGui.IsMouseClicked(ImGuiMouseButton.Left)
+            )
+            {
+                _ignoreClick = true;
+
+                if (isStarred)
+                {
+                    Config.StarredItems.Remove(micro.Id);
+                }
+                else
+                {
+                    Config.StarredItems.Add(micro.Id);
+                }
+
+                PluginInterface.SavePluginConfig(Config);
+
+                Library.MarkAsDirty();
+            }
+            ImGui.PopStyleVar();
+            ImGui.PopStyleColor(3);
+            ImGui.PopFont();
+
+            if (!isStarred)
+            {
+                ImGui.PopStyleColor();
+            }
         }
 
         private ImGuiTreeNodeFlags GetFlags(INode root, string? filter, ref bool shouldDraw, ref bool isShared)
@@ -332,7 +421,7 @@ namespace Microdancer
                 }
             }
 
-            if (matchesFilter || (node != root && isSelected))
+            if (matchesFilter || (emptyFilter && node != root && isSelected))
             {
                 flags |= ImGuiTreeNodeFlags.Bullet;
 

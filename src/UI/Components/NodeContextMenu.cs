@@ -42,12 +42,12 @@ namespace Microdancer
             var open = ImGui.BeginPopupContextItem($"{_id}{node.Id}");
             var canDelete = true;
 
-            if (node is LibraryFolderRoot || node is SharedFolderRoot)
+            if (node is LibraryFolderRoot || node is SharedFolderRoot || node.Parent is StarredFolderRoot)
             {
                 showRename = false;
                 canDelete = false;
 
-                if (node is SharedFolderRoot)
+                if (node is SharedFolderRoot || node is StarredFolderRoot || node.Parent is StarredFolderRoot)
                 {
                     showCreateButtons = false;
                 }
@@ -66,8 +66,7 @@ namespace Microdancer
                 {
                     if (ImGui.Selectable("Select"))
                     {
-                        Config.LibrarySelection = node.Id;
-                        PluginInterface.SavePluginConfig(Config);
+                        Select(node);
                     }
                 }
 
@@ -90,8 +89,7 @@ namespace Microdancer
 
                     if (ImGui.Selectable("Play"))
                     {
-                        Config.LibrarySelection = micro.Id;
-                        PluginInterface.SavePluginConfig(Config);
+                        Select(micro);
                         MicroManager.StartMicro(micro);
                     }
 
@@ -103,6 +101,23 @@ namespace Microdancer
                     if (!node.IsReadOnly)
                     {
                         ImGui.Separator();
+
+                        var isStarred = Config.StarredItems.Contains(micro.Id);
+                        if (ImGui.Selectable(isStarred ? "Unstar" : "Star"))
+                        {
+                            if (isStarred)
+                            {
+                                Config.StarredItems.Remove(micro.Id);
+                            }
+                            else
+                            {
+                                Config.StarredItems.Add(micro.Id);
+                            }
+
+                            PluginInterface.SavePluginConfig(Config);
+
+                            Library.MarkAsDirty();
+                        }
 
                         var isShared = Config.SharedItems.Contains(micro.Id);
                         if (ImGui.Selectable(isShared ? "Stop sharing" : "Share"))

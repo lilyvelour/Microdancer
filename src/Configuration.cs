@@ -17,5 +17,6 @@ namespace Microdancer
         public bool IgnoreLooping { get; set; }
         public bool IgnoreAutoCountdown { get; set; }
         public List<Guid> SharedItems { get; set; } = new();
+        public List<Guid> StarredItems { get; set; } = new();
     }
 }

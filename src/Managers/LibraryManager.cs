@@ -63,12 +63,36 @@ namespace Microdancer
                     var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
                     var sharedPath = Directory.CreateDirectory(sharedPathName);
 
-                    var library = BuildTree(libraryPath);
-                    var sharedWithMe = BuildTree(sharedPath, isSharedFolder: true);
+                    var library = BuildLibrary(libraryPath, out var starred);
+                    var sharedWithMe = BuildSharedWithMe(sharedPath);
 
                     _cachedNodes.Clear();
+                    if (starred.Children.Count > 0)
+                    {
+                        _cachedNodes.Add(starred);
+                    }
                     _cachedNodes.Add(library);
                     _cachedNodes.Add(sharedWithMe);
+
+                    var config = _pluginInterface.Configuration();
+                    var shouldSaveConfig = false;
+                    var ids = new HashSet<Guid>(config.SharedItems.Concat(config.StarredItems));
+                    var nodes = _cachedNodes.SelectMany(node => Traverse(node, n => n.Children)).ToList();
+
+                    foreach (var id in ids)
+                    {
+                        if (nodes.Find(n => n.Id == id) == null)
+                        {
+                            config.SharedItems.Remove(id);
+                            config.StarredItems.Remove(id);
+                            shouldSaveConfig = true;
+                        }
+                    }
+
+                    if (shouldSaveConfig)
+                    {
+                        _pluginInterface.SavePluginConfig(config);
+                    }
 
                     _shouldRebuild = false;
                 }
@@ -93,7 +117,7 @@ namespace Microdancer
             {
                 return GetNodes()
                     .Select(node => (T?)Traverse(node, n => n.Children).FirstOrDefault(n => n is T && n.Id == id))
-                    .FirstOrDefault(micro => micro != null);
+                    .FirstOrDefault(node => node != null);
             }
             catch
             {
@@ -149,7 +173,18 @@ namespace Microdancer
             _shouldRebuild = true;
         }
 
-        private INode BuildTree(DirectoryInfo dir, INode? parent = null, bool isSharedFolder = false)
+        private INode BuildLibrary(DirectoryInfo dir, out INode starred)
+        {
+            starred = new StarredFolderRoot(dir);
+            return BuildTree(dir, null, false, starred);
+        }
+
+        private INode BuildSharedWithMe(DirectoryInfo dir)
+        {
+            return BuildTree(dir, null, true, null);
+        }
+
+        private INode BuildTree(DirectoryInfo dir, INode? parent, bool isSharedFolder, INode? starred)
         {
             Folder folder;
             if (parent == null)
@@ -167,7 +202,7 @@ namespace Microdancer
                 {
                     continue;
                 }
-                folder.Children.Add(BuildTree(subDir, folder, isSharedFolder));
+                folder.Children.Add(BuildTree(subDir, folder, isSharedFolder, starred));
             }
 
             foreach (var microFile in dir.GetFiles("*.micro"))
@@ -176,7 +211,18 @@ namespace Microdancer
                 {
                     continue;
                 }
-                folder.Children.Add(new Micro(microFile, folder, isReadOnly: isSharedFolder));
+
+                var micro = new Micro(microFile, folder, isReadOnly: isSharedFolder);
+                folder.Children.Add(micro);
+
+                if (
+                    starred != null
+                    && _pluginInterface.GetPluginConfig() is Configuration config
+                    && config.StarredItems.Contains(micro.Id)
+                )
+                {
+                    starred.Children.Add(new Micro(microFile, starred, isSharedFolder));
+                }
             }
 
             return folder;
