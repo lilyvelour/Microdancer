@@ -7,6 +7,7 @@ using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Framework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 
 namespace Microdancer
 {
@@ -91,9 +92,10 @@ namespace Microdancer
                     _sigScanner.ScanText(Signatures.ProcessChatBox)
                 );
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogError("Failed to load ProcessChatBox");
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to load ProcessChatBox");
             }
 
             try
@@ -101,9 +103,10 @@ namespace Microdancer
                 // also found around g_PlayerMoveController+523
                 walkingBoolPtr = _sigScanner.GetStaticAddressFromSig(Signatures.IsWalking);
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogError("Failed to load /walk");
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to load /walk");
             }
 
             try
@@ -115,11 +118,12 @@ namespace Microdancer
                     DoEmote = Marshal.GetDelegateForFunctionPointer<DoEmoteDelegate>(
                         _sigScanner.ScanText(Signatures.DoEmote)
                     );
-                    emoteAgent = (IntPtr)agentModule->GetAgentByInternalID(19);
+                    emoteAgent = (IntPtr)agentModule->GetAgentByInternalID((uint)AgentId.Emote);
                 }
-                catch
+                catch (Exception e)
                 {
-                    PluginLog.LogError("Failed to load /doemote");
+                    PluginLog.LogError(e, e.Message);
+                    PluginLog.LogWarning("Failed to load /doemote");
                 }
 
                 try
@@ -133,14 +137,16 @@ namespace Microdancer
                         _sigScanner.ScanText(Signatures.GetActionId)
                     );
                 }
-                catch
+                catch (Exception e)
                 {
-                    PluginLog.LogError("Failed to load /useitem");
+                    PluginLog.LogError(e, e.Message);
+                    PluginLog.LogWarning("Failed to load /useitem");
                 }
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogError("Failed to get agent module");
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to get agent module");
             }
 
             // Located 1 function deep in Client__UI__Shell__ShellCommandAction_ExecuteCommand
@@ -148,27 +154,30 @@ namespace Microdancer
             {
                 actionCommandRequestTypePtr = _sigScanner.ScanText(Signatures.ActionCommandRequestType);
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogError("Failed to load /qac");
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to load /qac");
             }
 
             try
             {
                 ActionManager = (IntPtr)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogError("Failed to load ActionManager");
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to load ActionManager");
             }
 
             try
             {
                 CPoseSettings = _sigScanner.GetStaticAddressFromSig(Signatures.CPoseSettings);
             }
-            catch
+            catch (Exception e)
             {
-                PluginLog.LogError("Failed to load CPoseSettings");
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to load CPoseSettings");
             }
         }
 
