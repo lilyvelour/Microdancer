@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using XivCommon;
 
 namespace Microdancer
 {

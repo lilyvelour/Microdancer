@@ -10,7 +10,7 @@
     "InternalName": "Microdancer",
     "AssemblyVersion": "1.0.0.0",
     "ApplicableVersion": "any",
-    "DalamudApiLevel": 5,
+    "DalamudApiLevel": 6,
     "LoadPriority": 0,
     "IsHide": "False",
     "IsTestingExclusive": "False",
