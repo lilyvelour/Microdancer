@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.IoC;
 using Dalamud.Logging;
 
@@ -9,214 +13,214 @@ namespace Microdancer
     [PluginInterface]
     public class CPoseManager
     {
+        public enum PoseType
+        {
+            Invalid = -1,
+            Stand = 0,
+            Weapon = 1,
+            Sit = 2,
+            GroundSit = 3,
+            Doze = 4,
+            Parasol = 5,
+        }
+
         private readonly GameManager _gameManager;
         private readonly ClientState _clientState;
+        private readonly Condition _condition;
 
-        public CPoseManager(GameManager gameManager, ClientState clientState)
+        public CPoseManager(GameManager gameManager, ClientState clientState, Condition condition)
         {
             _gameManager = gameManager;
             _clientState = clientState;
-
-            ResetDefaultPoses();
+            _condition = condition;
         }
 
-        public const int NumStandingPoses = 7;
-        public const int NumWeaponDrawnPoses = 2;
-        public const int NumSitPoses = 3;
-        public const int NumGroundSitPoses = 4;
-        public const int NumDozePoses = 3;
-
-        public static readonly int[] NumPoses =
+        public PoseType GetPoseTypeFromName(string name)
         {
-            NumStandingPoses,
-            NumWeaponDrawnPoses,
-            NumSitPoses,
-            NumGroundSitPoses,
-            NumDozePoses,
-        };
-
-        public static readonly string[] PoseNames =
-        {
-            "Standing Pose",
-            "Weapon Drawn Pose",
-            "Sitting Pose",
-            "Sitting on Ground Pose",
-            "Dozing Pose",
-        };
-
-        private static byte TranslateState(byte state, bool weaponDrawn)
-        {
-            return state switch
+            switch (name)
             {
-                1 => 3,
-                2 => 2,
-                3 => 4,
-                _ => (byte)(weaponDrawn ? 1 : 0),
-            };
-        }
-
-        public const byte DefaultPose = byte.MaxValue;
-        public const byte UnchangedPose = byte.MaxValue - 1;
-
-        private readonly byte[] _defaultPoses = new byte[5];
-
-        public byte DefaultStandingPose => _defaultPoses[0];
-
-        public byte DefaultWeaponDrawnPose => _defaultPoses[1];
-
-        public byte DefaultSitPose => _defaultPoses[2];
-
-        public byte DefaultGroundSitPose => _defaultPoses[3];
-
-        public byte DefaultDozePose => _defaultPoses[4];
-
-        public byte StandingPose => GetPose(0);
-
-        public byte WeaponDrawnPose => GetPose(1);
-
-        public byte SitPose => GetPose(2);
-
-        public byte GroundSitPose => GetPose(3);
-
-        public byte DozePose => GetPose(4);
-
-        public void SetStandingPose(byte pose) => SetPose(0, pose);
-
-        public void SetWeaponDrawnPose(byte pose) => SetPose(1, pose);
-
-        public void SetSitPose(byte pose) => SetPose(2, pose);
-
-        public void SetGroundSitPose(byte pose) => SetPose(3, pose);
-
-        public void SetDozePose(byte pose) => SetPose(4, pose);
-
-        public bool WeaponDrawn { get; set; } = false;
-
-        private unsafe byte GetSeatingState(IntPtr playerPointer)
-        {
-            const int seatingStateOffset = 0x19D7;
-            var ptr = (byte*)playerPointer.ToPointer();
-            return *(ptr + seatingStateOffset);
-        }
-
-        private unsafe int GetCPoseActorState(IntPtr playerPointer)
-        {
-            const int cPoseOffset = 0xC11;
-            var ptr = (byte*)playerPointer.ToPointer();
-            return *(ptr + cPoseOffset);
-        }
-
-        private unsafe byte GetPose(int which)
-        {
-            var ptr = (byte*)_gameManager.CPoseSettings.ToPointer();
-            return ptr[which];
-        }
-
-        private unsafe void WritePose(int which, byte pose)
-        {
-            var ptr = (byte*)_gameManager.CPoseSettings.ToPointer();
-            ptr[which] = pose;
-        }
-
-        public void SetPose(int which, byte toWhat)
-        {
-            if (toWhat == UnchangedPose)
-                return;
-
-            if (toWhat == DefaultPose)
-            {
-                toWhat = _defaultPoses[which];
+                case "stand":
+                    return PoseType.Stand;
+                case "weapon":
+                    return PoseType.Weapon;
+                case "sit":
+                    return PoseType.Sit;
+                case "groundsit":
+                    return PoseType.GroundSit;
+                case "doze":
+                    return PoseType.Doze;
+                case "parasol":
+                    return PoseType.Parasol;
+                default:
+                    return PoseType.Invalid;
             }
-            else if (toWhat >= NumPoses[which])
-            {
-                PluginLog.LogError(
-                    $"Higher pose requested than possible for {PoseNames[which]}: {toWhat} / {NumPoses[which]}."
-                );
-                return;
-            }
+        }
 
+        public unsafe PoseType GetCurrentPoseType()
+        {
             var player = _clientState.LocalPlayer;
-            var playerPointer = player?.Address ?? IntPtr.Zero;
-
-            if (playerPointer == IntPtr.Zero)
-                return;
-
-            var currentState = GetSeatingState(playerPointer);
-            currentState = TranslateState(currentState, WeaponDrawn);
-            var pose = GetPose(which);
-            if (currentState == which)
+            if (player == null)
             {
-                if (toWhat == GetCPoseActorState(playerPointer))
+                return PoseType.Invalid;
+            }
+
+            var playerPointer = player.Address;
+
+            if (_condition[ConditionFlag.UsingParasol]) // Using a parasol
+            {
+                return PoseType.Parasol;
+            }
+
+            if (player.StatusFlags.HasFlag(StatusFlags.WeaponOut))
+            {
+                return PoseType.Weapon;
+            }
+
+            var ptr = (byte*)playerPointer.ToPointer();
+            var seatingState = *(ptr + Offsets.Character.SeatingState); // Sitting or dozing
+            switch (seatingState)
+            {
+                case 1:
+                    return PoseType.GroundSit;
+                case 2:
+                    return PoseType.Sit;
+                case 3:
+                    return PoseType.Doze;
+            }
+
+            return PoseType.Stand;
+        }
+
+        public int GetPoseCount(PoseType poseType)
+        {
+            switch (poseType)
+            {
+                case PoseType.Stand:
+                    return 7;
+                case PoseType.Weapon:
+                    return 2;
+                case PoseType.Sit:
+                    return 3;
+                case PoseType.GroundSit:
+                    return 4;
+                case PoseType.Doze:
+                    return 3;
+                case PoseType.Parasol:
+                    return 3;
+                default:
+                    return 0;
+            }
+        }
+
+        public void SetPose(PoseType newPoseType, byte newPoseIndex)
+        {
+            var currentPoseType = GetCurrentPoseType();
+            var currentPoseIndex = GetPose(currentPoseType);
+
+            if (currentPoseType == newPoseType)
+            {
+                if (newPoseIndex == GetCurrentPose())
                 {
-                    if (pose != toWhat)
+                    if (currentPoseIndex != newPoseIndex)
                     {
-                        WritePose(which, toWhat);
-                        PluginLog.LogDebug(
-                            "Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.",
-                            pose,
-                            toWhat,
-                            PoseNames[which],
-                            PoseNames[currentState]
-                        );
+                        WritePoseAndLog();
                     }
                 }
                 else
                 {
-                    Task.Run(
-                        () =>
-                        {
-                            var i = 0;
-                            do
-                            {
-                                PluginLog.LogDebug(
-                                    "Execute /setpose to get from {OldPose} to {NewPose} of {CurrentState:l}.",
-                                    pose,
-                                    toWhat,
-                                    PoseNames[currentState]
-                                );
-                                _gameManager.ExecuteCommand("/cpose");
-                                Task.Delay(TimeSpan.FromMilliseconds(50));
-                            } while (toWhat != GetCPoseActorState(playerPointer) && i++ < 8);
-                            if (i > 8)
-                            {
-                                PluginLog.LogError(
-                                    "Could not change pose of {CurrentState:l}.",
-                                    PoseNames[GetCPoseActorState(playerPointer)]
-                                );
-                            }
-                        }
-                    );
+                    Task.Run(CyclePosesAndLog);
                 }
             }
-            else if (pose != toWhat)
+            else if (currentPoseIndex != newPoseIndex)
             {
-                WritePose(which, toWhat);
+                WritePoseAndLog();
+            }
+
+            void WritePoseAndLog()
+            {
+                WritePose(newPoseType, newPoseIndex);
+
                 PluginLog.LogDebug(
-                    "Overwrote {OldPose} with {NewPose} for {WhichPose:l}, currently in {CurrentState:l}.",
-                    pose,
-                    toWhat,
-                    PoseNames[which],
-                    PoseNames[currentState]
+                    "Overwrote {currentPoseIndex} with {newPoseIndex} for {newPoseType:l}, currently in {currentPoseType:l}.",
+                    currentPoseIndex,
+                    newPoseIndex,
+                    newPoseType,
+                    currentPoseType
                 );
+            }
+
+            void CyclePosesAndLog()
+            {
+                var currentPoseCount = GetPoseCount(currentPoseType);
+
+                if (currentPoseCount <= 0)
+                {
+                    return;
+                }
+
+                var previousPose = newPoseIndex == 0 ? currentPoseCount - 1 : newPoseIndex - 1;
+                WritePose(newPoseType, (byte)previousPose);
+
+                var currentActorPoseIndex = GetCurrentPose();
+
+                if (currentPoseCount <= 0 || currentActorPoseIndex < 0)
+                {
+                    return;
+                }
+
+                int i;
+                for (i = 0; i < currentPoseCount - 1; ++i)
+                {
+                    currentActorPoseIndex = GetCurrentPose();
+                    if (currentActorPoseIndex == newPoseIndex)
+                    {
+                        break;
+                    }
+
+                    _gameManager.ExecuteCommand("/cpose");
+
+                    PluginLog.LogDebug(
+                        "Execute /cpose to get from {currentPoseIndex} to {newPoseIndex} of {currentPoseType:l}.",
+                        currentActorPoseIndex,
+                        newPoseIndex,
+                        currentPoseType
+                    );
+
+                    Task.Delay(TimeSpan.FromMilliseconds(50));
+                }
+
+                if (i >= currentPoseCount)
+                {
+                    PluginLog.LogError("Could not change pose of {currentPoseType:l}.", currentPoseType);
+                    WritePose(newPoseType, newPoseIndex);
+                }
             }
         }
 
-        public void SetPoses(byte standing, byte weaponDrawn, byte sitting, byte groundSitting, byte dozing)
+        private unsafe int GetCurrentPose()
         {
-            SetPose(0, standing);
-            SetPose(1, weaponDrawn);
-            SetPose(2, sitting);
-            SetPose(3, groundSitting);
-            SetPose(4, dozing);
+            var player = _clientState.LocalPlayer;
+            if (player == null)
+            {
+                return -1;
+            }
+
+            var playerPointer = player.Address;
+
+            var ptr = (byte*)playerPointer.ToPointer();
+            return *(ptr + Offsets.Character.CPose);
         }
 
-        public void ResetDefaultPoses()
+        private unsafe byte GetPose(PoseType poseType)
         {
-            _defaultPoses[0] = GetPose(0);
-            _defaultPoses[1] = GetPose(1);
-            _defaultPoses[2] = GetPose(2);
-            _defaultPoses[3] = GetPose(3);
-            _defaultPoses[4] = GetPose(4);
+            var ptr = (byte*)_gameManager.CPoseSettings.ToPointer();
+            return ptr[(int)poseType];
+        }
+
+        private unsafe void WritePose(PoseType poseType, byte poseIndex)
+        {
+            var ptr = (byte*)_gameManager.CPoseSettings.ToPointer();
+            ptr[(int)poseType] = poseIndex;
         }
     }
 }
