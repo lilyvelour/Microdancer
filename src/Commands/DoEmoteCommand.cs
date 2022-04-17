@@ -52,5 +52,53 @@ namespace Microdancer
         {
             DoEmote("96");
         }
+
+        [Command("weapon", HelpMessage = "Alias for /doemote 93.")]
+        public void Weapon()
+        {
+            DoEmote("93");
+        }
+
+        [Command("idle", "idle1", HelpMessage = "Alias for /setpose stand 1.")]
+        public void Idle1()
+        {
+            _gameManager.ExecuteCommand("/setpose stand 1");
+        }
+
+        [Command("idle2", HelpMessage = "Alias for /doemote 91")]
+        public void Idle2()
+        {
+            DoEmote("91");
+        }
+
+        [Command("idle3", HelpMessage = "Alias for /doemote 92")]
+        public void Idle3()
+        {
+            DoEmote("92");
+        }
+
+        [Command("idle4", HelpMessage = "Alias for /doemote 107")]
+        public void Idle4()
+        {
+            DoEmote("107");
+        }
+
+        [Command("idle5", HelpMessage = "Alias for /doemote 108")]
+        public void Idle5()
+        {
+            DoEmote("108");
+        }
+
+        [Command("idle6", HelpMessage = "Alias for /doemote 218")]
+        public void Idle6()
+        {
+            DoEmote("218");
+        }
+
+        [Command("idle7", HelpMessage = "Alias for /doemote 219")]
+        public void Idle7()
+        {
+            DoEmote("219");
+        }
     }
 }
