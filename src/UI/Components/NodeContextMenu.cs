@@ -69,7 +69,7 @@ namespace Microdancer
                         Select(node);
                     }
 
-                    if (ImGui.Selectable("Open in New Window"))
+                    if (node is Micro && ImGui.Selectable("View in New Window"))
                     {
                         View(node);
                     }
