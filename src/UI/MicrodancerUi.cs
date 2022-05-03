@@ -4,6 +4,8 @@ using System;
 using System.Numerics;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Microdancer
 {
@@ -105,15 +107,53 @@ namespace Microdancer
                 ImGuiWindowFlags.NoBackground
             );
 
-            _contentArea.Draw();
+            var node = Library.Find<INode>(Config.LibrarySelection);
 
-            _timeline.Draw();
+            _contentArea.Draw(node);
+            _timeline.Draw(node);
+
+            foreach (var guid in Config.OpenWindows)
+            {
+                var additionalNode = Library.Find<INode>(guid);
+
+                var windowVisible = true;
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
+                ImGui.SetNextWindowSizeConstraints(
+                    ImGuiHelpers.ScaledVector2(400, 400),
+                    ImGui.GetMainViewport().WorkSize
+                );
+                var open = ImGui.Begin(additionalNode?.Name ?? "Home", ref windowVisible, ImGuiWindowFlags.NoDocking);
+                ImGui.PopStyleVar();
+
+                if (open)
+                {
+                    ImGui.BeginChildFrame(
+                        101012,
+                        new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
+                        ImGuiWindowFlags.NoBackground
+                    );
+
+                    _contentArea.Draw(additionalNode);
+                    _timeline.Draw(additionalNode);
+
+                    ImGui.EndChildFrame();
+
+                    _playbackControls.Draw(additionalNode, true);
+
+                    ImGui.End();
+                }
+
+                if (!windowVisible)
+                {
+                    Close(guid);
+                }
+            }
 
             ImGui.EndChildFrame();
 
             ImGui.Columns(1, "playback-controls", false);
 
-            _playbackControls.Draw();
+            _playbackControls.Draw(node, false);
         }
     }
 }

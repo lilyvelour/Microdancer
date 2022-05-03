@@ -1,8 +1,11 @@
-public static class Offsets
+namespace Microdancer
 {
-    public static class Character
+    public static class Offsets
     {
-        public const int SeatingState = 0x1ABD;
-        public const int CPose = 0x631;
+        public static class Character
+        {
+            public const int SeatingState = 0x1ABD;
+            public const int CPose = 0x631;
+        }
     }
 }

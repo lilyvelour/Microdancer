@@ -37,23 +37,16 @@ namespace Microdancer
 
         public PoseType GetPoseTypeFromName(string name)
         {
-            switch (name)
+            return name switch
             {
-                case "stand":
-                    return PoseType.Stand;
-                case "weapon":
-                    return PoseType.Weapon;
-                case "sit":
-                    return PoseType.Sit;
-                case "groundsit":
-                    return PoseType.GroundSit;
-                case "doze":
-                    return PoseType.Doze;
-                case "parasol":
-                    return PoseType.Parasol;
-                default:
-                    return PoseType.Invalid;
-            }
+                "stand" => PoseType.Stand,
+                "weapon" => PoseType.Weapon,
+                "sit" => PoseType.Sit,
+                "groundsit" => PoseType.GroundSit,
+                "doze" => PoseType.Doze,
+                "parasol" => PoseType.Parasol,
+                _ => PoseType.Invalid,
+            };
         }
 
         public unsafe PoseType GetCurrentPoseType()
@@ -78,38 +71,27 @@ namespace Microdancer
 
             var ptr = (byte*)playerPointer.ToPointer();
             var seatingState = *(ptr + Offsets.Character.SeatingState); // Sitting or dozing
-            switch (seatingState)
+            return seatingState switch
             {
-                case 1:
-                    return PoseType.GroundSit;
-                case 2:
-                    return PoseType.Sit;
-                case 3:
-                    return PoseType.Doze;
-            }
-
-            return PoseType.Stand;
+                1 => PoseType.GroundSit,
+                2 => PoseType.Sit,
+                3 => PoseType.Doze,
+                _ => PoseType.Stand,
+            };
         }
 
         public int GetPoseCount(PoseType poseType)
         {
-            switch (poseType)
+            return poseType switch
             {
-                case PoseType.Stand:
-                    return 7;
-                case PoseType.Weapon:
-                    return 2;
-                case PoseType.Sit:
-                    return 3;
-                case PoseType.GroundSit:
-                    return 4;
-                case PoseType.Doze:
-                    return 3;
-                case PoseType.Parasol:
-                    return 3;
-                default:
-                    return 0;
-            }
+                PoseType.Stand => 7,
+                PoseType.Weapon => 2,
+                PoseType.Sit => 3,
+                PoseType.GroundSit => 4,
+                PoseType.Doze => 3,
+                PoseType.Parasol => 3,
+                _ => 0,
+            };
         }
 
         public void SetPose(PoseType newPoseType, byte newPoseIndex)

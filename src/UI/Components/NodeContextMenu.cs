@@ -68,6 +68,11 @@ namespace Microdancer
                     {
                         Select(node);
                     }
+
+                    if (ImGui.Selectable("Open in New Window"))
+                    {
+                        View(node);
+                    }
                 }
 
                 if (!node.IsReadOnly)
@@ -107,11 +112,11 @@ namespace Microdancer
                         {
                             if (isStarred)
                             {
-                                Config.StarredItems.Remove(micro.Id);
+                                Config.Unstar(micro.Id);
                             }
                             else
                             {
-                                Config.StarredItems.Add(micro.Id);
+                                Config.Star(micro.Id);
                             }
 
                             PluginInterface.SavePluginConfig(Config);
@@ -124,11 +129,11 @@ namespace Microdancer
                         {
                             if (isShared)
                             {
-                                Config.SharedItems.Remove(micro.Id);
+                                Config.Unshare(micro.Id);
                             }
                             else
                             {
-                                Config.SharedItems.Add(micro.Id);
+                                Config.Share(micro.Id);
                             }
 
                             PluginInterface.SavePluginConfig(Config);

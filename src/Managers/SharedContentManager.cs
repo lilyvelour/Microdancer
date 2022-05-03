@@ -230,14 +230,16 @@ namespace Microdancer
 
                 folder ??= new DirectoryInfo(_pluginInterface.SharedFolderPath());
                 Directory.CreateDirectory(folder.FullName);
-                var selection = _pluginInterface.Configuration().LibrarySelection;
+                var config = _pluginInterface.Configuration();
+                var selectedOrOpen = config.OpenWindows.ToList();
+                selectedOrOpen.Add(config.LibrarySelection);
 
                 foreach (var file in folder.EnumerateFiles())
                 {
                     if (!pathsToKeep.Contains(file.FullName))
                     {
                         var id = Node.GenerateId(file.FullName);
-                        if (selection != id)
+                        if (!selectedOrOpen.Contains(id))
                         {
                             file.Delete();
                         }

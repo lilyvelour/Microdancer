@@ -6,7 +6,6 @@ using Dalamud.Game.ClientState;
 using Dalamud.IoC;
 using System;
 using Microsoft.VisualBasic.FileIO;
-using Dalamud.Logging;
 
 namespace Microdancer
 {
@@ -43,6 +42,35 @@ namespace Microdancer
             Open(path);
         }
 
+        protected void View(INode node)
+        {
+            View(node.Id);
+        }
+
+        protected void View(Guid id)
+        {
+            Config.View(id);
+            PluginInterface.SavePluginConfig(Config);
+        }
+
+        protected void Close(INode node)
+        {
+            Config.Close(node.Id);
+            PluginInterface.SavePluginConfig(Config);
+        }
+
+        protected void Close(Guid id)
+        {
+            Config.Close(id);
+            PluginInterface.SavePluginConfig(Config);
+        }
+
+        protected void Select(Guid id)
+        {
+            Config.LibrarySelection = id;
+            PluginInterface.SavePluginConfig(Config);
+        }
+
         protected void Select(INode node)
         {
             Select(node.Id);
@@ -50,12 +78,7 @@ namespace Microdancer
 
         protected void DeselectAll()
         {
-            Select(Guid.Empty);
-        }
-
-        protected void Select(Guid id)
-        {
-            Config.LibrarySelection = id;
+            Config.LibrarySelection = Guid.Empty;
             PluginInterface.SavePluginConfig(Config);
         }
 
@@ -80,23 +103,14 @@ namespace Microdancer
         {
             if (Config.LibrarySelection == id)
             {
-                DeselectAll();
+                Config.LibrarySelection = Guid.Empty;
             }
             else
             {
-                Select(id);
-            }
-        }
-
-        protected bool ToggleSelectByName(string name)
-        {
-            var success = SelectByName(name);
-            if (!success)
-            {
-                DeselectAll();
+                Config.LibrarySelection = id;
             }
 
-            return success;
+            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void RevealNode(INode node)
@@ -142,14 +156,14 @@ namespace Microdancer
 
                 if (Config.SharedItems.Contains(node.Id))
                 {
-                    Config.SharedItems.Add(newId);
-                    Config.SharedItems.RemoveAll(id => id == node.Id);
+                    Config.Share(newId);
+                    Config.Unshare(node.Id);
                 }
 
                 if (Config.StarredItems.Contains(node.Id))
                 {
-                    Config.StarredItems.Add(newId);
-                    Config.StarredItems.RemoveAll(id => id == node.Id);
+                    Config.Star(newId);
+                    Config.Unstar(node.Id);
                 }
 
                 PluginInterface.SavePluginConfig(Config);
@@ -190,15 +204,9 @@ namespace Microdancer
                     Config.LibrarySelection = node.Parent?.Id ?? Guid.Empty;
                 }
 
-                if (Config.SharedItems.Contains(node.Id))
-                {
-                    Config.SharedItems.RemoveAll(id => id == node.Id);
-                }
-
-                if (Config.StarredItems.Contains(node.Id))
-                {
-                    Config.StarredItems.RemoveAll(id => id == node.Id);
-                }
+                Config.Close(node.Id);
+                Config.Unshare(node.Id);
+                Config.Unstar(node.Id);
 
                 PluginInterface.SavePluginConfig(Config);
             }

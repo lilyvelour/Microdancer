@@ -9,7 +9,7 @@ using ImGuiNET;
 
 namespace Microdancer
 {
-    public class ContentArea : PluginUiBase, IDrawable
+    public class ContentArea : PluginUiBase, IDrawable<INode?>
     {
         private readonly Breadcrumb _breadcrumb;
         private readonly DisplayNode _node;
@@ -30,9 +30,8 @@ namespace Microdancer
             _contextMenu = new NodeContextMenu("content-area-context-menu", allowSelectRenameDelete: false);
         }
 
-        public bool Draw()
+        public bool Draw(INode? node)
         {
-            var node = Library.Find<INode>(Config.LibrarySelection);
             var micro = node as Micro;
 
             if (micro != null)

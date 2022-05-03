@@ -29,6 +29,7 @@ namespace Microdancer
             {
                 var isRunning =
                     MicroManager.Current?.Micro == micro && MicroManager.PlaybackState != PlaybackState.Stopped;
+                var currentLineNumber = MicroManager.Current?.CurrentCommand?.LineNumber ?? 0;
 
                 fileContentsSize.Y -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 4.0f;
                 fileContentsSize.Y = Math.Max(fileContentsSize.Y, 200 * ImGuiHelpers.GlobalScale);
@@ -68,7 +69,6 @@ namespace Microdancer
                     var prefixColor = Vector4.Zero;
                     var textColor = Theme.GetColor(ImGuiCol.Text) * 0.75f;
                     textColor.W = 1.0f;
-                    var currentLineNumber = MicroManager.Current?.CurrentCommand?.LineNumber ?? 0;
 
                     if (isRunning && currentLineNumber == lineNumber)
                     {
@@ -111,7 +111,7 @@ namespace Microdancer
                     ImGui.SameLine();
 
                     ImGui.PushStyleColor(ImGuiCol.Text, textColor);
-                    if (ImGui.Selectable($"{lines[i]}##{i}", currentLineNumber == lineNumber))
+                    if (ImGui.Selectable($"{lines[i]}##{i}", isRunning && currentLineNumber == lineNumber))
                     {
                         MicroManager.StartMicro(micro, i + 1);
                     }

@@ -34,7 +34,6 @@ namespace Microdancer
                 if (ImGui.Selectable(label, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(label)))
                 {
                     Select(Library.Find<Node>(label)?.Id ?? Guid.Empty);
-                    PluginInterface.SavePluginConfig(Config);
                 }
 
                 var basePath = node.IsReadOnly ? PluginInterface.SharedFolderPath() : Config.LibraryPath;

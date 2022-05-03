@@ -44,6 +44,7 @@ namespace Microdancer
                 return false;
             }
 
+            var isSelected = Config.LibrarySelection == node.Id;
             var isShared = false;
             var isFolderRoot = node is LibraryFolderRoot || node is SharedFolderRoot;
             var micro = node as Micro;
@@ -133,7 +134,7 @@ namespace Microdancer
             }
             else
             {
-                if (Config.LibrarySelection == node.Id || flags.HasFlag(ImGuiTreeNodeFlags.Bullet))
+                if (isSelected || flags.HasFlag(ImGuiTreeNodeFlags.Bullet))
                 {
                     ImGui.SetNextItemOpen(true);
                 }
@@ -220,7 +221,7 @@ namespace Microdancer
             {
                 if (ImGui.IsItemClicked())
                 {
-                    if (Config.LibrarySelection == node.Id)
+                    if (isSelected)
                     {
                         DeselectAll();
                     }
@@ -294,7 +295,7 @@ namespace Microdancer
                 ImGui.EndGroup();
             }
 
-            if (Config.LibrarySelection == node.Id && !open)
+            if (isSelected && !open)
             {
                 if (!isFolderRoot && !_grid)
                 {
@@ -349,11 +350,11 @@ namespace Microdancer
 
                 if (isStarred)
                 {
-                    Config.StarredItems.Remove(micro.Id);
+                    Config.Unstar(micro.Id);
                 }
                 else
                 {
-                    Config.StarredItems.Add(micro.Id);
+                    Config.Star(micro.Id);
                 }
 
                 PluginInterface.SavePluginConfig(Config);

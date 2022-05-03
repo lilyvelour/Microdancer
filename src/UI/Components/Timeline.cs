@@ -6,16 +6,16 @@ using ImGuiNET;
 
 namespace Microdancer
 {
-    public class Timeline : PluginUiBase, IDrawable
+    public class Timeline : PluginUiBase, IDrawable<INode?>
     {
         private MicroInfo? _currentInfo;
         private MicroInfo? _info;
         private float _lastScrollPosition = -1;
         private bool _resetScroll;
 
-        public bool Draw()
+        public bool Draw(INode? node)
         {
-            var micro = Library.Find<Micro>(Config.LibrarySelection);
+            var micro = node as Micro;
 
             if (micro == null)
             {
@@ -23,12 +23,12 @@ namespace Microdancer
             }
 
             _currentInfo = MicroManager.Current;
-            if (_currentInfo?.Micro.Id == Config.LibrarySelection)
+            if (_currentInfo?.Micro.Id == micro.Id)
             {
                 _info = _currentInfo;
                 micro = _info.Micro;
             }
-            else if (_info?.Micro.Id != Config.LibrarySelection || _info.CurrentTime > TimeSpan.Zero)
+            else if (_info?.Micro.Id != micro.Id || _info.CurrentTime > TimeSpan.Zero)
             {
                 _info = new MicroInfo(micro);
                 _resetScroll = _lastScrollPosition >= 0;
