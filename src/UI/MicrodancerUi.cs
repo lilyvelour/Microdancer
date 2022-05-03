@@ -104,11 +104,12 @@ namespace Microdancer
             );
 
             var node = Library.Find<INode>(Config.LibrarySelection);
+            var librarySelection = Config.LibrarySelection;
 
-            EnsureUiComponents(Config.LibrarySelection);
+            EnsureUiComponents(librarySelection);
 
-            _contentAreas[Config.LibrarySelection].Draw(node);
-            _timelines[Config.LibrarySelection].Draw(node);
+            _contentAreas.GetValueOrDefault(librarySelection)?.Draw(node);
+            _timelines.GetValueOrDefault(librarySelection)?.Draw(node);
 
             for (var i = 0; i < Config.OpenWindows.Count; i++)
             {
@@ -134,12 +135,12 @@ namespace Microdancer
                         ImGuiWindowFlags.NoBackground
                     );
 
-                    _contentAreas[guid].Draw(additionalNode);
-                    _timelines[guid].Draw(additionalNode);
+                    _contentAreas.GetValueOrDefault(guid)?.Draw(additionalNode);
+                    _timelines.GetValueOrDefault(guid)?.Draw(additionalNode);
 
                     ImGui.EndChildFrame();
 
-                    _playbackControls[guid].Draw(additionalNode, true);
+                    _playbackControls.GetValueOrDefault(guid)?.Draw(additionalNode, true);
 
                     ImGui.End();
                 }
@@ -154,7 +155,7 @@ namespace Microdancer
 
             ImGui.Columns(1, "playback-controls", false);
 
-            _playbackControls[Config.LibrarySelection].Draw(node, false);
+            _playbackControls.GetValueOrDefault(librarySelection)?.Draw(node, false);
         }
 
         private void EnsureUiComponents(Guid guid)
@@ -162,7 +163,15 @@ namespace Microdancer
             if (!_contentAreas.ContainsKey(guid))
             {
                 _contentAreas[guid] = new ContentArea();
+            }
+
+            if (!_timelines.ContainsKey(guid))
+            {
                 _timelines[guid] = new Timeline();
+            }
+
+            if (!_playbackControls.ContainsKey(guid))
+            {
                 _playbackControls[guid] = new PlaybackControls();
             }
         }

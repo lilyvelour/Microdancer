@@ -68,6 +68,7 @@ namespace Microdancer
                     StarredFolderRoot => FontAwesomeIcon.Star,
                     LibraryFolderRoot => FontAwesomeIcon.Book,
                     SharedFolderRoot => FontAwesomeIcon.UserFriends,
+                    Folder => FontAwesomeIcon.Folder,
                     _ => FontAwesomeIcon.FileAlt,
                 };
                 ImGui.BeginGroup();
