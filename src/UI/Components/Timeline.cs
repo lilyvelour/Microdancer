@@ -68,7 +68,10 @@ namespace Microdancer
             ImGui.SetWindowFontScale(1.0f);
 
             var duration = _info.AllCommands.Length > 0 ? (float)_info.TotalTime.TotalSeconds : 5.0f;
-            float increment = Config.TimelineZoom;
+            if (!Config.TimelineZoomFactor.TryGetValue(_info.Id, out var increment))
+            {
+                Config.TimelineZoomFactor[_info.Id] = increment = 50.0f;
+            }
 
             var usableWidth = duration / increment * timecodeWidth * 1.5f;
             var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
@@ -148,10 +151,11 @@ namespace Microdancer
             ImGui.PushButtonRepeat(true);
 
             var changedZoom = false;
+            var zoomFactor = increment;
 
             if (ImGuiExt.IconButton((FontAwesomeIcon)0xf010, "Zoom Out"))
             {
-                Config.TimelineZoom += 0.1f;
+                zoomFactor += 0.1f;
                 changedZoom = true;
             }
 
@@ -159,13 +163,16 @@ namespace Microdancer
 
             if (ImGuiExt.IconButton((FontAwesomeIcon)0xf00e, "Zoom In"))
             {
-                Config.TimelineZoom -= 0.1f;
+                zoomFactor -= 0.1f;
                 changedZoom = true;
             }
 
             ImGui.PopButtonRepeat();
 
-            Config.TimelineZoom = Math.Max(MathExt.Snap(Math.Min(Config.TimelineZoom, duration * 0.1f), 0.05f), 0.25f);
+            Config.TimelineZoomFactor[_info.Id] = Math.Max(
+                MathExt.Snap(Math.Min(zoomFactor, duration * 0.1f), 0.05f),
+                0.25f
+            );
 
             if (changedZoom)
             {

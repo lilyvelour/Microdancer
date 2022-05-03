@@ -166,6 +166,12 @@ namespace Microdancer
                     Config.Unstar(node.Id);
                 }
 
+                if (Config.TimelineZoomFactor.TryGetValue(node.Id, out var timelineZoomFactor))
+                {
+                    Config.TimelineZoomFactor[newId] = timelineZoomFactor;
+                    Config.TimelineZoomFactor.Remove(node.Id);
+                }
+
                 PluginInterface.SavePluginConfig(Config);
             }
             catch
@@ -207,6 +213,7 @@ namespace Microdancer
                 Config.Close(node.Id);
                 Config.Unshare(node.Id);
                 Config.Unstar(node.Id);
+                Config.TimelineZoomFactor.Remove(node.Id);
 
                 PluginInterface.SavePluginConfig(Config);
             }

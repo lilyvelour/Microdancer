@@ -76,7 +76,12 @@ namespace Microdancer
 
                 ImGui.BeginChildFrame(
                     20,
-                    new(-1, -Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) + ImGuiHelpers.GlobalScale),
+                    new(
+                        -1,
+                        ImGui.GetContentRegionAvail().Y
+                            - Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize)
+                            + ImGuiHelpers.GlobalScale
+                    ),
                     ImGuiWindowFlags.NoBackground
                 );
 

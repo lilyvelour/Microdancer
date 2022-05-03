@@ -1,11 +1,10 @@
 ﻿using Dalamud.Interface;
 using ImGuiNET;
-using System;
 using System.Numerics;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
-using System.Linq;
 using System.Collections.Generic;
+using System;
 
 namespace Microdancer
 {
@@ -16,9 +15,9 @@ namespace Microdancer
 
         private readonly LibraryPath _libraryPath;
         private readonly DisplayLibrary _library;
-        private readonly ContentArea _contentArea;
-        private readonly Timeline _timeline;
-        private readonly PlaybackControls _playbackControls;
+        private readonly Dictionary<Guid, ContentArea> _contentAreas = new();
+        private readonly Dictionary<Guid, Timeline> _timelines = new();
+        private readonly Dictionary<Guid, PlaybackControls> _playbackControls = new();
 
         public MicrodancerUi(LicenseChecker license)
         {
@@ -26,9 +25,6 @@ namespace Microdancer
 
             _libraryPath = new LibraryPath();
             _library = new DisplayLibrary();
-            _contentArea = new ContentArea();
-            _timeline = new Timeline();
-            _playbackControls = new PlaybackControls();
         }
 
         public override void Draw()
@@ -109,12 +105,17 @@ namespace Microdancer
 
             var node = Library.Find<INode>(Config.LibrarySelection);
 
-            _contentArea.Draw(node);
-            _timeline.Draw(node);
+            EnsureUiComponents(Config.LibrarySelection);
 
-            foreach (var guid in Config.OpenWindows)
+            _contentAreas[Config.LibrarySelection].Draw(node);
+            _timelines[Config.LibrarySelection].Draw(node);
+
+            for (var i = 0; i < Config.OpenWindows.Count; i++)
             {
+                var guid = Config.OpenWindows[i];
                 var additionalNode = Library.Find<INode>(guid);
+
+                EnsureUiComponents(guid);
 
                 var windowVisible = true;
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
@@ -122,23 +123,23 @@ namespace Microdancer
                     ImGuiHelpers.ScaledVector2(400, 400),
                     ImGui.GetMainViewport().WorkSize
                 );
-                var open = ImGui.Begin(additionalNode?.Name ?? "Home", ref windowVisible);
+                var open = ImGui.Begin($"{additionalNode?.Name ?? "Home"}##Microdancer", ref windowVisible);
                 ImGui.PopStyleVar();
 
                 if (open)
                 {
                     ImGui.BeginChildFrame(
-                        101012,
+                        101011 + (uint)i,
                         new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
                         ImGuiWindowFlags.NoBackground
                     );
 
-                    _contentArea.Draw(additionalNode);
-                    _timeline.Draw(additionalNode);
+                    _contentAreas[guid].Draw(additionalNode);
+                    _timelines[guid].Draw(additionalNode);
 
                     ImGui.EndChildFrame();
 
-                    _playbackControls.Draw(additionalNode, true);
+                    _playbackControls[guid].Draw(additionalNode, true);
 
                     ImGui.End();
                 }
@@ -153,7 +154,17 @@ namespace Microdancer
 
             ImGui.Columns(1, "playback-controls", false);
 
-            _playbackControls.Draw(node, false);
+            _playbackControls[Config.LibrarySelection].Draw(node, false);
+        }
+
+        private void EnsureUiComponents(Guid guid)
+        {
+            if (!_contentAreas.ContainsKey(guid))
+            {
+                _contentAreas[guid] = new ContentArea();
+                _timelines[guid] = new Timeline();
+                _playbackControls[guid] = new PlaybackControls();
+            }
         }
     }
 }
