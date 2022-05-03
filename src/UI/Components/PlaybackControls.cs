@@ -36,7 +36,7 @@ namespace Microdancer
             ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.12941177f, 0.1254902f, 0.12941177f, 0.5f));
             ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
-            ImGui.BeginChildFrame(3, new(-1, -1));
+            ImGui.BeginChildFrame(3, new(-1, ImGui.GetContentRegionAvail().Y));
             ImGui.PopStyleVar(2);
             ImGui.PopStyleColor();
 
