@@ -122,7 +122,7 @@ namespace Microdancer
                     ImGuiHelpers.ScaledVector2(400, 400),
                     ImGui.GetMainViewport().WorkSize
                 );
-                var open = ImGui.Begin(additionalNode?.Name ?? "Home", ref windowVisible, ImGuiWindowFlags.NoDocking);
+                var open = ImGui.Begin(additionalNode?.Name ?? "Home", ref windowVisible);
                 ImGui.PopStyleVar();
 
                 if (open)
