@@ -34,10 +34,10 @@ namespace Microdancer
                 _resetScroll = _lastScrollPosition >= 0;
             }
 
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 4 * ImGuiHelpers.GlobalScale);
+
             var frameSize = ImGui.GetContentRegionAvail();
-            frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).X * 2.0f;
-            frameSize.X -= Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize) * 2.0f;
-            frameSize.X -= Theme.GetStyle<Vector2>(ImGuiStyleVar.WindowPadding).X * 2.0f;
+            frameSize.X -= 9 * ImGuiHelpers.GlobalScale;
             frameSize.Y = ImGuiHelpers.GetButtonSize(string.Empty).Y * 4.0f;
 
             ImGui.PushStyleColor(ImGuiCol.ScrollbarBg, Theme.GetColor(ImGuiCol.ScrollbarGrab));
@@ -51,7 +51,9 @@ namespace Microdancer
             ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0.0f, 0.0f));
 
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1.0f);
             ImGui.BeginChildFrame((uint)_info.Id.GetHashCode(), frameSize, ImGuiWindowFlags.AlwaysHorizontalScrollbar);
+            ImGui.PopStyleVar();
 
             if (_resetScroll)
             {
@@ -150,6 +152,10 @@ namespace Microdancer
 
             ImGui.PushButtonRepeat(true);
 
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1.0f);
+
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 4 * ImGuiHelpers.GlobalScale);
+
             var changedZoom = false;
             var zoomFactor = increment;
 
@@ -166,6 +172,8 @@ namespace Microdancer
                 zoomFactor -= 0.1f;
                 changedZoom = true;
             }
+
+            ImGui.PopStyleVar();
 
             ImGui.PopButtonRepeat();
 

@@ -131,6 +131,7 @@ namespace Microdancer.UI
                 );
 
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+                ImGui.PushStyleColor(ImGuiCol.Border, Vector4.One);
                 bool open;
                 var flags = ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoTitleBar;
 
@@ -142,7 +143,7 @@ namespace Microdancer.UI
                 {
                     open = ImGui.Begin(name, ref childWindowVisible, flags);
                 }
-
+                ImGui.PopStyleColor();
                 ImGui.PopStyleVar();
 
                 if (ImGui.IsWindowDocked())

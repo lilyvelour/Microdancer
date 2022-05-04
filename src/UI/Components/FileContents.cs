@@ -49,7 +49,9 @@ namespace Microdancer
                     ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hovered);
                 }
 
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1.0f);
                 ImGui.BeginChildFrame(10, fileContentsSize, ImGuiWindowFlags.HorizontalScrollbar);
+                ImGui.PopStyleVar();
 
                 if (isRunning)
                 {
