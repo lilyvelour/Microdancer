@@ -5,26 +5,29 @@ using Dalamud.Game.ClientState;
 using Dalamud.IoC;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
-namespace Microdancer
+namespace Microdancer.UI
 {
     [PluginInterface]
     public class MicrodancerUi : PluginWindow
     {
         private readonly LicenseChecker _license;
 
-        private readonly LibraryPath _libraryPath;
-        private readonly DisplayLibrary _library;
+        private readonly LibraryPath _libraryPath = new();
+        private readonly DisplayLibrary _library = new();
+        private readonly PlaybackControls _playbackControls = new();
+        private readonly RegionBar _regionBar = new();
+
         private readonly Dictionary<Guid, ContentArea> _contentAreas = new();
         private readonly Dictionary<Guid, Timeline> _timelines = new();
-        private readonly Dictionary<Guid, PlaybackControls> _playbackControls = new();
+
+        private Guid _focused;
+        private readonly Dictionary<Guid, float> _dockReleased = new();
 
         public MicrodancerUi(LicenseChecker license)
         {
             _license = license;
-
-            _libraryPath = new LibraryPath();
-            _library = new DisplayLibrary();
         }
 
         public override void Draw()
@@ -46,7 +49,9 @@ namespace Microdancer
 
             if (draw)
             {
-                DrawWindowContent();
+                DrawMainContent();
+
+                DrawDockWindows();
             }
 
             ImGui.End();
@@ -60,7 +65,120 @@ namespace Microdancer
             }
         }
 
-        private void DrawWindowContent()
+        private void DrawDockWindows()
+        {
+            var openWindows = Config.OpenWindows.ToList();
+            var previewWindow = false;
+
+            if (Config.LibrarySelection != Guid.Empty && !openWindows.Contains(Config.LibrarySelection))
+            {
+                openWindows.Add(Config.LibrarySelection);
+                previewWindow = true;
+            }
+
+            if (openWindows.Count == 0)
+            {
+                openWindows.Add(Guid.Empty);
+            }
+
+            for (int i = 0; i < openWindows.Count; i++)
+            {
+                var guid = openWindows[i];
+                var additionalNode = Library.Find<INode>(guid);
+
+                EnsureUiComponents(guid);
+
+                var childWindowVisible = true;
+
+                ImGui.SetNextWindowDockID(439839, ImGuiCond.Appearing);
+
+                if (!_dockReleased.ContainsKey(guid))
+                {
+                    ImGui.SetNextWindowDockID(439839, ImGuiCond.Always);
+                    _dockReleased[guid] = 0.0f;
+                }
+                else if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                {
+                    var releaseTime = _dockReleased.GetValueOrDefault(guid);
+                    if (releaseTime > 0.25f)
+                    {
+                        ImGui.SetNextWindowDockID(439839, ImGuiCond.Always);
+                        _dockReleased[guid] = 0.0f;
+                    }
+                    else
+                    {
+                        _dockReleased[guid] = releaseTime + ImGui.GetIO().DeltaTime;
+                    }
+                }
+
+                var name = additionalNode?.Name ?? "Home";
+
+                if (previewWindow && guid == Config.LibrarySelection)
+                {
+                    name = $"< {name} >";
+                }
+
+                if (guid != Guid.Empty && guid == Config.NextFocus)
+                {
+                    ImGui.SetNextWindowFocus();
+                    Config.NextFocus = Guid.Empty;
+                    PluginInterface.SavePluginConfig(Config);
+                }
+
+                ImGui.SetNextWindowSizeConstraints(
+                    ImGuiHelpers.ScaledVector2(400, 400),
+                    ImGui.GetMainViewport().WorkSize
+                );
+
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+                bool open;
+                var flags = ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoTitleBar;
+
+                if (guid == Guid.Empty)
+                {
+                    open = ImGui.Begin(name, flags);
+                }
+                else
+                {
+                    open = ImGui.Begin(name, ref childWindowVisible, flags);
+                }
+
+                ImGui.PopStyleVar();
+
+                if (ImGui.IsWindowDocked())
+                {
+                    _dockReleased[guid] = 0.0f;
+                }
+
+                if (open)
+                {
+                    if (ImGui.IsWindowFocused())
+                    {
+                        _focused = guid;
+                    }
+
+                    _contentAreas.GetValueOrDefault(guid)?.Draw(additionalNode);
+                    _timelines.GetValueOrDefault(guid)?.Draw(additionalNode);
+
+                    ImGui.End();
+                }
+
+                if (!childWindowVisible)
+                {
+                    if (!previewWindow)
+                    {
+                        Close(guid);
+                    }
+
+                    if (guid == Config.LibrarySelection)
+                    {
+                        DeselectAll();
+                    }
+                }
+            }
+        }
+
+        private void DrawMainContent()
         {
             if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
             {
@@ -83,11 +201,20 @@ namespace Microdancer
 
             ImGui.Spacing();
 
-            ImGui.Columns(2);
+            var guid = _focused;
+            if (guid == Guid.Empty)
+            {
+                guid = Config.LibrarySelection;
+            }
+
+            var node = Library.Find<INode>(guid);
+            var micro = node as Micro;
+
+            ImGui.Columns(3);
 
             ImGui.BeginChildFrame(
                 101010,
-                new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
+                new(-1, ImGui.GetContentRegionAvail().Y - (112 * ImGuiHelpers.GlobalScale)),
                 ImGuiWindowFlags.NoBackground
             );
 
@@ -99,63 +226,29 @@ namespace Microdancer
 
             ImGui.BeginChildFrame(
                 101011,
-                new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
+                new(-1, ImGui.GetContentRegionAvail().Y - (112 * ImGuiHelpers.GlobalScale)),
                 ImGuiWindowFlags.NoBackground
             );
 
-            var node = Library.Find<INode>(Config.LibrarySelection);
-            var librarySelection = Config.LibrarySelection;
+            ImGui.PushStyleColor(ImGuiCol.TitleBg, Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, Vector4.Zero);
 
-            EnsureUiComponents(librarySelection);
+            ImGui.DockSpace(439839, new(-1, -1));
 
-            _contentAreas.GetValueOrDefault(librarySelection)?.Draw(node);
-            _timelines.GetValueOrDefault(librarySelection)?.Draw(node);
-
-            for (var i = 0; i < Config.OpenWindows.Count; i++)
-            {
-                var guid = Config.OpenWindows[i];
-                var additionalNode = Library.Find<INode>(guid);
-
-                EnsureUiComponents(guid);
-
-                var windowVisible = true;
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
-                ImGui.SetNextWindowSizeConstraints(
-                    ImGuiHelpers.ScaledVector2(400, 400),
-                    ImGui.GetMainViewport().WorkSize
-                );
-                var open = ImGui.Begin($"{additionalNode?.Name ?? "Home"}##Microdancer", ref windowVisible);
-                ImGui.PopStyleVar();
-
-                if (open)
-                {
-                    ImGui.BeginChildFrame(
-                        101011 + (uint)i,
-                        new(-1, ImGui.GetContentRegionAvail().Y - 112 * ImGuiHelpers.GlobalScale),
-                        ImGuiWindowFlags.NoBackground
-                    );
-
-                    _contentAreas.GetValueOrDefault(guid)?.Draw(additionalNode);
-                    _timelines.GetValueOrDefault(guid)?.Draw(additionalNode);
-
-                    ImGui.EndChildFrame();
-
-                    _playbackControls.GetValueOrDefault(guid)?.Draw(additionalNode, true);
-
-                    ImGui.End();
-                }
-
-                if (!windowVisible)
-                {
-                    Close(guid);
-                }
-            }
+            ImGui.PopStyleColor(2);
 
             ImGui.EndChildFrame();
 
+            ImGui.NextColumn();
+
+            if (micro != null)
+            {
+                _regionBar.Draw(micro);
+            }
+
             ImGui.Columns(1, "playback-controls", false);
 
-            _playbackControls.GetValueOrDefault(librarySelection)?.Draw(node, false);
+            _playbackControls.Draw(node);
         }
 
         private void EnsureUiComponents(Guid guid)
@@ -168,11 +261,6 @@ namespace Microdancer
             if (!_timelines.ContainsKey(guid))
             {
                 _timelines[guid] = new Timeline();
-            }
-
-            if (!_playbackControls.ContainsKey(guid))
-            {
-                _playbackControls[guid] = new PlaybackControls();
             }
         }
     }

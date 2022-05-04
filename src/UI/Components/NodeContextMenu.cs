@@ -9,15 +9,15 @@ namespace Microdancer
     {
         private readonly CreateButtons _createButtons;
         private readonly string _id;
-        private readonly bool _allowSelectRenameDelete;
+        private readonly bool _allowRenameDelete;
 
         private Guid _deleting;
 
-        public NodeContextMenu(string id, bool allowSelectRenameDelete = true)
+        public NodeContextMenu(string id, bool allowRenameDelete = true)
         {
             _id = id;
             _createButtons = new CreateButtons(CreateButtons.ButtonStyle.ContextMenu);
-            _allowSelectRenameDelete = allowSelectRenameDelete;
+            _allowRenameDelete = allowRenameDelete;
         }
 
         bool IDrawable<INode>.Draw(INode node)
@@ -62,17 +62,9 @@ namespace Microdancer
                     ImGui.Separator();
                 }
 
-                if (_allowSelectRenameDelete)
+                if (ImGui.Selectable("View"))
                 {
-                    if (ImGui.Selectable("Select"))
-                    {
-                        Select(node);
-                    }
-
-                    if (node is Micro && ImGui.Selectable("View in New Window"))
-                    {
-                        View(node);
-                    }
+                    View(node);
                 }
 
                 if (!node.IsReadOnly)
@@ -141,7 +133,7 @@ namespace Microdancer
                     }
                 }
 
-                if (!node.IsReadOnly && _allowSelectRenameDelete && (showRename || canDelete))
+                if (!node.IsReadOnly && _allowRenameDelete && (showRename || canDelete))
                 {
                     ImGui.Separator();
 

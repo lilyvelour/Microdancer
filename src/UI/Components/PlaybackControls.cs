@@ -6,12 +6,12 @@ using ImGuiNET;
 
 namespace Microdancer
 {
-    public class PlaybackControls : PluginUiBase, IDrawable<INode?, bool>
+    public class PlaybackControls : PluginUiBase, IDrawable<INode?>
     {
         private MicroInfo? _info;
         private MicroInfo? _current;
 
-        public bool Draw(INode? node, bool isAdditionalWindow)
+        public bool Draw(INode? node)
         {
             var micro = node as Micro;
             _current = MicroManager.Current;
@@ -26,11 +26,6 @@ namespace Microdancer
                 {
                     _info = new MicroInfo(micro);
                 }
-            }
-
-            if (isAdditionalWindow && _current?.Micro != micro)
-            {
-                _current = null;
             }
 
             ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.12941177f, 0.1254902f, 0.12941177f, 0.5f));

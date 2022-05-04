@@ -96,6 +96,8 @@ namespace Microdancer
 
         public override void Begin()
         {
+            ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+
             foreach (var (style, value) in _styles)
             {
                 if (value is float f)

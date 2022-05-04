@@ -62,7 +62,7 @@ namespace Microdancer
         {
             ImGui.SetNextWindowPos(ImGui.GetCursorScreenPos());
 
-            bool _ = false;
+            var _ = false;
             var open = ImGui.Begin(
                 name,
                 ref _,

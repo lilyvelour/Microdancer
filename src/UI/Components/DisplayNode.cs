@@ -78,7 +78,7 @@ namespace Microdancer
                 {
                     if (!_ignoreClick)
                     {
-                        Select(node);
+                        Navigate(node.Parent?.Id ?? Guid.Empty, node.Id);
                     }
                     _ignoreClick = false;
                 }
@@ -222,23 +222,24 @@ namespace Microdancer
             {
                 if (ImGui.IsItemClicked())
                 {
-                    if (isSelected)
+                    if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                     {
-                        DeselectAll();
+                        View(node);
                     }
                     else
                     {
-                        var _ = false;
-                        var _1 = false;
-                        var otherFlags = GetFlags(node, filter, ref _, ref _1);
-
-                        if (node.Children.Count == 0 || !open || otherFlags.HasFlag(ImGuiTreeNodeFlags.Bullet))
+                        if (!isSelected)
                         {
-                            Select(node);
+                            var _ = false;
+                            var _1 = false;
+                            var otherFlags = GetFlags(node, filter, ref _, ref _1);
+
+                            if (node.Children.Count == 0 || !open || otherFlags.HasFlag(ImGuiTreeNodeFlags.Bullet))
+                            {
+                                Select(node);
+                            }
                         }
                     }
-
-                    PluginInterface.SavePluginConfig(Config);
                 }
             }
 

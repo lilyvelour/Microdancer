@@ -6,6 +6,7 @@ using Dalamud.Game.ClientState;
 using Dalamud.IoC;
 using System;
 using Microsoft.VisualBasic.FileIO;
+using System.Linq;
 
 namespace Microdancer
 {
@@ -53,6 +54,12 @@ namespace Microdancer
             PluginInterface.SavePluginConfig(Config);
         }
 
+        protected void Navigate(Guid from, Guid to)
+        {
+            Config.Navigate(from, to);
+            PluginInterface.SavePluginConfig(Config);
+        }
+
         protected void Close(INode node)
         {
             Config.Close(node.Id);
@@ -68,6 +75,7 @@ namespace Microdancer
         protected void Select(Guid id)
         {
             Config.LibrarySelection = id;
+            Config.NextFocus = id;
             PluginInterface.SavePluginConfig(Config);
         }
 
@@ -79,6 +87,7 @@ namespace Microdancer
         protected void DeselectAll()
         {
             Config.LibrarySelection = Guid.Empty;
+            Config.NextFocus = Config.OpenWindows.LastOrDefault();
             PluginInterface.SavePluginConfig(Config);
         }
 

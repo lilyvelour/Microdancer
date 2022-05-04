@@ -20,12 +20,31 @@ namespace Microdancer
         public List<Guid> SharedItems { get; set; } = new();
         public List<Guid> StarredItems { get; set; } = new();
         public Dictionary<Guid, float> TimelineZoomFactor { get; set; } = new();
+        public Guid NextFocus { get; set; }
 
         public void View(Guid item)
         {
             OpenWindows = OpenWindows.Distinct().ToList();
-            OpenWindows.Add(item);
+            OpenWindows.Remove(item);
             OpenWindows.Remove(Guid.Empty);
+            OpenWindows.Add(item);
+            NextFocus = item;
+        }
+
+        public void Navigate(Guid from, Guid to)
+        {
+            var fromIndex = OpenWindows.IndexOf(from);
+
+            if (fromIndex >= 0)
+            {
+                OpenWindows[fromIndex] = to;
+            }
+            else
+            {
+                View(to);
+            }
+
+            NextFocus = to;
         }
 
         public void Close(Guid item)
