@@ -44,6 +44,11 @@ namespace Microdancer
                 View(to);
             }
 
+            if (LibrarySelection == from)
+            {
+                LibrarySelection = to;
+            }
+
             NextFocus = to;
         }
 

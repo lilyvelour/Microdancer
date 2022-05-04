@@ -135,7 +135,7 @@ namespace Microdancer
             }
             else
             {
-                if (isSelected || flags.HasFlag(ImGuiTreeNodeFlags.Bullet))
+                if (flags.HasFlag(ImGuiTreeNodeFlags.Bullet))
                 {
                     ImGui.SetNextItemOpen(true);
                 }
@@ -218,28 +218,15 @@ namespace Microdancer
                     _newName = string.Empty;
                 }
             }
-            else
+            else if (ImGui.IsItemClicked())
             {
-                if (ImGui.IsItemClicked())
+                if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                 {
-                    if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-                    {
-                        View(node);
-                    }
-                    else
-                    {
-                        if (!isSelected)
-                        {
-                            var _ = false;
-                            var _1 = false;
-                            var otherFlags = GetFlags(node, filter, ref _, ref _1);
-
-                            if (node.Children.Count == 0 || !open || otherFlags.HasFlag(ImGuiTreeNodeFlags.Bullet))
-                            {
-                                Select(node);
-                            }
-                        }
-                    }
+                    View(node);
+                }
+                else
+                {
+                    Select(node);
                 }
             }
 
@@ -295,15 +282,6 @@ namespace Microdancer
             if (_grid)
             {
                 ImGui.EndGroup();
-            }
-
-            if (isSelected && !open)
-            {
-                if (!isFolderRoot && !_grid)
-                {
-                    ImGui.TreePush();
-                }
-                open = true;
             }
 
             if (open && !_grid)
