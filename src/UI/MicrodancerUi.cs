@@ -113,6 +113,22 @@ namespace Microdancer.UI
 
                 var name = additionalNode?.Name ?? "Home";
 
+                if (additionalNode != null)
+                {
+                    for (var j = 0; j < i; ++j)
+                    {
+                        var otherGuid = openWindows[j];
+                        var otherNode = Library.Find<INode>(otherGuid);
+
+                        if (name == otherNode?.Name)
+                        {
+                            var path = additionalNode.Path[(Config.LibraryPath.Length + 1)..];
+
+                            name += $"→ {path}";
+                        }
+                    }
+                }
+
                 if (previewWindow && guid == Config.LibrarySelection)
                 {
                     name = $"< {name} >";
@@ -143,6 +159,7 @@ namespace Microdancer.UI
                 {
                     open = ImGui.Begin(name, ref childWindowVisible, flags);
                 }
+
                 ImGui.PopStyleColor();
                 ImGui.PopStyleVar();
 
@@ -156,10 +173,17 @@ namespace Microdancer.UI
                     if (ImGui.IsWindowFocused())
                     {
                         _focused = guid;
+
+                        if (guid == Config.LibrarySelection && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                        {
+                            View(Config.LibrarySelection);
+                        }
                     }
 
+                    ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
                     _contentAreas.GetValueOrDefault(guid)?.Draw(additionalNode);
                     _timelines.GetValueOrDefault(guid)?.Draw(additionalNode);
+                    ImGui.PopStyleVar();
 
                     ImGui.End();
                 }
