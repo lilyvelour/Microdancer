@@ -81,6 +81,14 @@ namespace Microdancer
                     }
                     _ignoreClick = false;
                 }
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Middle))
+                {
+                    if (!_ignoreClick)
+                    {
+                        View(node.Id);
+                    }
+                    _ignoreClick = false;
+                }
                 ImGui.SetWindowFontScale(1.0f);
 
                 _contextMenu.Draw(node, out rename, showCreateButtons: false);
@@ -216,6 +224,10 @@ namespace Microdancer
                     _renaming = Guid.Empty;
                     _newName = string.Empty;
                 }
+            }
+            else if (ImGui.IsItemClicked(ImGuiMouseButton.Middle))
+            {
+                View(node);
             }
             else if (ImGui.IsItemClicked())
             {

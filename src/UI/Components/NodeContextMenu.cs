@@ -62,7 +62,8 @@ namespace Microdancer
                     ImGui.Separator();
                 }
 
-                if (ImGui.Selectable("View"))
+                var hasOpenTab = Config.LibrarySelection == node.Id || Config.OpenWindows.Contains(node.Id);
+                if (ImGui.Selectable(hasOpenTab ? "Select Tab" : "View in New Tab"))
                 {
                     View(node);
                 }

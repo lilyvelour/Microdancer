@@ -34,13 +34,20 @@ namespace Microdancer
         public void Navigate(Guid from, Guid to)
         {
             var fromIndex = OpenWindows.IndexOf(from);
+            var fromExists = fromIndex >= 0;
+            var toExists = OpenWindows.Contains(to);
 
-            if (fromIndex >= 0)
+            if (fromExists && !toExists)
             {
                 OpenWindows[fromIndex] = to;
             }
             else
             {
+                if (fromExists)
+                {
+                    Close(from);
+                }
+
                 View(to);
             }
 

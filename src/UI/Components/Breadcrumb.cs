@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -6,6 +7,13 @@ namespace Microdancer
 {
     public class Breadcrumb : PluginUiBase, IDrawable<INode?>
     {
+        private readonly NodeContextMenu _contextMenu;
+
+        public Breadcrumb()
+        {
+            _contextMenu = new NodeContextMenu("breadcrumb-context-menu");
+        }
+
         public bool Draw(INode? node)
         {
             if (node == null)
@@ -18,66 +26,50 @@ namespace Microdancer
                 Navigate(node.Id, Guid.Empty);
             }
 
-            ImGui.SameLine();
-            ImGui.Text("»");
-            ImGui.SameLine();
-            string label = node switch
+            var breadCrumb = new Stack<INode>();
+
+            for (var n = node; n != null; n = n.Parent)
             {
-                SharedFolderRoot => "Shared with Me",
-                StarredFolderRoot => "Starred",
-                _ => "Library",
-            };
-            if (ImGui.Selectable(label, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(label)))
-            {
-                Navigate(node.Id, Library.Find<Node>(label)?.Id ?? Guid.Empty);
+                breadCrumb.Push(n);
             }
 
-            var basePath = node.IsReadOnly ? PluginInterface.SharedFolderPath() : Config.LibraryPath;
-            var first = basePath.Length + 1;
-            if (first < node.Path.Length)
+            while (breadCrumb.Count > 0)
             {
-                var relativePath = node.Path[first..];
-                var breadCrumb = relativePath.Split(new[] { '/', '\\' });
+                var segment = breadCrumb.Pop();
 
-                var currentPath = string.Empty;
-                foreach (var segment in breadCrumb)
+                ImGui.SameLine();
+                ImGui.Text("»");
+                ImGui.SameLine();
+
+                if (segment is Micro)
                 {
-                    if (string.IsNullOrWhiteSpace(segment))
+                    ImGui.Selectable(segment.Name, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(segment.Name));
+                    _contextMenu.Draw(segment, false);
+
+                    var isShared = Config.SharedItems.Contains(node.Id);
+                    if (isShared)
                     {
-                        continue;
+                        ImGui.SameLine();
+
+                        ImGui.PushFont(UiBuilder.IconFont);
+                        ImGui.Text(FontAwesomeIcon.UserFriends.ToIconString());
+                        ImGui.PopFont();
                     }
+                }
+                else
+                {
+                    var canNavigate = ImGui.Selectable(
+                        segment.Name,
+                        false,
+                        ImGuiSelectableFlags.None,
+                        ImGui.CalcTextSize(segment.Name)
+                    );
 
-                    ImGui.SameLine();
-                    ImGui.Text("»");
-                    ImGui.SameLine();
-
-                    currentPath += $"/{segment}";
-
-                    var parent = node.Parent;
-
-                    if (node is Micro && segment.EndsWith(".micro"))
+                    if (canNavigate)
                     {
-                        ImGui.Text(segment[..^6]);
-                        var isShared = Config.SharedItems.Contains(node.Id);
-                        if (isShared)
-                        {
-                            ImGui.SameLine();
-
-                            ImGui.PushFont(UiBuilder.IconFont);
-                            ImGui.Text(FontAwesomeIcon.UserFriends.ToIconString());
-                            ImGui.PopFont();
-                        }
+                        Navigate(node.Id, segment.Id);
                     }
-                    else
-                    {
-                        if (
-                            ImGui.Selectable(segment, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(segment))
-                            && parent != null
-                        )
-                        {
-                            Navigate(node.Id, parent.Id);
-                        }
-                    }
+                    _contextMenu.Draw(segment, false);
                 }
             }
 

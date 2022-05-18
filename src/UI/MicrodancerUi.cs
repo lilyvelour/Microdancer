@@ -81,6 +81,8 @@ namespace Microdancer.UI
                 openWindows.Add(Guid.Empty);
             }
 
+            openWindows = openWindows.Distinct().ToList();
+
             for (int i = 0; i < openWindows.Count; i++)
             {
                 var guid = openWindows[i];
@@ -134,7 +136,7 @@ namespace Microdancer.UI
                     name = $"< {name} >";
                 }
 
-                name = $"{name}##{guid}";
+                name = $"{name}##{guid}_{i}";
 
                 if (guid != Guid.Empty && guid == Config.NextFocus)
                 {
@@ -192,14 +194,12 @@ namespace Microdancer.UI
 
                 if (!childWindowVisible)
                 {
-                    if (previewWindow && guid == Config.LibrarySelection)
+                    if (guid == Config.LibrarySelection)
                     {
                         DeselectAll();
                     }
-                    else
-                    {
-                        Close(guid);
-                    }
+
+                    Close(guid);
                 }
             }
         }
