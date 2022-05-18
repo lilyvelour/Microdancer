@@ -46,36 +46,29 @@ namespace Microdancer
             _partyManager = partyManager;
             _objectTable = objectTable;
 
-            var cancellationToken = _tokenSource.Token;
-            Task.Run(() => SharedContentUpdate(cancellationToken), cancellationToken);
+            Task.Run(() => SharedContentUpdate());
         }
 
-        private async void SharedContentUpdate(CancellationToken cancellationToken)
+        private async void SharedContentUpdate()
         {
-            try
+            using var client = new HttpClient();
+            var tickRate = TimeSpan.FromSeconds(2.5f);
+
+            while (!_disposedValue)
             {
-                using var client = new HttpClient();
-                var tickRate = TimeSpan.FromSeconds(2.5f);
-
-                while (true)
+                try
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        ClearSharedFolder();
-                        break;
-                    }
-
                     if (!_clientState.IsLoggedIn)
                     {
-                        ClearSharedFolder();
-                        await Task.Delay(tickRate, cancellationToken);
+                        await ClearSharedFolder();
+                        await Task.Delay(tickRate);
                         continue;
                     }
 
                     var player = _clientState.LocalPlayer;
                     if (player == null)
                     {
-                        await Task.Delay(tickRate, cancellationToken);
+                        await Task.Delay(tickRate);
                         continue;
                     }
 
@@ -92,7 +85,7 @@ namespace Microdancer
 
                     var party = _partyManager
                         .GetInfoFromParty()
-                        .Where(p => p.Name != playerName && p.World != playerWorld);
+                        .Where(p => !(p.Name == playerName && p.World == playerWorld));
 
                     foreach (var partyMember in party)
                     {
@@ -115,11 +108,7 @@ namespace Microdancer
                         Shared = shared,
                     };
 
-                    var response = await client.PostAsJsonAsync(
-                        ENDPOINT,
-                        request,
-                        cancellationToken: cancellationToken
-                    );
+                    var response = await client.PostAsJsonAsync(ENDPOINT, request);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -127,9 +116,7 @@ namespace Microdancer
 
                         try
                         {
-                            var sharedWithMe = await response.Content.ReadFromJsonAsync<SharedContentResponse>(
-                                cancellationToken: cancellationToken
-                            );
+                            var sharedWithMe = await response.Content.ReadFromJsonAsync<SharedContentResponse>();
 
                             if (sharedWithMe != null)
                             {
@@ -164,20 +151,20 @@ namespace Microdancer
 
                                         if (File.Exists(path))
                                         {
-                                            var current = await File.ReadAllTextAsync(path, cancellationToken);
+                                            var current = await File.ReadAllTextAsync(path);
                                             skipWrite = current == sharedMicro.Body;
                                         }
 
                                         if (!skipWrite)
                                         {
-                                            await File.WriteAllTextAsync(path, sharedMicro.Body, cancellationToken);
+                                            await File.WriteAllTextAsync(path, sharedMicro.Body);
                                         }
 
                                         pathsToKeep.Add(path);
                                     }
                                 }
 
-                                ClearSharedFolder(pathsToKeep);
+                                await ClearSharedFolder(pathsToKeep);
                             }
                         }
                         catch (Exception e)
@@ -186,10 +173,13 @@ namespace Microdancer
                         }
                     }
 
-                    await Task.Delay(tickRate, cancellationToken);
+                    await Task.Delay(tickRate);
+                }
+                catch
+                {
+                    await Task.Delay(tickRate);
                 }
             }
-            catch { }
         }
 
         public void Dispose()
@@ -206,23 +196,15 @@ namespace Microdancer
                 return;
             }
 
-            if (disposing)
-            {
-                if (!_tokenSource.IsCancellationRequested)
-                {
-                    _tokenSource.Cancel(false);
-                }
-            }
-
             _disposedValue = true;
         }
 
-        private void ClearSharedFolder()
+        private Task ClearSharedFolder()
         {
-            ClearSharedFolder(new HashSet<string>());
+            return ClearSharedFolder(new HashSet<string>());
         }
 
-        private void ClearSharedFolder(HashSet<string> pathsToKeep, DirectoryInfo? folder = null)
+        private async Task ClearSharedFolder(HashSet<string> pathsToKeep, DirectoryInfo? folder = null)
         {
             try
             {
@@ -244,11 +226,13 @@ namespace Microdancer
                             file.Delete();
                         }
                     }
+
+                    await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
 
                 foreach (var dir in folder.EnumerateDirectories())
                 {
-                    ClearSharedFolder(pathsToKeep, dir);
+                    await ClearSharedFolder(pathsToKeep, dir);
                 }
 
                 if (canDelete && !folder.EnumerateFileSystemInfos().Any())
@@ -257,7 +241,10 @@ namespace Microdancer
                     {
                         folder.Delete();
                     }
-                    catch { }
+                    catch (Exception e)
+                    {
+                        PluginLog.Error(e, e.Message);
+                    }
                 }
             }
             catch (Exception e)

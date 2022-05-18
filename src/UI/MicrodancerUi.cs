@@ -49,9 +49,22 @@ namespace Microdancer.UI
 
             if (draw)
             {
-                DrawMainContent();
-
-                DrawDockWindows();
+                if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
+                {
+                    ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
+                }
+                else if (_license.IsValidLicense == false)
+                {
+                    ImGui.TextColored(
+                        new(1.0f, 0.0f, 0.0f, 1.0f),
+                        "Microdancer is not currently licensed for this character. Please contact Dance Mom for access!"
+                    );
+                }
+                else
+                {
+                    DrawMainContent();
+                    DrawDockWindows();
+                }
             }
 
             ImGui.End();
@@ -206,21 +219,6 @@ namespace Microdancer.UI
 
         private void DrawMainContent()
         {
-            if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
-            {
-                ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
-                return;
-            }
-            else if (_license.IsValidLicense == false)
-            {
-                ImGui.TextColored(
-                    new(1.0f, 0.0f, 0.0f, 1.0f),
-                    "Microdancer is not currently licensed for this character. Please contact Dance Mom for access!"
-                );
-
-                return;
-            }
-
             ImGui.Columns(1);
 
             _libraryPath.Draw();
