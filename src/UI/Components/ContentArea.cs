@@ -61,6 +61,12 @@ namespace Microdancer
             {
                 ImGui.Spacing();
 
+                if (node?.IsReadOnly == false)
+                {
+                    var basePath = (node as Folder)?.Path ?? Config.LibraryPath;
+                    _createButtons.Draw(basePath);
+                }
+
                 var nodes = node?.Children ?? Library.GetNodes().ToList();
 
                 if (nodes.Count > 0)
@@ -101,12 +107,6 @@ namespace Microdancer
                     ImGui.Text("This folder is lonely...let's get started!");
 
                     ImGui.Spacing();
-
-                    if (node?.IsReadOnly == false)
-                    {
-                        var basePath = (node as Folder)?.Path ?? Config.LibraryPath;
-                        _createButtons.Draw(basePath);
-                    }
                 }
             }
 

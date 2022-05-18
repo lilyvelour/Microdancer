@@ -1,3 +1,4 @@
+using System.Numerics;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -25,26 +26,41 @@ namespace Microdancer
 
         public bool Draw(string basePath)
         {
-            if (!_newMicro && !_newFolder)
+            var canCreate = !_newMicro && !_newFolder;
+
+            switch (_buttonStyle)
             {
-                switch (_buttonStyle)
-                {
-                    case ButtonStyle.Icons:
-                        _newMicro = ImGuiExt.IconButton(FontAwesomeIcon.Plus, "Create new Micro");
-                        ImGui.SameLine();
-                        _newFolder = ImGuiExt.IconButton(FontAwesomeIcon.FolderPlus, "Create new Folder");
-                        break;
-                    case ButtonStyle.ContextMenu:
-                        _newMicro = ImGui.Selectable("New Micro");
-                        _newFolder = ImGui.Selectable("New Folder");
-                        break;
-                    default:
-                    case ButtonStyle.Buttons:
-                        _newMicro = ImGui.Button("Create new Micro");
-                        ImGui.SameLine();
-                        _newFolder = ImGui.Button("Create new Folder");
-                        break;
-                }
+                case ButtonStyle.Icons:
+                    _newMicro |= ImGuiExt.IconButton(FontAwesomeIcon.Plus, "Create new Micro") && canCreate;
+                    ImGui.SameLine();
+                    _newFolder |= ImGuiExt.IconButton(FontAwesomeIcon.FolderPlus, "Create new Folder") && canCreate;
+                    break;
+                case ButtonStyle.ContextMenu:
+                    _newMicro |= ImGui.Selectable("New Micro") && canCreate;
+                    _newFolder |= ImGui.Selectable("New Folder") && canCreate;
+                    break;
+                default:
+                case ButtonStyle.Buttons:
+                    var rect = ImGui.GetContentRegionAvail();
+                    rect.Y = ImGuiHelpers.GlobalScale * 40.0f;
+
+                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+
+                    ImGui.InvisibleButton($"create-before-spacing-{basePath}", new(rect.X * 0.15f, rect.Y));
+                    ImGui.SameLine();
+                    _newMicro |= ImGui.Button("Create new Micro", new(rect.X * 0.3125f, rect.Y)) && canCreate;
+                    ImGui.SameLine();
+                    ImGui.InvisibleButton($"create-middle-spacing-{basePath}", new(rect.X * 0.025f, rect.Y));
+                    ImGui.SameLine();
+                    _newFolder |= ImGui.Button("Create new Folder", new(rect.X * 0.3125f, rect.Y)) && canCreate;
+                    ImGui.SameLine();
+                    ImGui.InvisibleButton($"create-after-spacing-{basePath}", new(rect.X * 0.15f, rect.Y));
+
+                    ImGui.PopStyleVar();
+
+                    ImGui.Spacing();
+
+                    break;
             }
 
             if (_newMicro || _newFolder)
@@ -61,13 +77,10 @@ namespace Microdancer
                     {
                         CreateFolder(basePath, itemName);
                     }
-                    _newItemName = string.Empty;
-                    _newMicro = false;
-                    _newFolder = false;
                 }
                 else
                 {
-                    if (ImGuiExt.BeginCursorPopup("##new-item-popup"))
+                    if (ImGuiExt.BeginCursorPopup("##new-item-popup", canCreate))
                     {
                         if (string.IsNullOrWhiteSpace(_newItemName))
                         {
@@ -114,7 +127,7 @@ namespace Microdancer
 
                         ImGui.PopItemWidth();
                     }
-                    else if (_buttonStyle != ButtonStyle.ContextMenu)
+                    else
                     {
                         _newItemName = string.Empty;
                         _newMicro = false;

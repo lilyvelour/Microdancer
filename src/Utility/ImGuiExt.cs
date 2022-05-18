@@ -58,9 +58,12 @@ namespace Microdancer
             ImGui.PopStyleColor(3);
         }
 
-        public static bool BeginCursorPopup(string name)
+        public static bool BeginCursorPopup(string name, bool reposition)
         {
-            ImGui.SetNextWindowPos(ImGui.GetCursorScreenPos());
+            if (reposition)
+            {
+                ImGui.SetNextWindowPos(ImGui.GetMousePos());
+            }
 
             var _ = false;
             var open = ImGui.Begin(
