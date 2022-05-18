@@ -11,7 +11,7 @@ namespace Microdancer
 
         public Breadcrumb()
         {
-            _contextMenu = new NodeContextMenu("breadcrumb-context-menu");
+            _contextMenu = new NodeContextMenu("breadcrumb-context-menu", allowRenameDelete: false);
         }
 
         public bool Draw(INode? node)
