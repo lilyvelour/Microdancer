@@ -24,15 +24,26 @@ namespace Microdancer
 
         public void View(Guid item)
         {
+            OpenWindows.Remove(Guid.Empty);
+
+            if (item == Guid.Empty)
+            {
+                return;
+            }
+
             OpenWindows = OpenWindows.Distinct().ToList();
             OpenWindows.Remove(item);
-            OpenWindows.Remove(Guid.Empty);
             OpenWindows.Add(item);
             NextFocus = item;
         }
 
         public void Navigate(Guid from, Guid to)
         {
+            if (to == Guid.Empty)
+            {
+                return;
+            }
+
             var fromIndex = OpenWindows.IndexOf(from);
             var fromExists = fromIndex >= 0;
             var toExists = OpenWindows.Contains(to);

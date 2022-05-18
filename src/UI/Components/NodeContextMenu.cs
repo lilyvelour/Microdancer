@@ -22,20 +22,26 @@ namespace Microdancer
 
         bool IDrawable<INode>.Draw(INode node)
         {
-            return Draw(node, true);
+            return Draw(node, showCreateButtons: true, showViewButton: true);
         }
 
-        public bool Draw(INode node, bool showCreateButtons = true)
+        public bool Draw(INode node, bool showCreateButtons = true, bool showViewButton = true)
         {
-            return Draw(node, out var _, showRename: false, showCreateButtons);
+            return Draw(node, out var _, showRename: false, showCreateButtons, showViewButton);
         }
 
-        public bool Draw(INode node, out bool rename, bool showCreateButtons = true)
+        public bool Draw(INode node, out bool rename, bool showCreateButtons = true, bool showViewButton = true)
         {
-            return Draw(node, out rename, showRename: true, showCreateButtons);
+            return Draw(node, out rename, showRename: true, showCreateButtons, showViewButton);
         }
 
-        private bool Draw(INode node, out bool rename, bool showRename = true, bool showCreateButtons = true)
+        private bool Draw(
+            INode node,
+            out bool rename,
+            bool showRename = true,
+            bool showCreateButtons = true,
+            bool showViewButton = true
+        )
         {
             rename = false;
 
@@ -62,10 +68,13 @@ namespace Microdancer
                     ImGui.Separator();
                 }
 
-                var hasOpenTab = Config.LibrarySelection == node.Id || Config.OpenWindows.Contains(node.Id);
-                if (ImGui.Selectable(hasOpenTab ? "Select Tab" : "View in New Tab"))
+                if (showViewButton)
                 {
-                    View(node);
+                    var isViewing = Config.LibrarySelection == node.Id || Config.OpenWindows.Contains(node.Id);
+                    if (ImGui.Selectable(isViewing ? "Select Tab" : "View in New Tab"))
+                    {
+                        View(node);
+                    }
                 }
 
                 if (!node.IsReadOnly)

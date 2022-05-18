@@ -21,30 +21,35 @@ namespace Microdancer
                 return false;
             }
 
-            if (ImGui.Selectable("Home", false, ImGuiSelectableFlags.None, ImGui.CalcTextSize("Home")))
-            {
-                Navigate(node.Id, Guid.Empty);
-            }
-
-            var breadCrumb = new Stack<INode>();
+            var breadcrumb = new Stack<INode>();
 
             for (var n = node; n != null; n = n.Parent)
             {
-                breadCrumb.Push(n);
+                breadcrumb.Push(n);
             }
 
-            while (breadCrumb.Count > 0)
+            if (breadcrumb.Count < 2)
             {
-                var segment = breadCrumb.Pop();
+                return false;
+            }
 
-                ImGui.SameLine();
-                ImGui.Text("»");
-                ImGui.SameLine();
+            var drawSeparator = false;
+            do
+            {
+                var segment = breadcrumb.Pop();
+
+                if (drawSeparator)
+                {
+                    ImGui.SameLine();
+                    ImGui.Text("»");
+                    ImGui.SameLine();
+                }
+                drawSeparator |= true;
 
                 if (segment is Micro)
                 {
                     ImGui.Selectable(segment.Name, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(segment.Name));
-                    _contextMenu.Draw(segment, false);
+                    _contextMenu.Draw(segment, showCreateButtons: false, showViewButton: segment != node);
 
                     var isShared = Config.SharedItems.Contains(node.Id);
                     if (isShared)
@@ -69,9 +74,9 @@ namespace Microdancer
                     {
                         Navigate(node.Id, segment.Id);
                     }
-                    _contextMenu.Draw(segment, false);
+                    _contextMenu.Draw(segment, showCreateButtons: false, showViewButton: segment != node);
                 }
-            }
+            } while (breadcrumb.Count > 0);
 
             return true;
         }
