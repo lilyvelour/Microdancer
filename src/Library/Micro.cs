@@ -9,6 +9,8 @@ namespace Microdancer
 {
     public sealed class Micro : Node
     {
+        private readonly Random _random = new();
+
         private string[]? _cache;
         private DateTime _cacheTime = DateTime.MinValue;
 
@@ -22,7 +24,7 @@ namespace Microdancer
 
         public IEnumerable<string> GetBody()
         {
-            if (_cache != null && DateTime.Now - _cacheTime > TimeSpan.FromSeconds(1.5))
+            if (_cache != null && DateTime.Now - _cacheTime > TimeSpan.FromMinutes(5 + _random.NextDouble()))
             {
                 try
                 {

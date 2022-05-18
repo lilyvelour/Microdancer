@@ -44,7 +44,6 @@ namespace Microdancer
                 return false;
             }
 
-            var isSelected = Config.LibrarySelection == node.Id;
             var isShared = false;
             var isFolderRoot = node is LibraryFolderRoot || node is SharedFolderRoot;
             var micro = node as Micro;
