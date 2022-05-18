@@ -134,6 +134,8 @@ namespace Microdancer.UI
                     name = $"< {name} >";
                 }
 
+                name = $"{name}##{guid}";
+
                 if (guid != Guid.Empty && guid == Config.NextFocus)
                 {
                     ImGui.SetNextWindowFocus();
