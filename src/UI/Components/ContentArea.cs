@@ -13,6 +13,7 @@ namespace Microdancer
     {
         private readonly DisplayNode _node;
         private readonly FileContents _fileContents;
+        private readonly Breadcrumb _breadcrumb;
         private readonly CreateButtons _createButtons;
         private readonly NodeContextMenu _contextMenu;
 
@@ -22,6 +23,7 @@ namespace Microdancer
         {
             _node = new DisplayNode("content-area", grid: true);
             _fileContents = new FileContents();
+            _breadcrumb = new Breadcrumb();
             _createButtons = new CreateButtons();
             _contextMenu = new NodeContextMenu("content-area-context-menu", allowRenameDelete: false);
         }
@@ -53,14 +55,14 @@ namespace Microdancer
 
             ImGui.Spacing();
 
+            _breadcrumb.Draw(node);
+
             if (micro != null)
             {
                 _fileContents.Draw(micro);
             }
             else
             {
-                ImGui.Spacing();
-
                 if (node?.IsReadOnly == false)
                 {
                     var basePath = (node as Folder)?.Path ?? Config.LibraryPath;

@@ -113,7 +113,7 @@ namespace Microdancer.UI
 
                 var name = additionalNode?.Name ?? "Home";
 
-                if (additionalNode != null)
+                if (additionalNode is Micro micro)
                 {
                     for (var j = 0; j < i; ++j)
                     {
@@ -122,7 +122,7 @@ namespace Microdancer.UI
 
                         if (name == otherNode?.Name)
                         {
-                            var path = additionalNode.Path[(Config.LibraryPath.Length + 1)..];
+                            var path = micro.Path[(Config.LibraryPath.Length + 1)..];
 
                             name += $"→ {path}";
                         }
@@ -192,14 +192,13 @@ namespace Microdancer.UI
 
                 if (!childWindowVisible)
                 {
-                    if (!previewWindow)
-                    {
-                        Close(guid);
-                    }
-
-                    if (guid == Config.LibrarySelection)
+                    if (previewWindow && guid == Config.LibrarySelection)
                     {
                         DeselectAll();
+                    }
+                    else
+                    {
+                        Close(guid);
                     }
                 }
             }
