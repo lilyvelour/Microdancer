@@ -6,23 +6,36 @@ using Dalamud.Game;
 using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Logging;
-using Framework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
+using XIVFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+using Dalamud.Game.ClientState;
 
 namespace Microdancer
 {
     // https://raw.githubusercontent.com/UnknownX7/OOBlugin/master/Game.cs
     // https://github.com/Ottermandias/AutoVisor/blob/c0b22286119d6ff207715c3dd1726137bb146863/SeFunctions/CPoseSettings.cs
     [PluginInterface]
-    public unsafe class GameManager
+    public unsafe class GameManager : IDisposable
     {
         private readonly GameGui _gameGui;
         private readonly SigScanner _sigScanner;
+        private readonly ClientState _clientState;
+        private readonly Framework _framework;
+        private readonly Channel<(string command, byte actionCommandRequestType)> _channel =
+            Channel.CreateUnbounded<(string, byte)>();
 
-        public GameManager(GameGui gameGui, SigScanner sigScanner)
+        private bool _disposedValue;
+
+        public GameManager(GameGui gameGui, SigScanner sigScanner, ClientState clientState, Framework framework)
         {
             _gameGui = gameGui;
             _sigScanner = sigScanner;
+            _clientState = clientState;
+            _framework = framework;
+
+            _framework.Update += Update;
 
             Initialize();
         }
@@ -83,7 +96,7 @@ namespace Microdancer
 
         public IntPtr CPoseSettings = IntPtr.Zero;
 
-        public void Initialize()
+        private void Initialize()
         {
             try
             {
@@ -111,7 +124,7 @@ namespace Microdancer
 
             try
             {
-                var agentModule = Framework.Instance()->GetUiModule()->GetAgentModule();
+                var agentModule = XIVFramework.Instance()->GetUiModule()->GetAgentModule();
 
                 try
                 {
@@ -181,7 +194,12 @@ namespace Microdancer
             }
         }
 
-        public void ExecuteCommand(string command)
+        public ValueTask ExecuteCommand(string command, byte actionCommandRequestType = 2)
+        {
+            return _channel.Writer.WriteAsync((command, actionCommandRequestType));
+        }
+
+        private void ExcecuteCommandImmediate(string command)
         {
             try
             {
@@ -199,8 +217,45 @@ namespace Microdancer
             }
             catch
             {
-                PluginLog.LogError("Failed injecting command");
+                PluginLog.LogError("ExecuteCommand: Failed injecting command");
             }
+        }
+
+        private void Update(Framework _)
+        {
+            if (_clientState.LocalPlayer == null)
+            {
+                return;
+            }
+
+            while (_channel.Reader.TryRead(out var cmd))
+            {
+                ActionCommandRequestType = cmd.actionCommandRequestType;
+                ExcecuteCommandImmediate(cmd.command);
+                ActionCommandRequestType = 0;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposedValue)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _framework.Update -= Update;
+            }
+
+            _disposedValue = true;
         }
     }
 }

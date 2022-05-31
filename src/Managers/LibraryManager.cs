@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
@@ -15,9 +17,9 @@ namespace Microdancer
         private bool _disposedValue;
 
         private readonly DalamudPluginInterface _pluginInterface;
-
-        private readonly List<INode> _cachedNodes = new();
+        private readonly ConcurrentBag<INode> _cachedNodes = new();
         private bool _shouldRebuild;
+        private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
 
@@ -55,46 +57,53 @@ namespace Microdancer
 
         public IEnumerable<INode> GetNodes()
         {
+            var nodes = _cachedNodes.ToArray();
+            if (_shouldRebuild && !_isBuilding)
+            {
+                _shouldRebuild = false;
+                _isBuilding = true;
+                Task.Run(BuildNodes); // Offload this to a worker thread
+            }
+            return nodes;
+        }
+
+        private void BuildNodes()
+        {
             try
             {
-                if (_shouldRebuild)
+                var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
+                var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
+                var sharedPath = Directory.CreateDirectory(sharedPathName);
+
+                var library = BuildLibrary(libraryPath, out var starred);
+                var sharedWithMe = BuildSharedWithMe(sharedPath);
+
+                _cachedNodes.Clear();
+                if (starred.Children.Count > 0)
                 {
-                    var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
-                    var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
-                    var sharedPath = Directory.CreateDirectory(sharedPathName);
+                    _cachedNodes.Add(starred);
+                }
+                _cachedNodes.Add(library);
+                _cachedNodes.Add(sharedWithMe);
 
-                    var library = BuildLibrary(libraryPath, out var starred);
-                    var sharedWithMe = BuildSharedWithMe(sharedPath);
+                var config = _pluginInterface.Configuration();
+                var shouldSaveConfig = false;
+                var ids = new HashSet<Guid>(config.SharedItems.Concat(config.StarredItems));
+                var nodes = _cachedNodes.SelectMany(node => Traverse(node, n => n.Children)).ToList();
 
-                    _cachedNodes.Clear();
-                    if (starred.Children.Count > 0)
+                foreach (var id in ids)
+                {
+                    if (nodes.Find(n => n.Id == id) == null)
                     {
-                        _cachedNodes.Add(starred);
+                        config.SharedItems.Remove(id);
+                        config.StarredItems.Remove(id);
+                        shouldSaveConfig = true;
                     }
-                    _cachedNodes.Add(library);
-                    _cachedNodes.Add(sharedWithMe);
+                }
 
-                    var config = _pluginInterface.Configuration();
-                    var shouldSaveConfig = false;
-                    var ids = new HashSet<Guid>(config.SharedItems.Concat(config.StarredItems));
-                    var nodes = _cachedNodes.SelectMany(node => Traverse(node, n => n.Children)).ToList();
-
-                    foreach (var id in ids)
-                    {
-                        if (nodes.Find(n => n.Id == id) == null)
-                        {
-                            config.SharedItems.Remove(id);
-                            config.StarredItems.Remove(id);
-                            shouldSaveConfig = true;
-                        }
-                    }
-
-                    if (shouldSaveConfig)
-                    {
-                        _pluginInterface.SavePluginConfig(config);
-                    }
-
-                    _shouldRebuild = false;
+                if (shouldSaveConfig)
+                {
+                    _pluginInterface.SavePluginConfig(config);
                 }
             }
             catch (Exception e)
@@ -102,8 +111,10 @@ namespace Microdancer
                 PluginLog.LogError(e, e.Message);
                 _shouldRebuild = true;
             }
-
-            return _cachedNodes.ToArray();
+            finally
+            {
+                _isBuilding = false;
+            }
         }
 
         public T? Find<T>(Guid id) where T : INode

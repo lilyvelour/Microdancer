@@ -131,7 +131,7 @@ namespace Microdancer
                 );
             }
 
-            void CyclePosesAndLog()
+            async void CyclePosesAndLog()
             {
                 var currentPoseCount = GetPoseCount(currentPoseType);
 
@@ -159,7 +159,7 @@ namespace Microdancer
                         break;
                     }
 
-                    _gameManager.ExecuteCommand("/cpose");
+                    await _gameManager.ExecuteCommand("/cpose");
 
                     PluginLog.LogDebug(
                         "Execute /cpose to get from {currentPoseIndex} to {newPoseIndex} of {currentPoseType:l}.",
@@ -168,7 +168,7 @@ namespace Microdancer
                         currentPoseType
                     );
 
-                    Task.Delay(TimeSpan.FromMilliseconds(50));
+                    await Task.Delay(TimeSpan.FromMilliseconds(50));
                 }
 
                 if (i >= currentPoseCount)

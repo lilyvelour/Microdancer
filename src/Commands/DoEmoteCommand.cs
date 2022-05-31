@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Dalamud.Game.Gui;
 using Dalamud.Logging;
 
@@ -60,9 +61,9 @@ namespace Microdancer
         }
 
         [Command("idle", "idle1", HelpMessage = "Alias for /setpose stand 1.")]
-        public void Idle1()
+        public async void Idle1()
         {
-            _gameManager.ExecuteCommand("/setpose stand 1");
+            await _gameManager.ExecuteCommand("/setpose stand 1");
         }
 
         [Command("idle2", HelpMessage = "Alias for /doemote 91")]

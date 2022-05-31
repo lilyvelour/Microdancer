@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
 using Dalamud.Logging;
@@ -22,9 +23,9 @@ namespace Microdancer
             HelpMessage = "Uses /action but it can queue. Does not queue in combat.",
             Raw = true
         )]
-        public void QueueAction(string action)
+        public async void QueueAction(string action)
         {
-            QueueActionImpl("/ac", action);
+            await QueueActionImpl("/ac", action);
         }
 
         [Command(
@@ -32,13 +33,13 @@ namespace Microdancer
             HelpMessage = "Uses /blueaction but it can queue. Does not queue in combat.",
             Raw = true
         )]
-        public void QueueBlueAction(string action)
+        public async void QueueBlueAction(string action)
         {
             // TODO: Does this actually work?
-            QueueActionImpl("/blueaction", action);
+            await QueueActionImpl("/blueaction", action);
         }
 
-        private void QueueActionImpl(string cmd, string action)
+        private async Task QueueActionImpl(string cmd, string action)
         {
             if (_gameManager.actionCommandRequestTypePtr == IntPtr.Zero)
             {
@@ -46,21 +47,10 @@ namespace Microdancer
                 return;
             }
 
-            // To prevent queueing actions in combat
-            var inCombat = _condition[ConditionFlag.InCombat];
-
-            if (!inCombat)
-            {
-                _gameManager.ActionCommandRequestType = 0;
-            }
-
             // Handle auto translate strings
-            _gameManager.ExecuteCommand($"{cmd} {action.Replace(" ", "\"").Replace(" ", "\"")}");
+            var command = $"{cmd} {action.Replace(" ", "\"").Replace(" ", "\"")}";
 
-            if (!inCombat)
-            {
-                _gameManager.ActionCommandRequestType = 2;
-            }
+            await _gameManager.ExecuteCommand(command, !_condition[ConditionFlag.InCombat] ? (byte)0 : (byte)2);
         }
     }
 }

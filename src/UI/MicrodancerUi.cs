@@ -201,9 +201,9 @@ namespace Microdancer.UI
                     _contentAreas.GetValueOrDefault(guid)?.Draw(additionalNode);
                     _timelines.GetValueOrDefault(guid)?.Draw(additionalNode);
                     ImGui.PopStyleVar();
-
-                    ImGui.End();
                 }
+
+                ImGui.End();
 
                 if (!childWindowVisible)
                 {

@@ -27,7 +27,6 @@ namespace Microdancer
         private readonly PartyManager _partyManager;
         private readonly ObjectTable _objectTable;
 
-        private readonly CancellationTokenSource _tokenSource = new();
         private bool _disposedValue;
 
         private const string ENDPOINT = "https://example.com/prod/v1/share";
@@ -189,7 +188,7 @@ namespace Microdancer
             GC.SuppressFinalize(this);
         }
 
-        private void Dispose(bool disposing)
+        private void Dispose(bool _)
         {
             if (_disposedValue)
             {

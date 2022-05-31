@@ -18,11 +18,9 @@ namespace Microdancer
         private bool _disposedValue;
         private bool _ready;
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly Framework _framework;
         private readonly ClientState _clientState;
         private readonly GameManager _gameManager;
         private readonly Condition _condition;
-        private readonly Channel<string> _channel = Channel.CreateUnbounded<string>();
 
         private bool? _autoBusy;
 
@@ -30,19 +28,16 @@ namespace Microdancer
 
         public MicroManager(
             DalamudPluginInterface pluginInterface,
-            Framework framework,
             ClientState clientState,
             GameManager gameManager,
             Condition condition
         )
         {
             _pluginInterface = pluginInterface;
-            _framework = framework;
             _clientState = clientState;
             _gameManager = gameManager;
             _condition = condition;
 
-            _framework.Update += Update;
             _clientState.Login += Login;
             _clientState.Logout += Logout;
 
@@ -65,7 +60,6 @@ namespace Microdancer
 
             if (disposing)
             {
-                _framework.Update -= Update;
                 _clientState.Login -= Login;
                 _clientState.Logout -= Logout;
             }
@@ -118,21 +112,6 @@ namespace Microdancer
 
             Current?.Stop();
             Current = null;
-        }
-
-        private void Update(Framework _)
-        {
-            while (true)
-            {
-                if (!_channel.Reader.TryRead(out var command) || !_ready)
-                {
-                    return;
-                }
-
-                _gameManager.ActionCommandRequestType = 0;
-                _gameManager.ExecuteCommand(command);
-                _gameManager.ActionCommandRequestType = 2;
-            }
         }
 
         public PlaybackState PlaybackState
@@ -252,14 +231,14 @@ namespace Microdancer
                 else if (command.Text.StartsWith("/autobusy") || command.Text.StartsWith("/autobussy"))
                 {
                     _autoBusy = true;
-                    await _channel.Writer.WriteAsync("/busy on");
+                    await _gameManager.ExecuteCommand("/busy on");
 
                     if (command.Text.StartsWith("/autobussy"))
                     {
                         for (var s = 1; s <= 12; ++s)
                         {
                             // This is Kibby's fault
-                            await _channel.Writer.WriteAsync($"/echo Bussy Gang Bussy Gang Bussy Gang <se.{s}>");
+                            await _gameManager.ExecuteCommand($"/echo Bussy Gang Bussy Gang Bussy Gang <se.{s}>");
                         }
                     }
 
@@ -284,35 +263,13 @@ namespace Microdancer
                 }
                 else if (command.Text.StartsWith("/acancel")) // Animation cancel
                 {
-                    await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
-                    await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
-                }
-                else if (command.Text.StartsWith("/snapchange "))
-                {
-                    var gearset = command.Text[12..];
-                    if (!string.IsNullOrWhiteSpace(gearset))
-                    {
-#pragma warning disable CS4014
-                        Task.Run(
-                            async () =>
-                            {
-                                await _channel.Writer.WriteAsync("/bm off");
-                                await Task.Delay(TimeSpan.FromSeconds(0.3));
-                                await _channel.Writer.WriteAsync("/snap motion");
-                                await Task.Delay(TimeSpan.FromSeconds(1.3));
-                                await _channel.Writer.WriteAsync("/guard motion");
-                                await _channel.Writer.WriteAsync($"/gs change {gearset}");
-                                await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
-                                await _channel.Writer.WriteAsync("/gaction \"Glamour Plate\"");
-                            }
-                        );
-#pragma warning restore CS4014
-                    }
+                    await _gameManager.ExecuteCommand("/gaction \"Glamour Plate\"");
+                    await _gameManager.ExecuteCommand("/gaction \"Glamour Plate\"");
                 }
                 // Send the command to the channel (ignore /microcancel)
                 else if (command.Text != "/microcancel")
                 {
-                    await _channel.Writer.WriteAsync(command.Text);
+                    await _gameManager.ExecuteCommand(command.Text);
                 }
 
                 var waitTime = command.WaitTime - autoPing;
@@ -377,7 +334,7 @@ namespace Microdancer
                         if (_autoBusy == false)
                         {
                             _autoBusy = null;
-                            await _channel.Writer.WriteAsync("/busy off");
+                            await _gameManager.ExecuteCommand("/busy off");
                         }
                     }
                 );
@@ -427,7 +384,7 @@ namespace Microdancer
                             return;
                         }
 
-                        await _channel.Writer.WriteAsync("/cd 5");
+                        await _gameManager.ExecuteCommand("/cd 5");
                     }
                 )
                 .ConfigureAwait(false);
