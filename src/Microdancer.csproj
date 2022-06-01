@@ -13,7 +13,6 @@
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <FileVersion>1.0.0.0</FileVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <UseWindowsForms>true</UseWindowsForms>
         <NoWarn>CA1416;CA1822</NoWarn>
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

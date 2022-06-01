@@ -11,7 +11,6 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState;
-using System.Windows.Forms;
 using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
