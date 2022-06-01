@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System;
@@ -20,7 +21,7 @@ namespace Microdancer
         private readonly DalamudPluginInterface _pluginInterface;
         private readonly ClientState _clientState;
         private readonly GameManager _gameManager;
-        private readonly Condition _condition;
+        private readonly ChatGui _chatGui;
 
         private bool? _autoBusy;
 
@@ -30,13 +31,13 @@ namespace Microdancer
             DalamudPluginInterface pluginInterface,
             ClientState clientState,
             GameManager gameManager,
-            Condition condition
+            ChatGui chatGui
         )
         {
             _pluginInterface = pluginInterface;
             _clientState = clientState;
             _gameManager = gameManager;
-            _condition = condition;
+            _chatGui = chatGui;
 
             _clientState.Login += Login;
             _clientState.Logout += Logout;
@@ -89,6 +90,12 @@ namespace Microdancer
 
         public void StartMicro(MicroInfo microInfo)
         {
+            if (_gameManager.IsInCombatOrPvP)
+            {
+                _chatGui.PrintError("Micros cannot be used in combat or PvP.");
+                return;
+            }
+
             if (!_ready)
             {
                 return;
@@ -132,7 +139,7 @@ namespace Microdancer
         {
             shouldBreakLoop = microInfo != Current;
 
-            if (_condition[ConditionFlag.InCombat])
+            if (_gameManager.IsInCombatOrPvP)
             {
                 microInfo.Stop();
                 shouldBreakLoop = true;

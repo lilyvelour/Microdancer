@@ -170,10 +170,11 @@ namespace Microdancer
                         return;
                     }
 
-                    if (argsArray.Length < parameters.Count(p => !p.HasDefaultValue))
+                    var minParameterCount = parameters.Count(p => !p.HasDefaultValue);
+                    if (argsArray.Length < minParameterCount)
                     {
                         _chatGui.PrintError(
-                            $"{command.Command}: Invalid parameter count. Command must have at least {parameters.Length} parameter(s)."
+                            $"{command.Command}: Invalid parameter count. Command must have {(minParameterCount < parameters.Length ? "at least" : "")} {minParameterCount} parameter(s)."
                         );
                     }
 
@@ -253,6 +254,10 @@ namespace Microdancer
                 else if (float.TryParse(str, out var f))
                 {
                     value = f;
+                }
+                else if (double.TryParse(str, out var d))
+                {
+                    value = d;
                 }
                 else if (int.TryParse(str, out var ii))
                 {

@@ -38,5 +38,9 @@ namespace Microdancer
 
         // byte GetCrossRealmPartySize()
         public const string GetCrossRealmPartySize = "48 83 EC 28 E8 ?? ?? ?? ?? 84 C0 74 3C";
+
+        public const string KeyStates = "4C 8D 05 ?? ?? ?? ?? 44 8B 0D";
+
+        public const string KeyStateIndexArray = "0F B6 94 33 ?? ?? ?? ?? 84 D2";
     }
 }

@@ -8,12 +8,10 @@ namespace Microdancer
 {
     public sealed class QueueActionCommand : CommandBase
     {
-        private readonly Condition _condition;
         private readonly GameManager _gameManager;
 
-        public QueueActionCommand(Condition condition, GameManager gameManager) : base()
+        public QueueActionCommand(GameManager gameManager) : base()
         {
-            _condition = condition;
             _gameManager = gameManager;
         }
 
@@ -50,7 +48,7 @@ namespace Microdancer
             // Handle auto translate strings
             var command = $"{cmd} {action.Replace(" ", "\"").Replace(" ", "\"")}";
 
-            await _gameManager.ExecuteCommand(command, !_condition[ConditionFlag.InCombat] ? (byte)0 : (byte)2);
+            await _gameManager.ExecuteCommand(command, _gameManager.IsInCombatOrPvP ? (byte)2 : (byte)0);
         }
     }
 }

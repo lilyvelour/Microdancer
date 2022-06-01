@@ -8,11 +8,11 @@ namespace Microdancer
 {
     public class MicroInfo : MicroInfoBase
     {
-        private static readonly Regex _waitExp =
-            new(@"/wait (\d+(?:\.\d+)?)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         private static readonly Regex _waitInlineExp =
             new(@"<wait\.(\d+(?:\.\d+)?)>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex _waitExp =
+            new(@"/wait (\d+(?:\.\d+)?)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private MicroCommand? _currentCommand;
         private bool _isPlaying;
@@ -252,13 +252,13 @@ namespace Microdancer
         {
             defaultWait ??= TimeSpan.FromMilliseconds(10);
 
-            var re = _waitInlineExp;
-            var matches = re.Matches(command);
+            var regex = _waitInlineExp;
+            var matches = regex.Matches(command);
 
             if (matches.Count == 0)
             {
-                re = _waitExp;
-                matches = re.Matches(command);
+                regex = _waitExp;
+                matches = regex.Matches(command);
             }
 
             if (matches.Count == 0)
@@ -274,7 +274,17 @@ namespace Microdancer
                 return defaultWait.Value;
             }
 
-            command = re == _waitExp ? "/wait" : re.Replace(command, string.Empty);
+            command = regex == _waitExp ? "/wait" : regex.Replace(command, string.Empty);
+
+            // Timed commands
+            if (command.StartsWith("/presskey"))
+            {
+                var split = command.Split();
+                if (double.TryParse(split.Last(), out var t))
+                {
+                    seconds = t;
+                }
+            }
 
             // Special commands
             if (
@@ -284,7 +294,7 @@ namespace Microdancer
                 || command == "/autocd"
                 || command == "/autoping"
                 || command == "/autobusy"
-                || command == "/autobusy"
+                || command == "/autobussy"
             )
             {
                 return TimeSpan.Zero;

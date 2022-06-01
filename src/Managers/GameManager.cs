@@ -11,6 +11,10 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState;
+using System.Windows.Forms;
+using System.Collections.Generic;
+using Dalamud.Game.ClientState.Conditions;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace Microdancer
 {
@@ -23,17 +27,27 @@ namespace Microdancer
         private readonly SigScanner _sigScanner;
         private readonly ClientState _clientState;
         private readonly Framework _framework;
+        private readonly Condition _condition;
         private readonly Channel<(string command, byte actionCommandRequestType)> _channel =
             Channel.CreateUnbounded<(string, byte)>();
 
+        private readonly HashSet<Keys> _heldKeys = new();
+
         private bool _disposedValue;
 
-        public GameManager(GameGui gameGui, SigScanner sigScanner, ClientState clientState, Framework framework)
+        public GameManager(
+            GameGui gameGui,
+            SigScanner sigScanner,
+            ClientState clientState,
+            Framework framework,
+            Condition condition
+        )
         {
             _gameGui = gameGui;
             _sigScanner = sigScanner;
             _clientState = clientState;
             _framework = framework;
+            _condition = condition;
 
             _framework.Update += Update;
 
@@ -41,6 +55,7 @@ namespace Microdancer
         }
 
         private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
+
         private ProcessChatBoxDelegate? ProcessChatBox;
         private IntPtr uiModule = IntPtr.Zero;
         private IntPtr walkingBoolPtr = IntPtr.Zero;
@@ -56,6 +71,11 @@ namespace Microdancer
                     *(bool*)(walkingBoolPtr - 0x10B) = value; // Autorun
                 }
             }
+        }
+
+        public bool IsInCombatOrPvP
+        {
+            get { return _condition[ConditionFlag.InCombat] || GameMain.IsInPvPArea(); }
         }
 
         public IntPtr emoteAgent = IntPtr.Zero;
@@ -95,6 +115,64 @@ namespace Microdancer
         public ref uint QueuedPVPAction => ref *(uint*)(ActionManager + 0x84);
 
         public IntPtr CPoseSettings = IntPtr.Zero;
+
+        public ValueTask ExecuteCommand(string command, byte actionCommandRequestType = 2)
+        {
+            return _channel.Writer.WriteAsync((command, actionCommandRequestType));
+        }
+
+        private int* _keyStates;
+        private byte* _keyStateIndexArray;
+
+        public byte GetKeyStateIndex(Keys key)
+        {
+            var keyCode = (int)key;
+
+            return keyCode is >= 0 and < 240 ? _keyStateIndexArray[keyCode] : (byte)0;
+        }
+
+        private ref int GetKeyState(int key) => ref _keyStates[key];
+
+        public bool SendKeyHold(Keys key, bool releaseNextFrame = true)
+        {
+            if (releaseNextFrame)
+            {
+                _heldKeys.Add(key);
+            }
+
+            var stateIndex = GetKeyStateIndex(key);
+            if (stateIndex <= 0)
+            {
+                return false;
+            }
+
+            GetKeyState(stateIndex) |= 1;
+            return true;
+        }
+
+        public bool SendKey(Keys key)
+        {
+            var stateIndex = GetKeyStateIndex(key);
+            if (stateIndex <= 0)
+            {
+                return false;
+            }
+
+            GetKeyState(stateIndex) |= 6;
+            return true;
+        }
+
+        public bool SendKeyRelease(Keys key)
+        {
+            var stateIndex = GetKeyStateIndex(key);
+            if (stateIndex <= 0)
+            {
+                return false;
+            }
+
+            GetKeyState(stateIndex) &= ~1;
+            return true;
+        }
 
         private void Initialize()
         {
@@ -175,6 +253,19 @@ namespace Microdancer
 
             try
             {
+                _keyStates = (int*)_sigScanner.GetStaticAddressFromSig(Signatures.KeyStates);
+                _keyStateIndexArray = (byte*)(
+                    _sigScanner.Module.BaseAddress + *(int*)(_sigScanner.ScanModule(Signatures.KeyStateIndexArray) + 4)
+                );
+            }
+            catch (Exception e)
+            {
+                PluginLog.LogError(e, e.Message);
+                PluginLog.LogWarning("Failed to load /sendkey");
+            }
+
+            try
+            {
                 ActionManager = (IntPtr)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
             }
             catch (Exception e)
@@ -192,11 +283,6 @@ namespace Microdancer
                 PluginLog.LogError(e, e.Message);
                 PluginLog.LogWarning("Failed to load CPoseSettings");
             }
-        }
-
-        public ValueTask ExecuteCommand(string command, byte actionCommandRequestType = 2)
-        {
-            return _channel.Writer.WriteAsync((command, actionCommandRequestType));
         }
 
         private void ExcecuteCommandImmediate(string command)
@@ -223,6 +309,16 @@ namespace Microdancer
 
         private void Update(Framework _)
         {
+            if (_heldKeys.Count > 0)
+            {
+                foreach (var key in _heldKeys)
+                {
+                    SendKeyRelease(key);
+                }
+
+                _heldKeys.Clear();
+            }
+
             if (_clientState.LocalPlayer == null)
             {
                 return;

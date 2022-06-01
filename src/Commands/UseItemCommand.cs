@@ -14,15 +14,13 @@ namespace Microdancer
     public sealed class UseItemCommand : CommandBase
     {
         private readonly DataManager _dataManager;
-        private readonly Condition _condition;
         private readonly GameManager _gameManager;
 
         private Dictionary<uint, string>? _usableItems;
 
-        public UseItemCommand(DataManager dataManager, Condition condition, GameManager gameManager) : base()
+        public UseItemCommand(DataManager dataManager, GameManager gameManager) : base()
         {
             _dataManager = dataManager;
-            _condition = condition;
             _gameManager = gameManager;
 
             Task.Run(
@@ -49,9 +47,9 @@ namespace Microdancer
         [Command("useitem", "item", HelpMessage = "Uses an item by name or ID. Only available out of combat.")]
         public async Task UseItem(string item)
         {
-            if (_condition[ConditionFlag.InCombat])
+            if (_gameManager.IsInCombatOrPvP)
             {
-                PrintError("Not supported while in combat.");
+                PrintError("Not supported while in combat or PvP.");
                 return;
             }
 

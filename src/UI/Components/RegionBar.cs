@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Numerics;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -30,7 +29,6 @@ namespace Microdancer
                 ImGuiWindowFlags.NoBackground
             );
 
-            var inCombat = Condition[ConditionFlag.InCombat];
             var regions = _info!.AllRegions;
             var regionButtonSize = Vector2.Zero;
 
@@ -130,10 +128,7 @@ namespace Microdancer
                     }
                     else if (ImGui.Button(isNamedRegion ? region.Name : $"{regionNumber++}", size))
                     {
-                        if (!inCombat)
-                        {
-                            MicroManager.StartMicro(micro, region.Name);
-                        }
+                        MicroManager.StartMicro(micro, region.Name);
                     }
 
                     ImGuiExt.TextTooltip(region.Name);
