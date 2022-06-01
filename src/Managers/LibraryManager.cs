@@ -17,7 +17,7 @@ namespace Microdancer
         private bool _disposedValue;
 
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly ConcurrentBag<INode> _cachedNodes = new();
+        private readonly ConcurrentQueue<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
@@ -81,13 +81,12 @@ namespace Microdancer
                 _cachedNodes.Clear();
                 if (starred.Children.Count > 0)
                 {
-                    _cachedNodes.Add(starred);
+                    _cachedNodes.Enqueue(starred);
                 }
-                _cachedNodes.Add(library);
-                _cachedNodes.Add(sharedWithMe);
+                _cachedNodes.Enqueue(library);
+                _cachedNodes.Enqueue(sharedWithMe);
 
                 var config = _pluginInterface.Configuration();
-                var shouldSaveConfig = false;
                 var ids = new HashSet<Guid>(config.SharedItems.Concat(config.StarredItems));
                 var nodes = _cachedNodes.SelectMany(node => Traverse(node, n => n.Children)).ToList();
 
@@ -97,14 +96,14 @@ namespace Microdancer
                     {
                         config.SharedItems.Remove(id);
                         config.StarredItems.Remove(id);
-                        shouldSaveConfig = true;
                     }
                 }
 
-                if (shouldSaveConfig)
-                {
-                    _pluginInterface.SavePluginConfig(config);
-                }
+                // HACK: We rely on this being saved somewhere else for now
+                // if (shouldSaveConfig)
+                // {
+                //     _pluginInterface.SavePluginConfig(config);
+                // }
             }
             catch (Exception e)
             {
