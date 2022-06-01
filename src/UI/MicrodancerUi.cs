@@ -155,7 +155,7 @@ namespace Microdancer.UI
                 {
                     ImGui.SetNextWindowFocus();
                     Config.NextFocus = Guid.Empty;
-                    PluginInterface.SavePluginConfig(Config);
+                    // PluginInterface.SavePluginConfig(Config); - HACK
                 }
 
                 ImGui.SetNextWindowSizeConstraints(
