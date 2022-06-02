@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.Command;
 using Dalamud.Logging;
 
 namespace Microdancer
