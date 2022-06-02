@@ -251,6 +251,7 @@ namespace Microdancer
         private static TimeSpan ExtractWait(ref string command, TimeSpan? defaultWait)
         {
             defaultWait ??= TimeSpan.FromMilliseconds(10);
+            var seconds = defaultWait.Value.TotalSeconds;
 
             var regex = _waitInlineExp;
             var matches = regex.Matches(command);
@@ -261,33 +262,27 @@ namespace Microdancer
                 matches = regex.Matches(command);
             }
 
-            if (matches.Count == 0)
+            if (matches.Count > 0)
             {
-                return defaultWait.Value;
-            }
+                var match = matches[^1];
+                var waitTime = match.Groups[1].Captures[0].Value;
 
-            var match = matches[^1];
-            var waitTime = match.Groups[1].Captures[0].Value;
-
-            if (!double.TryParse(waitTime, NumberStyles.Number, CultureInfo.InvariantCulture, out var seconds))
-            {
-                return defaultWait.Value;
-            }
-
-            command = regex == _waitExp ? "/wait" : regex.Replace(command, string.Empty);
-
-            // Timed commands
-            if (command.StartsWith("/presskey"))
-            {
-                var split = command.Split();
-                if (double.TryParse(split.Last(), out var t))
+                if (double.TryParse(waitTime, NumberStyles.Number, CultureInfo.InvariantCulture, out var t))
                 {
                     seconds = t;
                 }
-            }
 
-            // Special commands
-            if (
+                command = regex == _waitExp ? "/wait" : regex.Replace(command, string.Empty);
+            }
+            else if (command.StartsWith("/presskey")) // Timed commands
+            {
+                var split = command.Split();
+                if (double.TryParse(split.Last(), NumberStyles.Number, CultureInfo.InvariantCulture, out var t))
+                {
+                    seconds = t + 0.5f;
+                }
+            }
+            else if ( // Special commands
                 command == "/defaultwait"
                 || command == "/loop"
                 || command == "/autocountdown"
@@ -297,7 +292,7 @@ namespace Microdancer
                 || command == "/autobussy"
             )
             {
-                return TimeSpan.Zero;
+                seconds = 0;
             }
 
             try
