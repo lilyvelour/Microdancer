@@ -17,7 +17,8 @@ namespace Microdancer
 
         [Command(
             "snapchange",
-            HelpMessage = "Smoothly change to a gear set and/or glamour plate using a snap emote. Requires the guard emote as well."
+            HelpMessage = "Smoothly change to a gear set and/or glamour plate using a snap emote. Requires the guard emote as well.",
+            Raw = true
         )]
         public async Task SnapChange(string gearset)
         {
