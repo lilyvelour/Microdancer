@@ -164,7 +164,7 @@ namespace Microdancer
             ImGui.SameLine();
 
             ImGui.PushFont(UiBuilder.IconFont);
-            ImGui.PushButtonRepeat(true);
+            // ImGui.PushButtonRepeat(true);
             if (ImGuiExt.IconButton(FontAwesomeIcon.FastForward, buttonSize))
             {
                 if (_current?.IsPlaying == true)
@@ -187,7 +187,7 @@ namespace Microdancer
                     MicroManager.StartMicro(micro);
                 }
             }
-            ImGui.PopButtonRepeat();
+            // ImGui.PopButtonRepeat();
             ImGui.PopFont();
 
             ImGuiExt.TextTooltip("Next Line");
