@@ -51,32 +51,27 @@ namespace Microdancer
         protected void View(Guid id)
         {
             Config.View(id);
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void Navigate(Guid from, Guid to)
         {
             Config.Navigate(from, to);
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void Close(INode node)
         {
             Config.Close(node.Id);
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void Close(Guid id)
         {
             Config.Close(id);
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void Select(Guid id)
         {
             Config.LibrarySelection = id;
             Config.NextFocus = id;
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void Select(INode node)
@@ -88,7 +83,6 @@ namespace Microdancer
         {
             Config.LibrarySelection = Guid.Empty;
             Config.NextFocus = Config.OpenWindows.LastOrDefault();
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected bool SelectByName(string name)
@@ -118,8 +112,6 @@ namespace Microdancer
             {
                 Config.LibrarySelection = id;
             }
-
-            PluginInterface.SavePluginConfig(Config);
         }
 
         protected void RevealNode(INode node)
@@ -180,8 +172,6 @@ namespace Microdancer
                     Config.TimelineZoomFactor[newId] = timelineZoomFactor;
                     Config.TimelineZoomFactor.Remove(node.Id);
                 }
-
-                PluginInterface.SavePluginConfig(Config);
             }
             catch
             {
@@ -223,8 +213,6 @@ namespace Microdancer
                 Config.Unshare(node.Id);
                 Config.Unstar(node.Id);
                 Config.TimelineZoomFactor.Remove(node.Id);
-
-                PluginInterface.SavePluginConfig(Config);
             }
             catch
             {

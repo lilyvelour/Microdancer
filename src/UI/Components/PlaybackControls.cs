@@ -92,7 +92,6 @@ namespace Microdancer
             if (ImGuiExt.IconButton(FontAwesomeIcon.Clock, buttonSize))
             {
                 Config.IgnoreAutoCountdown ^= true;
-                PluginInterface.SavePluginConfig(Config);
             }
             ImGui.PopStyleColor();
             ImGui.PopFont();
@@ -200,7 +199,6 @@ namespace Microdancer
             if (ImGuiExt.IconButton((FontAwesomeIcon)0xf01e, buttonSize))
             {
                 Config.IgnoreLooping ^= true;
-                PluginInterface.SavePluginConfig(Config);
             }
             ImGui.PopStyleColor();
             ImGui.PopFont();

@@ -156,13 +156,11 @@ namespace Microdancer
 
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 4 * ImGuiHelpers.GlobalScale);
 
-            var changedZoom = false;
             var zoomFactor = increment;
 
             if (ImGuiExt.IconButton((FontAwesomeIcon)0xf010, "Zoom Out"))
             {
                 zoomFactor += 0.1f;
-                changedZoom = true;
             }
 
             ImGui.SameLine();
@@ -170,7 +168,6 @@ namespace Microdancer
             if (ImGuiExt.IconButton((FontAwesomeIcon)0xf00e, "Zoom In"))
             {
                 zoomFactor -= 0.1f;
-                changedZoom = true;
             }
 
             ImGui.PopStyleVar();
@@ -181,11 +178,6 @@ namespace Microdancer
                 MathExt.Snap(Math.Min(zoomFactor, duration * 0.1f), 0.05f),
                 0.25f
             );
-
-            if (changedZoom)
-            {
-                PluginInterface.SavePluginConfig(Config);
-            }
 
             return true;
         }

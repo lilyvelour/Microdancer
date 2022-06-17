@@ -6,6 +6,8 @@ using Dalamud.IoC;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Text.Json;
+using Dalamud.Game;
 
 namespace Microdancer.UI
 {
@@ -13,7 +15,7 @@ namespace Microdancer.UI
     public class MicrodancerUi : PluginWindow
     {
         private readonly LicenseChecker _license;
-
+        private readonly Framework _framework;
         private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
         private readonly PlaybackControls _playbackControls = new();
@@ -24,10 +26,15 @@ namespace Microdancer.UI
 
         private Guid _focused;
         private readonly Dictionary<Guid, float> _dockReleased = new();
+        private string? _previousConfigJson;
+        private int _frameCount;
 
-        public MicrodancerUi(LicenseChecker license)
+        public MicrodancerUi(LicenseChecker license, Framework framework)
         {
             _license = license;
+            _framework = framework;
+
+            _framework.Update += Update;
         }
 
         public override void Draw()
@@ -74,7 +81,6 @@ namespace Microdancer.UI
             if (windowVisible != Config.WindowVisible)
             {
                 Config.WindowVisible = windowVisible;
-                PluginInterface.SavePluginConfig(Config);
             }
         }
 
@@ -155,7 +161,6 @@ namespace Microdancer.UI
                 {
                     ImGui.SetNextWindowFocus();
                     Config.NextFocus = Guid.Empty;
-                    // PluginInterface.SavePluginConfig(Config); - HACK
                 }
 
                 ImGui.SetNextWindowSizeConstraints(
@@ -286,6 +291,36 @@ namespace Microdancer.UI
             {
                 _timelines[guid] = new Timeline();
             }
+        }
+
+        private void Update(Framework framework)
+        {
+            _frameCount++;
+
+            if (_frameCount % 200 == 0)
+            {
+                var configJson = JsonSerializer.Serialize(Config);
+                if (configJson != _previousConfigJson)
+                {
+                    PluginInterface.SavePluginConfig(Config);
+                    _previousConfigJson = configJson;
+                }
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_disposedValue)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _framework.Update -= Update;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

@@ -18,7 +18,6 @@ namespace Microdancer
             if (ImGui.InputText("##lib-path", ref libPath, 8192, ImGuiInputTextFlags.EnterReturnsTrue))
             {
                 Config.LibraryPath = libPath;
-                PluginInterface.SavePluginConfig(Config);
                 Library.MarkAsDirty();
             }
 

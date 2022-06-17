@@ -121,8 +121,6 @@ namespace Microdancer
                                 Config.Star(micro.Id);
                             }
 
-                            PluginInterface.SavePluginConfig(Config);
-
                             Library.MarkAsDirty();
                         }
 
@@ -137,8 +135,6 @@ namespace Microdancer
                             {
                                 Config.Share(micro.Id);
                             }
-
-                            PluginInterface.SavePluginConfig(Config);
                         }
                     }
                 }

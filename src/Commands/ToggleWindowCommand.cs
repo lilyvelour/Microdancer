@@ -18,7 +18,6 @@ namespace Microdancer
         public void ToggleWindow()
         {
             _configuration.WindowVisible ^= true;
-            _pluginInterface.SavePluginConfig(_configuration);
         }
     }
 }

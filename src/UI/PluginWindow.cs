@@ -14,7 +14,7 @@ namespace Microdancer
             ClientState.Logout += Logout;
         }
 
-        private bool _disposedValue;
+        protected bool _disposedValue;
 
         public abstract void Draw();
 
@@ -44,13 +44,11 @@ namespace Microdancer
         private void Logout(object? _, EventArgs _1)
         {
             Config.WindowVisible = false;
-            PluginInterface.SavePluginConfig(Config);
         }
 
         private void OpenConfigUi()
         {
             Config.WindowVisible = true;
-            PluginInterface.SavePluginConfig(Config);
         }
     }
 }

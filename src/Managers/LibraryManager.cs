@@ -98,12 +98,6 @@ namespace Microdancer
                         config.StarredItems.Remove(id);
                     }
                 }
-
-                // HACK: We rely on this being saved somewhere else for now
-                // if (shouldSaveConfig)
-                // {
-                //     _pluginInterface.SavePluginConfig(config);
-                // }
             }
             catch (Exception e)
             {

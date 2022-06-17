@@ -348,8 +348,6 @@ namespace Microdancer
                     Config.Star(micro.Id);
                 }
 
-                PluginInterface.SavePluginConfig(Config);
-
                 Library.MarkAsDirty();
             }
             ImGui.PopStyleVar();
