@@ -36,10 +36,21 @@ namespace Microdancer
         // HACK: This is a big giant hack so that we can use Dalamud's built-in IoC
         public static object Set(object obj, Type t)
         {
+            object result;
+
             var type = typeof(DalamudPluginInterface).Assembly.GetType("Dalamud.Service`1");
             var genericType = type!.MakeGenericType(t);
-            var method = genericType!.GetMethod("Set", new Type[] { t });
-            var result = method!.Invoke(null, new object[] { obj! })!;
+
+            try
+            {
+                var method = genericType!.GetMethod("Provide", new Type[] { t });
+                result = method!.Invoke(null, new object[] { obj! })!;
+            }
+            catch
+            {
+                var method = genericType!.GetMethod("Set", new Type[] { t });
+                result = method!.Invoke(null, new object[] { obj! })!;
+            }
 
             if (result is IDisposable disposable)
             {
