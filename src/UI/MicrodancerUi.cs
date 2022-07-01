@@ -2,7 +2,6 @@
 using ImGuiNET;
 using System.Numerics;
 using Dalamud.Game.ClientState;
-using Dalamud.IoC;
 using System.Collections.Generic;
 using System;
 using System.Linq;
@@ -11,11 +10,10 @@ using Dalamud.Game;
 
 namespace Microdancer.UI
 {
-    [PluginInterface]
     public class MicrodancerUi : PluginWindow
     {
-        private readonly LicenseChecker _license;
         private readonly Framework _framework;
+        private readonly LicenseChecker _license;
         private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
         private readonly PlaybackControls _playbackControls = new();
@@ -29,10 +27,11 @@ namespace Microdancer.UI
         private string? _previousConfigJson;
         private int _frameCount;
 
-        public MicrodancerUi(LicenseChecker license, Framework framework)
+        public MicrodancerUi(Framework framework, ClientState clientState, Service.Locator serviceLocator)
+            : base(clientState)
         {
-            _license = license;
             _framework = framework;
+            _license = serviceLocator.Get<LicenseChecker>();
 
             _framework.Update += Update;
         }

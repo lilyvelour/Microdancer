@@ -18,10 +18,10 @@ namespace Microdancer
 
         private Dictionary<uint, string>? _usableItems;
 
-        public UseItemCommand(DataManager dataManager, GameManager gameManager) : base()
+        public UseItemCommand(DataManager dataManager, Service.Locator serviceLocator) : base(serviceLocator)
         {
             _dataManager = dataManager;
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
 
             Task.Run(
                 async () =>

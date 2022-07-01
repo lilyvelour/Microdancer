@@ -18,14 +18,13 @@ using IOPath = System.IO.Path;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public sealed class SharedContentManager : IDisposable
     {
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly LibraryManager _library;
         private readonly ClientState _clientState;
-        private readonly PartyManager _partyManager;
         private readonly ObjectTable _objectTable;
+        private readonly LibraryManager _library;
+        private readonly PartyManager _partyManager;
 
         private bool _disposedValue;
 
@@ -33,17 +32,17 @@ namespace Microdancer
 
         public SharedContentManager(
             DalamudPluginInterface pluginInterface,
-            LibraryManager libraryManager,
             ClientState clientState,
-            PartyManager partyManager,
-            ObjectTable objectTable
+            ObjectTable objectTable,
+            Service.Locator serviceLocator
         )
         {
             _pluginInterface = pluginInterface;
-            _library = libraryManager;
             _clientState = clientState;
-            _partyManager = partyManager;
             _objectTable = objectTable;
+
+            _library = serviceLocator.Get<LibraryManager>();
+            _partyManager = serviceLocator.Get<PartyManager>();
 
             Task.Run(() => SharedContentUpdate());
         }

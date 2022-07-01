@@ -10,12 +10,10 @@ using System.Linq;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public abstract class PluginUiBase
     {
         protected DalamudPluginInterface PluginInterface { get; }
-        protected ClientState ClientState { get; }
-        protected Condition Condition { get; }
+        protected GameManager GameManager { get; }
         protected LibraryManager Library { get; }
         protected MicroManager MicroManager { get; }
         protected Configuration Config { get; }
@@ -23,11 +21,12 @@ namespace Microdancer
 
         protected PluginUiBase()
         {
+            var serviceLocator = new Service.Locator();
+
             PluginInterface = Microdancer.PluginInterface;
-            ClientState = CustomService.Get<ClientState>();
-            Condition = CustomService.Get<Condition>();
-            Library = CustomService.Get<LibraryManager>();
-            MicroManager = CustomService.Get<MicroManager>();
+            GameManager = serviceLocator.Get<GameManager>();
+            Library = serviceLocator.Get<LibraryManager>();
+            MicroManager = serviceLocator.Get<MicroManager>();
             Config = PluginInterface.Configuration();
             Theme = new BurgundyTheme(); // TODO: Configurable themes
         }
@@ -263,7 +262,7 @@ namespace Microdancer
         {
             return $@"# =====================================================
 # {name}
-# Choreography © {DateTime.Now.Year} by {ClientState.LocalPlayer?.Name ?? "[Author]"}
+# Choreography © {DateTime.Now.Year} by {GameManager.PlayerName ?? "[Author]"}
 # =====================================================
 
 /autocountdown <wait.0>

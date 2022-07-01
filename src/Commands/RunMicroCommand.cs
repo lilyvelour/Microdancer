@@ -7,10 +7,10 @@ namespace Microdancer
         private readonly LibraryManager _library;
         private readonly MicroManager _microManager;
 
-        public RunMicroCommand(LibraryManager library, MicroManager microManager) : base()
+        public RunMicroCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _library = library;
-            _microManager = microManager;
+            _library = serviceLocator.Get<LibraryManager>();
+            _microManager = serviceLocator.Get<MicroManager>();
         }
 
         [Command(

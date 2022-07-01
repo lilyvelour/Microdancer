@@ -11,7 +11,6 @@ using Dalamud.Plugin;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public class LibraryManager : IDisposable
     {
         private bool _disposedValue;
@@ -23,7 +22,7 @@ namespace Microdancer
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
 
-        public LibraryManager(DalamudPluginInterface pluginInterface)
+        public LibraryManager(DalamudPluginInterface pluginInterface, Service.Locator _)
         {
             _pluginInterface = pluginInterface;
 

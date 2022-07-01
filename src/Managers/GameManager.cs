@@ -19,7 +19,6 @@ namespace Microdancer
 {
     // https://raw.githubusercontent.com/UnknownX7/OOBlugin/master/Game.cs
     // https://github.com/Ottermandias/AutoVisor/blob/c0b22286119d6ff207715c3dd1726137bb146863/SeFunctions/CPoseSettings.cs
-    [PluginInterface]
     public unsafe class GameManager : IDisposable
     {
         private readonly GameGui _gameGui;
@@ -39,7 +38,8 @@ namespace Microdancer
             SigScanner sigScanner,
             ClientState clientState,
             Framework framework,
-            Condition condition
+            Condition condition,
+            Service.Locator _
         )
         {
             _gameGui = gameGui;
@@ -58,6 +58,9 @@ namespace Microdancer
         private ProcessChatBoxDelegate? ProcessChatBox;
         private IntPtr uiModule = IntPtr.Zero;
         private IntPtr walkingBoolPtr = IntPtr.Zero;
+
+        public string? PlayerName => _clientState.LocalPlayer?.Name?.ToString();
+        public bool IsLoggedIn => _clientState.IsLoggedIn;
 
         public bool IsWalking
         {

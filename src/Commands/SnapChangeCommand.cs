@@ -10,9 +10,9 @@ namespace Microdancer
     {
         private readonly GameManager _gameManager;
 
-        public SnapChangeCommand(GameManager gameManager) : base()
+        public SnapChangeCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command(

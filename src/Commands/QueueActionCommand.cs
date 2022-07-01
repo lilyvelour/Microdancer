@@ -8,9 +8,9 @@ namespace Microdancer
     {
         private readonly GameManager _gameManager;
 
-        public QueueActionCommand(GameManager gameManager) : base()
+        public QueueActionCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command(

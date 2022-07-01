@@ -1,17 +1,19 @@
 using System;
 using Dalamud.Game.ClientState;
-using Dalamud.IoC;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public abstract class PluginWindow : PluginUiBase, IDisposable
     {
-        protected PluginWindow()
+        protected ClientState ClientState { get; }
+
+        protected PluginWindow(ClientState clientState)
         {
+            ClientState = clientState;
+            this.ClientState.Logout += Logout;
+
             PluginInterface.UiBuilder.Draw += Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
-            ClientState.Logout += Logout;
         }
 
         protected bool _disposedValue;
@@ -35,7 +37,7 @@ namespace Microdancer
             {
                 PluginInterface.UiBuilder.Draw -= Draw;
                 PluginInterface.UiBuilder.OpenConfigUi -= OpenConfigUi;
-                ClientState.Logout -= Logout;
+                this.ClientState.Logout -= Logout;
             }
 
             _disposedValue = true;

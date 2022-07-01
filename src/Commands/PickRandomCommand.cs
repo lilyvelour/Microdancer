@@ -7,9 +7,9 @@ namespace Microdancer
         private readonly GameManager _gameManager;
         private readonly Random _random = new();
 
-        public PickRandomCommand(GameManager gameManager) : base()
+        public PickRandomCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command(

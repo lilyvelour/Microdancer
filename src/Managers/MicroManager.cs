@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public class MicroManager : IDisposable
     {
         public const int FRAME_TIME = 33;
@@ -20,8 +19,8 @@ namespace Microdancer
         private bool _ready;
         private readonly DalamudPluginInterface _pluginInterface;
         private readonly ClientState _clientState;
-        private readonly GameManager _gameManager;
         private readonly ChatGui _chatGui;
+        private readonly GameManager _gameManager;
 
         private bool? _autoBusy;
 
@@ -30,14 +29,14 @@ namespace Microdancer
         public MicroManager(
             DalamudPluginInterface pluginInterface,
             ClientState clientState,
-            GameManager gameManager,
-            ChatGui chatGui
+            ChatGui chatGui,
+            Service.Locator serviceLocator
         )
         {
             _pluginInterface = pluginInterface;
             _clientState = clientState;
-            _gameManager = gameManager;
             _chatGui = chatGui;
+            _gameManager = serviceLocator.Get<GameManager>();
 
             _clientState.Login += Login;
             _clientState.Logout += Logout;

@@ -7,7 +7,6 @@ using System.Linq;
 namespace Microdancer
 {
     [Serializable]
-    [PluginInterface]
     public class Configuration : IPluginConfiguration
     {
         public int Version { get; set; } = 1;

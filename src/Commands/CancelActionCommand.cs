@@ -7,9 +7,9 @@ namespace Microdancer
     {
         private readonly GameManager _gameManager;
 
-        public CancelActionCommand(GameManager gameManager) : base()
+        public CancelActionCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command(

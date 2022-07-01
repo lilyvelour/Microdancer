@@ -8,7 +8,8 @@ namespace Microdancer
         private readonly DalamudPluginInterface _pluginInterface;
         private readonly Configuration _configuration;
 
-        public ToggleWindowCommand(DalamudPluginInterface pluginInterface) : base()
+        public ToggleWindowCommand(DalamudPluginInterface pluginInterface, Service.Locator serviceLocator)
+            : base(serviceLocator)
         {
             _pluginInterface = pluginInterface;
             _configuration = _pluginInterface.Configuration();

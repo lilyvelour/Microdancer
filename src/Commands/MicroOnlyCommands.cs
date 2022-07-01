@@ -2,6 +2,8 @@ namespace Microdancer
 {
     public sealed class MicroOnlyCommands : CommandBase
     {
+        public MicroOnlyCommands(Service.Locator serviceLocator) : base(serviceLocator) { }
+
         [Command(
             "autobusy",
             HelpMessage = "[Micro-only] When specified, busy status will be set to on when the Micro begins, and set to off 5 seconds after the micro ends, unless /autobusy is set again in any Micro."

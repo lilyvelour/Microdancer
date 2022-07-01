@@ -3,6 +3,8 @@ using Dalamud.Plugin;
 using System;
 using System.Linq;
 using Microdancer.UI;
+using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 
 namespace Microdancer
 {
@@ -16,24 +18,28 @@ namespace Microdancer
 
         internal static DalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-        public Microdancer(DalamudPluginInterface pluginInterface)
+        public Microdancer(DalamudPluginInterface pluginInterface, CommandManager commandManager, ChatGui chatGui)
         {
             PluginInterface = pluginInterface;
 
-            CustomService.Set(pluginInterface.Create<LicenseChecker>());
+            // Dalamud services we have to locate manually go here
+            pluginInterface.RegisterService(commandManager);
+            pluginInterface.RegisterService(chatGui);
+
+            var licenseChecker = pluginInterface.CreateService<LicenseChecker>();
 
             if (pluginInterface.GetPluginConfig() == null)
             {
                 pluginInterface.SavePluginConfig(new Configuration());
             }
 
-            CustomService.Set(pluginInterface.Create<GameManager>());
-            CustomService.Set(pluginInterface.Create<PartyManager>());
-            CustomService.Set(pluginInterface.Create<CPoseManager>());
-            CustomService.Set(pluginInterface.Create<MicroManager>());
-            CustomService.Set(pluginInterface.Create<LibraryManager>());
-            CustomService.Set(pluginInterface.Create<SharedContentManager>());
-            CustomService.Set(pluginInterface.Create<MicrodancerUi>());
+            pluginInterface.CreateService<GameManager>();
+            pluginInterface.CreateService<PartyManager>();
+            pluginInterface.CreateService<CPoseManager>();
+            pluginInterface.CreateService<MicroManager>();
+            pluginInterface.CreateService<LibraryManager>();
+            pluginInterface.CreateService<SharedContentManager>();
+            pluginInterface.CreateService<MicrodancerUi>();
 
             var commandTypes = Assembly
                 .GetExecutingAssembly()
@@ -43,10 +49,7 @@ namespace Microdancer
 
             foreach (var type in commandTypes)
             {
-                var method = typeof(DalamudPluginInterface).GetMethod(nameof(DalamudPluginInterface.Create));
-                var generic = method!.MakeGenericMethod(type);
-                var svc = generic.Invoke(pluginInterface, new object[] { Array.Empty<object>() })!;
-                CustomService.Set(svc, type);
+                pluginInterface.CreateService(type);
             }
         }
 
@@ -65,7 +68,7 @@ namespace Microdancer
 
             if (disposing)
             {
-                CustomService.DisposeAll();
+                Service.DisposeAll();
             }
 
             _disposedValue = true;

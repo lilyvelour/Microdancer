@@ -9,9 +9,9 @@ namespace Microdancer
     {
         private readonly CPoseManager _cPoseManager;
 
-        public SetPoseCommand(CPoseManager cPoseManager) : base()
+        public SetPoseCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _cPoseManager = cPoseManager;
+            _cPoseManager = serviceLocator.Get<CPoseManager>();
         }
 
         [Command(

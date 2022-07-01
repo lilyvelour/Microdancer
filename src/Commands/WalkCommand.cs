@@ -6,9 +6,9 @@ namespace Microdancer
     {
         private readonly GameManager _gameManager;
 
-        public WalkCommand(GameManager gameManager) : base()
+        public WalkCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command("walk", HelpMessage = "Toggle between walk and run. Optional subcommands: [on, off]")]

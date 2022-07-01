@@ -8,7 +8,6 @@ using Dalamud.IoC;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public sealed class LicenseChecker : IDisposable
     {
         public bool? IsValidLicense { get; private set; }
@@ -17,7 +16,7 @@ namespace Microdancer
 
         private const string ENDPOINT = "https://example.com/prod/v1/license";
 
-        public LicenseChecker(ClientState clientState)
+        public LicenseChecker(ClientState clientState, Service.Locator _)
         {
             Task.Run(
                 async () =>

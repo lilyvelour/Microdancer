@@ -10,10 +10,10 @@ namespace Microdancer
         private readonly GameGui _gameGui;
         private readonly GameManager _gameManager;
 
-        public DoEmoteCommand(GameGui gameGui, GameManager gameManager) : base()
+        public DoEmoteCommand(GameGui gameGui, Service.Locator serviceLocator) : base(serviceLocator)
         {
             _gameGui = gameGui;
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command("doemote", HelpMessage = "Performs the specified emote by ID.")]

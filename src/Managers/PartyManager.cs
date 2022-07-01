@@ -27,7 +27,6 @@ namespace Microdancer
     }
 
     // https://github.com/SyntaxVoid/FFLogsPartyLookup/blob/e2a3174bed5ef1e9277ef796e9b3648559780764/FFLogsPartyLookup/PartyHandler.cs
-    [PluginInterface]
     public sealed unsafe class PartyManager
     {
         // Somewhat abstractifies the interface needed to get a list of party members
@@ -55,7 +54,8 @@ namespace Microdancer
             DataManager dataManager,
             GameGui gameGui,
             ClientState clientState,
-            PartyList partyList
+            PartyList partyList,
+            Service.Locator _
         )
         {
             _dataManager = dataManager;

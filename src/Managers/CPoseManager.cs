@@ -10,7 +10,6 @@ using Dalamud.Logging;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public class CPoseManager
     {
         public enum PoseType
@@ -24,15 +23,16 @@ namespace Microdancer
             Parasol = 5,
         }
 
-        private readonly GameManager _gameManager;
         private readonly ClientState _clientState;
         private readonly Condition _condition;
+        private readonly GameManager _gameManager;
 
-        public CPoseManager(GameManager gameManager, ClientState clientState, Condition condition)
+        public CPoseManager(ClientState clientState, Condition condition, Service.Locator serviceLocator)
         {
-            _gameManager = gameManager;
             _clientState = clientState;
             _condition = condition;
+
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         public PoseType GetPoseTypeFromName(string name)

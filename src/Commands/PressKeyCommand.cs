@@ -9,9 +9,9 @@ namespace Microdancer
     {
         private readonly GameManager _gameManager;
 
-        public PressKeyCommand(GameManager gameManager) : base()
+        public PressKeyCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
-            _gameManager = gameManager;
+            _gameManager = serviceLocator.Get<GameManager>();
         }
 
         [Command(

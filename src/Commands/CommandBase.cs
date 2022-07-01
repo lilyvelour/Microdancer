@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,7 +11,6 @@ using Dalamud.IoC;
 
 namespace Microdancer
 {
-    [PluginInterface]
     public abstract class CommandBase : IDisposable
     {
         private readonly CommandManager _commandManager;
@@ -23,11 +21,11 @@ namespace Microdancer
 
         private bool _disposedValue;
 
-        protected CommandBase()
+        protected CommandBase(Service.Locator serviceLocator)
         {
-            _commandManager = CustomService.Get<CommandManager>();
-            _chatGui = CustomService.Get<ChatGui>();
-            _license = CustomService.Get<LicenseChecker>();
+            _commandManager = serviceLocator.Get<CommandManager>();
+            _chatGui = serviceLocator.Get<ChatGui>();
+            _license = serviceLocator.Get<LicenseChecker>();
 
             CommandInfo = GetType()
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
