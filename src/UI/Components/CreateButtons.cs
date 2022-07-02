@@ -8,7 +8,7 @@ namespace Microdancer
     {
         private readonly ButtonStyle _buttonStyle;
 
-        private string _newItemName = string.Empty;
+        // private string _newItemName = string.Empty;
         private bool _newMicro;
         private bool _newFolder;
 
@@ -66,76 +66,77 @@ namespace Microdancer
             if (_newMicro || _newFolder)
             {
                 var itemName = _newMicro ? "New Micro" : "New Folder";
-
-                if (_buttonStyle == ButtonStyle.ContextMenu)
+                if (_newMicro)
                 {
-                    if (_newMicro)
-                    {
-                        CreateMicro(basePath, itemName);
-                    }
-                    if (_newFolder)
-                    {
-                        CreateFolder(basePath, itemName);
-                    }
+                    CreateMicro(basePath, itemName);
                 }
-                else
+                if (_newFolder)
                 {
-                    if (ImGuiExt.BeginCursorPopup("##new-item-popup", canCreate))
-                    {
-                        if (string.IsNullOrWhiteSpace(_newItemName))
-                        {
-                            _newItemName = itemName;
-                        }
-
-                        if (
-                            ImGui.InputText(
-                                "##new-item",
-                                ref _newItemName,
-                                1024,
-                                ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll
-                            )
-                        )
-                        {
-                            if (!string.IsNullOrWhiteSpace(_newItemName))
-                            {
-                                itemName = _newItemName;
-                                if (_newMicro)
-                                {
-                                    CreateMicro(basePath, itemName);
-                                }
-                                if (_newFolder)
-                                {
-                                    CreateFolder(basePath, itemName);
-                                }
-                            }
-
-                            _newItemName = string.Empty;
-                            _newMicro = false;
-                            _newFolder = false;
-                        }
-
-                        ImGui.SameLine();
-
-                        ImGui.PushItemWidth(-1);
-
-                        if (ImGuiExt.IconButton(FontAwesomeIcon.TimesCircle))
-                        {
-                            _newItemName = string.Empty;
-                            _newMicro = false;
-                            _newFolder = false;
-                        }
-
-                        ImGui.PopItemWidth();
-                    }
-                    else
-                    {
-                        _newItemName = string.Empty;
-                        _newMicro = false;
-                        _newFolder = false;
-                    }
-
-                    ImGuiExt.EndCursorPopup();
+                    CreateFolder(basePath, itemName);
                 }
+
+                // if (_buttonStyle == ButtonStyle.ContextMenu)
+                // {
+
+                // }
+                // else
+                // {
+                //     if (ImGuiExt.BeginCursorPopup("##new-item-popup", canCreate))
+                //     {
+                //         if (string.IsNullOrWhiteSpace(_newItemName))
+                //         {
+                //             _newItemName = itemName;
+                //         }
+
+                //         if (
+                //             ImGui.InputText(
+                //                 "##new-item",
+                //                 ref _newItemName,
+                //                 1024,
+                //                 ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll
+                //             )
+                //         )
+                //         {
+                //             if (!string.IsNullOrWhiteSpace(_newItemName))
+                //             {
+                //                 itemName = _newItemName;
+                //                 if (_newMicro)
+                //                 {
+                //                     CreateMicro(basePath, itemName);
+                //                 }
+                //                 if (_newFolder)
+                //                 {
+                //                     CreateFolder(basePath, itemName);
+                //                 }
+                //             }
+
+                //             _newItemName = string.Empty;
+                //             _newMicro = false;
+                //             _newFolder = false;
+                //         }
+
+                //         ImGui.SameLine();
+
+                //         ImGui.PushItemWidth(-1);
+
+                //         if (ImGuiExt.IconButton(FontAwesomeIcon.TimesCircle))
+                //         {
+                //             _newItemName = string.Empty;
+                //             _newMicro = false;
+                //             _newFolder = false;
+                //         }
+
+                //         ImGui.PopItemWidth();
+                //     }
+                //     else
+                //     {
+                //         _newItemName = string.Empty;
+                //         _newMicro = false;
+                //         _newFolder = false;
+                //     }
+
+                //     ImGuiExt.EndCursorPopup();
+                // }
             }
 
             return true;
