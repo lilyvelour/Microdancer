@@ -175,6 +175,7 @@ namespace Microdancer
             catch
             {
                 // no-op
+                // TODO: Error when file exists
             }
         }
 

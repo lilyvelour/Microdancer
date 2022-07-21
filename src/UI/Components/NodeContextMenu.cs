@@ -164,18 +164,29 @@ namespace Microdancer
 
             if (_deleting == node.Id && canDelete)
             {
-                ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(300, 80));
+                ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(400, 80));
                 var windowPosition = ImGui.GetIO().DisplaySize * 0.5f;
-                windowPosition.X -= 150 * ImGuiHelpers.GlobalScale;
+                windowPosition.X -= 200 * ImGuiHelpers.GlobalScale;
                 windowPosition.Y -= 40 * ImGuiHelpers.GlobalScale;
 
                 ImGui.SetNextWindowPos(windowPosition);
-                var _ = true;
-                var drawModal = ImGui.Begin($"Delete {node.GetType().Name}?", ref _, ImGuiWindowFlags.Modal);
+                var modalOpen = true;
+
+                // HACK: Bit hacky, we force disable scrolling here
+                var drawModal = ImGui.Begin(
+                    $"Delete {node.GetType().Name}?##{_id}-{_deleting}",
+                    ref modalOpen,
+                    ImGuiWindowFlags.Modal
+                        | ImGuiWindowFlags.NoSavedSettings
+                        | ImGuiWindowFlags.NoScrollbar
+                        | ImGuiWindowFlags.NoScrollWithMouse
+                        | ImGuiWindowFlags.NoResize
+                        | ImGuiWindowFlags.NoDocking
+                );
 
                 if (drawModal)
                 {
-                    ImGui.TextWrapped($"Are you sure you want to delete {node.Name}?");
+                    ImGui.Text($"Are you sure you want to delete {node.Name}?");
 
                     if (ImGui.Button("Move to Recycle Bin"))
                     {
@@ -183,12 +194,23 @@ namespace Microdancer
                         _deleting = Guid.Empty;
                     }
                     ImGui.SameLine();
-                    if (ImGui.Button("Cancel") || !ImGui.IsWindowFocused())
+                    if (ImGui.Button("Cancel"))
+                    {
+                        _deleting = Guid.Empty;
+                    }
+
+                    if (!ImGui.IsWindowFocused())
                     {
                         _deleting = Guid.Empty;
                     }
                 }
+
                 ImGui.End();
+
+                if (!modalOpen)
+                {
+                    _deleting = Guid.Empty;
+                }
 
                 return true;
             }

@@ -10,8 +10,8 @@ namespace Microdancer
         private readonly ButtonStyle _buttonStyle;
 
         private string _newItemName = string.Empty;
-        private bool _newMicro;
-        private bool _newFolder;
+        private CreateState _createState;
+        private bool _shouldReposition;
 
         public CreateButtons(ButtonStyle buttonStyle = ButtonStyle.Buttons)
         {
@@ -24,15 +24,26 @@ namespace Microdancer
             ContextMenu,
         }
 
+        private enum CreateState
+        {
+            Unselected,
+            NewMicro,
+            NewFolder,
+        }
+
         public bool Draw(string basePath)
         {
-            var canCreate = !_newMicro && !_newFolder;
-
             switch (_buttonStyle)
             {
                 case ButtonStyle.ContextMenu:
-                    _newMicro |= ImGui.Selectable("New Micro") && canCreate;
-                    _newFolder |= ImGui.Selectable("New Folder") && canCreate;
+                    if (ImGui.Selectable("New Micro"))
+                    {
+                        ToggleState(CreateState.NewMicro);
+                    }
+                    if (ImGui.Selectable("New Folder"))
+                    {
+                        ToggleState(CreateState.NewFolder);
+                    }
                     break;
                 default:
                 case ButtonStyle.Buttons:
@@ -43,11 +54,17 @@ namespace Microdancer
 
                     ImGui.InvisibleButton($"create-before-spacing-{basePath}", new(rect.X * 0.15f, rect.Y));
                     ImGui.SameLine();
-                    _newMicro |= ImGui.Button("Create new Micro", new(rect.X * 0.3125f, rect.Y)) && canCreate;
+                    if (ImGui.Button("Create new Micro", new(rect.X * 0.3125f, rect.Y)))
+                    {
+                        ToggleState(CreateState.NewMicro);
+                    }
                     ImGui.SameLine();
                     ImGui.InvisibleButton($"create-middle-spacing-{basePath}", new(rect.X * 0.025f, rect.Y));
                     ImGui.SameLine();
-                    _newFolder |= ImGui.Button("Create new Folder", new(rect.X * 0.3125f, rect.Y)) && canCreate;
+                    if (ImGui.Button("Create new Folder", new(rect.X * 0.3125f, rect.Y)))
+                    {
+                        ToggleState(CreateState.NewFolder);
+                    }
                     ImGui.SameLine();
                     ImGui.InvisibleButton($"create-after-spacing-{basePath}", new(rect.X * 0.15f, rect.Y));
 
@@ -58,30 +75,30 @@ namespace Microdancer
                     break;
             }
 
-            if (_newMicro || _newFolder)
+            if (_createState != CreateState.Unselected)
             {
-                var itemName = _newMicro ? "New Micro" : "New Folder";
+                var itemName = _createState == CreateState.NewMicro ? "New Micro" : "New Folder";
 
                 if (_buttonStyle == ButtonStyle.ContextMenu)
                 {
-                    if (_newMicro)
+                    if (_createState == CreateState.NewMicro)
                     {
                         CreateMicro(basePath, itemName);
                     }
-                    if (_newFolder)
+                    else
                     {
                         CreateFolder(basePath, itemName);
                     }
 
-                    _newMicro = false;
-                    _newFolder = false;
+                    ToggleState(CreateState.Unselected);
                 }
                 else
                 {
                     var width = 298 * ImGuiHelpers.GlobalScale;
                     var height = ImGuiHelpers.GetButtonSize(" ").Y + ImGui.GetStyle().ItemSpacing.Y * 2;
 
-                    ImGuiExt.BeginCursorPopup("##new-item-popup", new Vector2(width, height), canCreate);
+                    ImGuiExt.BeginCursorPopup("##new-item-popup", new Vector2(width, height), _shouldReposition);
+                    _shouldReposition = false;
 
                     if (string.IsNullOrWhiteSpace(_newItemName))
                     {
@@ -100,19 +117,18 @@ namespace Microdancer
                         if (!string.IsNullOrWhiteSpace(_newItemName))
                         {
                             itemName = _newItemName;
-                            if (_newMicro)
+
+                            if (_createState == CreateState.NewMicro)
                             {
                                 CreateMicro(basePath, itemName);
                             }
-                            if (_newFolder)
+                            else
                             {
                                 CreateFolder(basePath, itemName);
                             }
                         }
 
-                        _newItemName = string.Empty;
-                        _newMicro = false;
-                        _newFolder = false;
+                        ToggleState(CreateState.Unselected);
                     }
 
                     ImGui.SameLine();
@@ -121,9 +137,7 @@ namespace Microdancer
 
                     if (ImGuiExt.IconButton(FontAwesomeIcon.TimesCircle))
                     {
-                        _newItemName = string.Empty;
-                        _newMicro = false;
-                        _newFolder = false;
+                        ToggleState(CreateState.Unselected);
                     }
 
                     ImGui.PopItemWidth();
@@ -133,6 +147,27 @@ namespace Microdancer
             }
 
             return true;
+        }
+
+        private void ToggleState(CreateState state)
+        {
+            var originalState = _createState;
+
+            if (state == CreateState.Unselected)
+            {
+                _createState = state;
+            }
+            else
+            {
+                _createState = _createState == state ? CreateState.Unselected : state;
+            }
+
+            if (originalState != state)
+            {
+                _newItemName = string.Empty;
+            }
+
+            _shouldReposition = true;
         }
     }
 }

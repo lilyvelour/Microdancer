@@ -21,7 +21,7 @@ namespace Microdancer
         {
             _idPrefix = idPrefix;
             _grid = grid;
-            _contextMenu = new NodeContextMenu($"{_idPrefix}node-context-menu");
+            _contextMenu = new NodeContextMenu($"{_idPrefix}-node-context-menu");
         }
 
         bool IDrawable<INode>.Draw(INode node)
