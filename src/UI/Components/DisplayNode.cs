@@ -73,7 +73,9 @@ namespace Microdancer
                 ImGui.BeginGroup();
 
                 ImGui.SetWindowFontScale(2.0f);
-                if (ImGuiExt.IconButton(icon, node.Name, ImGuiHelpers.ScaledVector2(128, 128)))
+                ImGuiExt.IconButton(icon, node.Name, ImGuiHelpers.ScaledVector2(128, 128));
+
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                 {
                     if (!_ignoreClick)
                     {
