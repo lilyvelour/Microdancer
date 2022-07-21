@@ -8,6 +8,7 @@ namespace Microdancer
     public static class ImGuiExt
     {
         private static Vector2 _relativeMousePosition;
+        private static Vector2 _originalCursorPos;
 
         public static bool IconButton(FontAwesomeIcon icon, Vector2 size)
         {
@@ -86,19 +87,21 @@ namespace Microdancer
             string name,
             Vector2 size,
             bool reposition,
-            ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize
+            ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Popup
         )
         {
             ImGui.SetItemAllowOverlap();
 
             var contentSize = ImGui.GetContentRegionAvail();
-            size.X = Math.Min(size.X, contentSize.X);
-            size.Y = Math.Min(size.Y, contentSize.Y);
+            var contentAnchor = ImGui.GetWindowPos() + contentSize;
 
             if (reposition)
             {
-                _relativeMousePosition = RelativeMousePos();
+                _originalCursorPos = ImGui.GetCursorPos();
+                _relativeMousePosition = ImGui.GetMousePos() - contentAnchor;
             }
+
+            ImGui.SetNextWindowPos(contentAnchor + _relativeMousePosition);
 
             var cursorPos = _relativeMousePosition;
 
@@ -120,6 +123,7 @@ namespace Microdancer
         public static void EndCursorPopup()
         {
             ImGui.EndChildFrame();
+            ImGui.SetCursorPos(_originalCursorPos);
         }
 
         public static bool TintButton(string label, Vector4 color)
