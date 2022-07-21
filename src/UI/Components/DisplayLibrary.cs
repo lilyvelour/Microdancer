@@ -8,14 +8,12 @@ namespace Microdancer
     public class DisplayLibrary : PluginUiBase, IDrawable
     {
         private readonly DisplayNode _node;
-        private readonly CreateButtons _createButtons;
 
         private string _search = string.Empty;
 
         public DisplayLibrary()
         {
             _node = new DisplayNode("library");
-            _createButtons = new CreateButtons(CreateButtons.ButtonStyle.Icons);
         }
 
         public bool Draw()
@@ -37,7 +35,6 @@ namespace Microdancer
                 new(
                     -1,
                     ImGui.GetContentRegionAvail().Y
-                        - ImGuiHelpers.GetButtonSize(string.Empty).Y
                         - Theme.GetStyle<Vector2>(ImGuiStyleVar.FramePadding).Y
                         - Theme.GetStyle<float>(ImGuiStyleVar.FrameBorderSize)
                 )
@@ -65,39 +62,6 @@ namespace Microdancer
             if (ImGui.IsItemClicked())
             {
                 DeselectAll();
-            }
-
-            ImGui.PushFont(UiBuilder.IconFont);
-            var buttonWidth = ImGuiHelpers.GetButtonSize(FontAwesomeIcon.Plus.ToIconString()).X;
-            ImGui.PopFont();
-
-            var itemSpacing = ImGui.GetStyle().ItemSpacing.X;
-            var buttonGroupWidth = (buttonWidth * 2) + itemSpacing;
-            var availableWidth = ImGui.GetContentRegionAvail().X;
-            var columnPadding = ImGui.GetStyle().ColumnsMinSpacing * 2;
-
-            var spacingWidth = availableWidth - columnPadding - buttonGroupWidth;
-
-            if (spacingWidth > itemSpacing)
-            {
-                ImGui.Dummy(new(spacingWidth, 0));
-                ImGui.SameLine();
-            }
-
-            var path = Config.LibraryPath;
-            if (Directory.Exists(path))
-            {
-                var node = Library.Find<INode>(Config.LibrarySelection);
-                if (node is Micro)
-                {
-                    path = Path.GetDirectoryName(node.Path)!;
-                }
-                else if (node != null)
-                {
-                    path = node.Path;
-                }
-
-                _createButtons.Draw(path);
             }
 
             return true;

@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using Dalamud.Interface;
 using ImGuiNET;
@@ -20,7 +21,6 @@ namespace Microdancer
         public enum ButtonStyle
         {
             Buttons,
-            Icons,
             ContextMenu,
         }
 
@@ -30,11 +30,6 @@ namespace Microdancer
 
             switch (_buttonStyle)
             {
-                case ButtonStyle.Icons:
-                    _newMicro |= ImGuiExt.IconButton(FontAwesomeIcon.Plus, "Create new Micro") && canCreate;
-                    ImGui.SameLine();
-                    _newFolder |= ImGuiExt.IconButton(FontAwesomeIcon.FolderPlus, "Create new Folder") && canCreate;
-                    break;
                 case ButtonStyle.ContextMenu:
                     _newMicro |= ImGui.Selectable("New Micro") && canCreate;
                     _newFolder |= ImGui.Selectable("New Folder") && canCreate;
@@ -83,59 +78,55 @@ namespace Microdancer
                 }
                 else
                 {
-                    if (ImGuiExt.BeginCursorPopup("##new-item-popup", canCreate))
+                    var width = 298 * ImGuiHelpers.GlobalScale;
+                    var height = ImGuiHelpers.GetButtonSize(" ").Y + ImGui.GetStyle().ItemSpacing.Y * 2;
+
+                    ImGuiExt.BeginCursorPopup("##new-item-popup", new Vector2(width, height), canCreate);
+
+                    if (string.IsNullOrWhiteSpace(_newItemName))
                     {
-                        if (string.IsNullOrWhiteSpace(_newItemName))
-                        {
-                            _newItemName = itemName;
-                        }
-
-                        if (
-                            ImGui.InputText(
-                                "##new-item",
-                                ref _newItemName,
-                                1024,
-                                ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll
-                            )
-                        )
-                        {
-                            if (!string.IsNullOrWhiteSpace(_newItemName))
-                            {
-                                itemName = _newItemName;
-                                if (_newMicro)
-                                {
-                                    CreateMicro(basePath, itemName);
-                                }
-                                if (_newFolder)
-                                {
-                                    CreateFolder(basePath, itemName);
-                                }
-                            }
-
-                            _newItemName = string.Empty;
-                            _newMicro = false;
-                            _newFolder = false;
-                        }
-
-                        ImGui.SameLine();
-
-                        ImGui.PushItemWidth(-1);
-
-                        if (ImGuiExt.IconButton(FontAwesomeIcon.TimesCircle))
-                        {
-                            _newItemName = string.Empty;
-                            _newMicro = false;
-                            _newFolder = false;
-                        }
-
-                        ImGui.PopItemWidth();
+                        _newItemName = itemName;
                     }
-                    else
+
+                    if (
+                        ImGui.InputText(
+                            "##new-item",
+                            ref _newItemName,
+                            1024,
+                            ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll
+                        )
+                    )
+                    {
+                        if (!string.IsNullOrWhiteSpace(_newItemName))
+                        {
+                            itemName = _newItemName;
+                            if (_newMicro)
+                            {
+                                CreateMicro(basePath, itemName);
+                            }
+                            if (_newFolder)
+                            {
+                                CreateFolder(basePath, itemName);
+                            }
+                        }
+
+                        _newItemName = string.Empty;
+                        _newMicro = false;
+                        _newFolder = false;
+                    }
+
+                    ImGui.SameLine();
+
+                    ImGui.PushItemWidth(-1);
+
+                    if (ImGuiExt.IconButton(FontAwesomeIcon.TimesCircle))
                     {
                         _newItemName = string.Empty;
                         _newMicro = false;
                         _newFolder = false;
                     }
+
+                    ImGui.PopItemWidth();
 
                     ImGuiExt.EndCursorPopup();
                 }

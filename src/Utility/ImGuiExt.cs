@@ -7,6 +7,8 @@ namespace Microdancer
 {
     public static class ImGuiExt
     {
+        private static Vector2 _relativeMousePosition;
+
         public static bool IconButton(FontAwesomeIcon icon, Vector2 size)
         {
             return IconButton(icon, null, size);
@@ -58,31 +60,66 @@ namespace Microdancer
             ImGui.PopStyleColor(3);
         }
 
-        public static bool BeginCursorPopup(string name, bool reposition)
+        public static Vector2 RelativeMousePos()
         {
+            var mousePos = ImGui.GetMousePos();
+
+            Vector2 relativeMousePos;
+            Vector2 scale;
+
+            var min = ImGui.GetWindowContentRegionMin();
+            var max = ImGui.GetWindowContentRegionMax();
+
+            scale.X = (float)(max.X - min.X) / (max.X - min.X);
+            scale.Y = (float)(max.Y - min.Y) / (max.Y - min.Y);
+
+            // calculating the point on viewport
+            relativeMousePos.X = min.X + ((mousePos.X - min.X) * scale.X);
+            relativeMousePos.Y = min.Y + ((mousePos.Y - min.Y) * scale.Y);
+
+            relativeMousePos -= ImGui.GetWindowPos();
+
+            return relativeMousePos;
+        }
+
+        public static void BeginCursorPopup(
+            string name,
+            Vector2 size,
+            bool reposition,
+            ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize
+        )
+        {
+            ImGui.SetItemAllowOverlap();
+
+            var contentSize = ImGui.GetContentRegionAvail();
+            size.X = Math.Min(size.X, contentSize.X);
+            size.Y = Math.Min(size.Y, contentSize.Y);
+
             if (reposition)
             {
-                ImGui.SetNextWindowPos(ImGui.GetMousePos());
+                _relativeMousePosition = RelativeMousePos();
             }
 
-            var _ = false;
-            var open = ImGui.Begin(
-                name,
-                ref _,
-                ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Popup
-            );
+            var cursorPos = _relativeMousePosition;
 
-            if (open && !ImGui.IsWindowFocused())
+            var totalContentSize = ImGui.GetContentRegionMax();
+            if (cursorPos.X + size.X > totalContentSize.X)
             {
-                return false;
+                cursorPos.X = totalContentSize.X - size.X;
+            }
+            if (cursorPos.Y + size.Y > totalContentSize.Y)
+            {
+                cursorPos.Y = totalContentSize.Y - size.Y;
             }
 
-            return open;
+            ImGui.SetCursorPos(cursorPos);
+
+            ImGui.BeginChildFrame((uint)name.GetHashCode(), size, flags);
         }
 
         public static void EndCursorPopup()
         {
-            ImGui.End();
+            ImGui.EndChildFrame();
         }
 
         public static bool TintButton(string label, Vector4 color)
