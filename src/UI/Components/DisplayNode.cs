@@ -38,6 +38,7 @@ namespace Microdancer
             return result;
         }
 
+        [Obsolete("Cause it aint", false)]
         private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
         {
             if (node == null)

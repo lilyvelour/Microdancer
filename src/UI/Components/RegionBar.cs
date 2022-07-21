@@ -12,6 +12,7 @@ namespace Microdancer
 
         private float _lastColumnWidth;
 
+        [Obsolete("Cause it aint", false)] // HACK
         public bool Draw(Micro micro)
         {
             if (MicroManager.Current?.Micro == micro)
