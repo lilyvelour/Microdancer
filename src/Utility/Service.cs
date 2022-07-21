@@ -31,6 +31,11 @@ namespace Microdancer
             return _configuration ??= pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         }
 
+        public static void SaveConfiguration(this DalamudPluginInterface pluginInterface)
+        {
+            pluginInterface.SavePluginConfig(Configuration(pluginInterface));
+        }
+
         public static T? RegisterService<T>(this DalamudPluginInterface _, T? service) where T : class
         {
             if (service != null)

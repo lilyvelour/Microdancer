@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Logging;
 using ImGuiNET;
 
 namespace Microdancer
@@ -15,7 +16,7 @@ namespace Microdancer
         private bool _shouldSetRenameFocus = false;
 
         private string _newName = string.Empty;
-        private bool _ignoreClick;
+        private static bool _ignoreInput;
 
         public DisplayNode(string idPrefix, bool grid = false)
         {
@@ -40,6 +41,12 @@ namespace Microdancer
         private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
         {
             if (node == null)
+            {
+                return false;
+            }
+
+            // HACK: Update starred display instantly instead of waiting for a refresh
+            if (node.Parent is StarredFolderRoot && !Config.StarredItems.Contains(node.Id))
             {
                 return false;
             }
@@ -73,23 +80,21 @@ namespace Microdancer
                 ImGui.BeginGroup();
 
                 ImGui.SetWindowFontScale(2.0f);
-                ImGuiExt.IconButton(icon, node.Name, ImGuiHelpers.ScaledVector2(128, 128));
-
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+                if (ImGuiExt.IconButton(icon, node.Name, ImGuiHelpers.ScaledVector2(128, 128)))
                 {
-                    if (!_ignoreClick)
+                    if (!_ignoreInput)
                     {
                         Navigate(node.Parent?.Id ?? Guid.Empty, node.Id);
                     }
-                    _ignoreClick = false;
+                    _ignoreInput = false;
                 }
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Middle))
                 {
-                    if (!_ignoreClick)
+                    if (!_ignoreInput)
                     {
                         View(node.Id);
                     }
-                    _ignoreClick = false;
+                    _ignoreInput = false;
                 }
                 ImGui.SetWindowFontScale(1.0f);
 
@@ -134,7 +139,7 @@ namespace Microdancer
 
                     if (ImGuiExt.TintButton(label, new(-1, -1), Vector4.Zero))
                     {
-                        Select(node);
+                        Navigate(node.Parent?.Id ?? Guid.Empty, node.Id);
                     }
 
                     ImGui.PopStyleColor(2);
@@ -210,6 +215,7 @@ namespace Microdancer
 
                     _renaming = Guid.Empty;
                     _newName = string.Empty;
+                    _ignoreInput = true;
                 }
                 ImGui.PopItemWidth();
 
@@ -219,6 +225,7 @@ namespace Microdancer
 
                     _renaming = Guid.Empty;
                     _newName = string.Empty;
+                    _ignoreInput = true;
                 }
 
                 if (ImGui.IsKeyPressed(ImGui.GetKeyIndex(ImGuiKey.Escape)))
@@ -229,21 +236,29 @@ namespace Microdancer
             }
             else if (ImGui.IsItemClicked(ImGuiMouseButton.Middle))
             {
-                View(node);
-            }
-            else if (ImGui.IsItemClicked())
-            {
-                if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                if (!_ignoreInput)
                 {
                     View(node);
                 }
-                else
+                _ignoreInput = false;
+            }
+            else if (!_grid && ImGui.IsItemClicked())
+            {
+                if (!_ignoreInput)
                 {
-                    Select(node);
+                    if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                    {
+                        View(node);
+                    }
+                    else
+                    {
+                        Select(node);
+                    }
                 }
+                _ignoreInput = false;
             }
 
-            _contextMenu.Draw(node, out rename);
+            _contextMenu.Draw(node, out rename, showCreateButtons: false);
 
             if (rename && _renaming != node.Id)
             {
@@ -339,7 +354,7 @@ namespace Microdancer
                 && ImGui.IsMouseClicked(ImGuiMouseButton.Left)
             )
             {
-                _ignoreClick = true;
+                _ignoreInput = true;
 
                 if (isStarred)
                 {

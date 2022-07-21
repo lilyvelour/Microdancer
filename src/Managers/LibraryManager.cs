@@ -17,7 +17,7 @@ namespace Microdancer
 
         private readonly DalamudPluginInterface _pluginInterface;
         private readonly ConcurrentQueue<INode> _cachedNodes = new();
-        private bool _shouldRebuild;
+        private readonly ConcurrentQueue<bool> _rebuildQueue = new();
         private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
@@ -57,9 +57,8 @@ namespace Microdancer
         public IEnumerable<INode> GetNodes()
         {
             var nodes = _cachedNodes.ToArray();
-            if (_shouldRebuild && !_isBuilding)
+            if (!_isBuilding && _rebuildQueue.TryDequeue(out var _))
             {
-                _shouldRebuild = false;
                 _isBuilding = true;
                 Task.Run(BuildNodes); // Offload this to a worker thread
             }
@@ -70,7 +69,11 @@ namespace Microdancer
         {
             try
             {
-                var libraryPath = new DirectoryInfo(_pluginInterface.Configuration().LibraryPath);
+                PluginLog.Log("[LibraryManager] Building nodes...");
+
+                var config = _pluginInterface.Configuration();
+
+                var libraryPath = new DirectoryInfo(config.LibraryPath);
                 var sharedPathName = Path.Combine(_pluginInterface.GetPluginConfigDirectory(), "shared");
                 var sharedPath = Directory.CreateDirectory(sharedPathName);
 
@@ -85,7 +88,6 @@ namespace Microdancer
                 _cachedNodes.Enqueue(library);
                 _cachedNodes.Enqueue(sharedWithMe);
 
-                var config = _pluginInterface.Configuration();
                 var ids = new HashSet<Guid>(config.SharedItems.Concat(config.StarredItems));
                 var nodes = _cachedNodes.SelectMany(node => Traverse(node, n => n.Children)).ToList();
 
@@ -101,7 +103,7 @@ namespace Microdancer
             catch (Exception e)
             {
                 PluginLog.LogError(e, e.Message);
-                _shouldRebuild = true;
+                _rebuildQueue.Enqueue(true);
             }
             finally
             {
@@ -173,7 +175,7 @@ namespace Microdancer
         internal void MarkAsDirty()
         {
             EnsureWatchers();
-            _shouldRebuild = true;
+            _rebuildQueue.Enqueue(true);
         }
 
         private INode BuildLibrary(DirectoryInfo dir, out INode starred)
@@ -272,7 +274,7 @@ namespace Microdancer
                 watcher.Deleted += WatcherEvent;
                 watcher.Renamed += WatcherEvent;
 
-                _shouldRebuild = true;
+                _rebuildQueue.Enqueue(true);
 
                 return watcher;
             }

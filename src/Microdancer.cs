@@ -28,11 +28,6 @@ namespace Microdancer
 
             var licenseChecker = pluginInterface.CreateService<LicenseChecker>();
 
-            if (pluginInterface.GetPluginConfig() == null)
-            {
-                pluginInterface.SavePluginConfig(new Configuration());
-            }
-
             pluginInterface.CreateService<GameManager>();
             pluginInterface.CreateService<PartyManager>();
             pluginInterface.CreateService<CPoseManager>();

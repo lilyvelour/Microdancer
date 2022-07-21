@@ -152,7 +152,10 @@ namespace Microdancer
 
                 var newId = Node.GenerateId(newPath);
 
-                Config.LibrarySelection = newId;
+                if (Config.LibrarySelection == node.Id)
+                {
+                    Config.LibrarySelection = newId;
+                }
 
                 if (Config.SharedItems.Contains(node.Id))
                 {

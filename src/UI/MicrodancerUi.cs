@@ -260,10 +260,11 @@ namespace Microdancer.UI
 
             ImGui.PushStyleColor(ImGuiCol.TitleBg, Vector4.Zero);
             ImGui.PushStyleColor(ImGuiCol.TitleBgActive, Vector4.Zero);
+            ImGui.PushStyleColor(ImGuiCol.DockingEmptyBg, Vector4.Zero);
 
             ImGui.DockSpace(439839, new(-1, -1));
 
-            ImGui.PopStyleColor(2);
+            ImGui.PopStyleColor(3);
 
             ImGui.EndChildFrame();
 
@@ -301,7 +302,7 @@ namespace Microdancer.UI
                 var configJson = JsonSerializer.Serialize(Config);
                 if (configJson != _previousConfigJson)
                 {
-                    PluginInterface.SavePluginConfig(Config);
+                    PluginInterface.SaveConfiguration();
                     _previousConfigJson = configJson;
                 }
             }
