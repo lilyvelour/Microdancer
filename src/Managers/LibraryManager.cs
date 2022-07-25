@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 
@@ -16,7 +15,7 @@ namespace Microdancer
         private bool _disposedValue;
 
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly ConcurrentQueue<INode> _cachedNodes = new();
+        private readonly ConcurrentBag<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
@@ -54,7 +53,7 @@ namespace Microdancer
             _disposedValue = true;
         }
 
-        public IEnumerable<INode> GetNodes()
+        public IList<INode> GetNodes()
         {
             var nodes = _cachedNodes.ToArray();
             if (_shouldRebuild && !_isBuilding)
@@ -84,10 +83,10 @@ namespace Microdancer
                 _cachedNodes.Clear();
                 if (starred.Children.Count > 0)
                 {
-                    _cachedNodes.Enqueue(starred);
+                    _cachedNodes.Add(starred);
                 }
-                _cachedNodes.Enqueue(library);
-                _cachedNodes.Enqueue(sharedWithMe);
+                _cachedNodes.Add(library);
+                _cachedNodes.Add(sharedWithMe);
 
                 var ids = new HashSet<Guid>(config.SharedItems.Concat(config.StarredItems));
                 var nodes = _cachedNodes.SelectMany(node => Traverse(node, n => n.Children)).ToList();
