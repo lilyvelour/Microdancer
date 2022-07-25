@@ -41,7 +41,7 @@ namespace Microdancer
                             using var client = new HttpClient();
 
                             PluginLog.LogVerbose(
-                                "Checking license status. name=\"{0}\", world=\"{1}\"",
+                                "Checking license status. name={0}, world={1}",
                                 playerName,
                                 playerWorld
                             );
