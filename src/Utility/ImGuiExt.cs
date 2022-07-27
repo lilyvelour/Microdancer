@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Logging;
 using ImGuiNET;
 
 namespace Microdancer
@@ -87,13 +88,13 @@ namespace Microdancer
             string name,
             Vector2 size,
             bool reposition,
-            ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Popup
+            ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize
         )
         {
             ImGui.SetItemAllowOverlap();
 
-            var contentSize = ImGui.GetContentRegionAvail();
-            var contentAnchor = ImGui.GetWindowPos() + contentSize;
+            var contentSize = ImGui.GetContentRegionMax();
+            var contentAnchor = ImGui.GetWindowPos();
 
             if (reposition)
             {
@@ -101,21 +102,10 @@ namespace Microdancer
                 _relativeMousePosition = ImGui.GetMousePos() - contentAnchor;
             }
 
-            ImGui.SetNextWindowPos(contentAnchor + _relativeMousePosition);
+            var localPos = Vector2.Min(_relativeMousePosition, contentSize - size);
+            var screenPos = contentAnchor + localPos;
 
-            var cursorPos = _relativeMousePosition;
-
-            var totalContentSize = ImGui.GetContentRegionMax();
-            if (cursorPos.X + size.X > totalContentSize.X)
-            {
-                cursorPos.X = totalContentSize.X - size.X;
-            }
-            if (cursorPos.Y + size.Y > totalContentSize.Y)
-            {
-                cursorPos.Y = totalContentSize.Y - size.Y;
-            }
-
-            ImGui.SetCursorPos(cursorPos);
+            ImGui.SetNextWindowPos(screenPos);
 
             ImGui.BeginChildFrame((uint)name.GetHashCode(), size, flags);
         }

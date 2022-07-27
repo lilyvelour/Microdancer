@@ -53,20 +53,19 @@ namespace Microdancer
             if (micro == null && node?.IsReadOnly == false)
             {
                 var basePath = (node as Folder)?.Path ?? Config.LibraryPath;
-                ImGui.PushStyleColor(ImGuiCol.FrameBg, Vector4.Zero);
-                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.0f);
-                ImGui.BeginChildFrame(4838949, new(ImGui.GetContentRegionAvail().X, 48 * ImGuiHelpers.GlobalScale));
-                ImGui.PopStyleVar();
                 _createButtons.Draw(basePath);
-                ImGui.EndChildFrame();
-                ImGui.PopStyleColor();
-            }
-            else
-            {
-                ImGui.Spacing();
             }
 
-            _breadcrumb.Draw(node);
+            ImGui.Spacing();
+            ImGui.Spacing();
+
+            if (!_breadcrumb.Draw(node))
+            {
+                ImGui.Text(" ");
+            }
+
+            ImGui.Spacing();
+            ImGui.Spacing();
 
             if (micro != null)
             {
@@ -74,7 +73,7 @@ namespace Microdancer
             }
             else
             {
-                var nodes = node?.Children ?? Library.GetNodes().ToList();
+                var nodes = node?.Children ?? Library.GetNodes();
 
                 if (nodes.Count > 0)
                 {

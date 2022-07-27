@@ -329,6 +329,7 @@ namespace Microdancer
                     ImGui.PushStyleColor(ImGuiCol.Text, Theme.GetColor(ImGuiCol.TextDisabled));
                     ImGui.TreeNodeEx($"{_idPrefix}{node.Id}empty", ImGuiTreeNodeFlags.Leaf, "- None -");
                     ImGui.PopStyleColor();
+                    ImGui.TreePop();
                 }
             }
 

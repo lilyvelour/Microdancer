@@ -70,8 +70,6 @@ namespace Microdancer
 
                     ImGui.PopStyleVar();
 
-                    ImGui.Spacing();
-
                     break;
             }
 
