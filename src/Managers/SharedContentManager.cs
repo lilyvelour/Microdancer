@@ -56,6 +56,13 @@ namespace Microdancer
             {
                 try
                 {
+                    // Don't update shared content if the window is hidden
+                    if (!_pluginInterface.Configuration().WindowVisible)
+                    {
+                        await Task.Delay(tickRate);
+                        continue;
+                    }
+
                     if (!_clientState.IsLoggedIn)
                     {
                         await ClearSharedFolder();
