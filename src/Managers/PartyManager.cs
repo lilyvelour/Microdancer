@@ -44,10 +44,7 @@ namespace Microdancer
         private delegate IntPtr InfoProxyCrossRealm_GetPtr();
         public delegate byte GetCrossRealmPartySize();
 
-        //private readonly InfoProxyCrossRealm_GetPtr InfoProxyCrossRealm_GetPtrDelegate;
-        //private readonly GetCrossRealmPartySize getCrossRealmPartySize;
-
-        private InfoProxyCrossRealm* _infoProxyCrossRealm;
+        private readonly InfoProxyCrossRealm* _infoProxyCrossRealm;
 
         private readonly DataManager _dataManager;
         private readonly GameGui _gameGui;
@@ -55,7 +52,6 @@ namespace Microdancer
         private readonly PartyList _partyList;
 
         public PartyManager(
-            SigScanner sigScanner,
             DataManager dataManager,
             GameGui gameGui,
             ClientState clientState,
@@ -68,67 +64,21 @@ namespace Microdancer
             _clientState = clientState;
             _partyList = partyList;
             _infoProxyCrossRealm = InfoProxyCrossRealm.Instance();
-
-            // // This needs to be started when the plugin is loaded to identify the
-            // // location in memory where the cross-world party exists. This will
-            // // probably break if SE ever changes the offsets or the layout
-            // // of the CrossRealmGroup class.
-            // // src: gist.github.com/Eternita-S/c21192996d181c41740c6322f2760e16
-            // var ipcr_ptr = sigScanner.ScanText(Signatures.InfoProxyCrossRealm);
-            // InfoProxyCrossRealm_GetPtrDelegate = Marshal.GetDelegateForFunctionPointer<InfoProxyCrossRealm_GetPtr>(
-            //     ipcr_ptr
-            // );
-            // var gcrps_ptr = sigScanner.ScanText(Signatures.GetCrossRealmPartySize);
-            // getCrossRealmPartySize = Marshal.GetDelegateForFunctionPointer<GetCrossRealmPartySize>(gcrps_ptr);
         }
 
-        // private PartyMember GetCrossRealmPlayer(int index)
-        // {
-        //     // Utilizes the results of the SigScanner from Init() to locate
-        //     // information about a specific crossworld player and build a
-        //     // playerInfo object based on the provided index. If there's any error,
-        //     // returns a default playerInfo object instead
-        //     try
-        //     {
-        //         var playerPtr = InfoProxyCrossRealm_GetPtrDelegate() + 0x3c2 + 0x50 * index;
-        //         var playerName = Marshal.PtrToStringUTF8(playerPtr + 0x8) ?? "NotFound";
-        //         var world = WorldNameFromByte(*(byte*)playerPtr);
-        //         return new PartyMember(playerName, world);
-        //     }
-        //     catch
-        //     {
-        //         return new PartyMember("NotFound", "NotFound");
-        //     }
-        // }
-
-        private string WorldNameFromByte(byte worldByte)
+        private string ByteToWorld(byte worldByte)
         {
-            // Given a byte for a specific world (SE decides how these are mapped),
-            // this method will search the Worlds excel sheet (provided by Dalamud)
-            // to resolve to a string of the actual world name. This is basically the
-            // same method as classJobFromByte but uses World instead of classJob and
-            // I'm sure some kind of template could combine these two, but I'm not
-            // familiar enough with templates for a robust solution.
-#pragma warning disable 8632
             var worldSheet = _dataManager.GetExcelSheet<World>();
-            var worlds = worldSheet?.ToArray();
-            if (worlds != null) // We found the worlds!
+            var world = worldSheet?.GetRow(worldByte);
+
+            if (world != null)
             {
-                var world = Array.Find(worlds, x => x.RowId == worldByte);
-                if (world != null)
-                {
-                    return world.Name.ToString();
-                }
-                else
-                {
-                    return $"UnknownWorldForByteID={worldByte}";
-                }
+                return world.Name.ToString();
             }
             else
             {
-                return "UnableToFindWorld";
+                return $"UnknownWorldForByteID={worldByte}";
             }
-#pragma warning restore 8632
         }
 
         private int GetPartyType()
@@ -187,7 +137,7 @@ namespace Microdancer
             }
 
             var localPlayerName = localPlayer.Name.ToString();
-            var localPlayerWorld = WorldNameFromByte((byte)localPlayer.HomeWorld.Id);
+            var localPlayerWorld = ByteToWorld((byte)localPlayer.HomeWorld.Id);
             var localPlayerInfo = new PartyMember(localPlayerName, localPlayerWorld);
             output.Add(localPlayerInfo);
 
@@ -214,8 +164,8 @@ namespace Microdancer
                 }
 
                 tempName = member.Name.ToString();
-                tempWorld = WorldNameFromByte((byte)member.World.Id);
-                output.Add(new PartyMember(tempName, tempWorld));
+                tempWorld = ByteToWorld((byte)member.World.Id);
+                output.Add(new(tempName, tempWorld));
             }
             return output;
         }
@@ -226,24 +176,26 @@ namespace Microdancer
             // assuming the party is a cross-world party
             var output = new List<PartyMember>();
             const int maxNameLength = 30;
+            const int cwPartyIndex = 0;
 
-            var cwPartyIndex = 0;
             var cwPartyCount = InfoProxyCrossRealm.GetGroupMemberCount(cwPartyIndex);
 
-            for (int j = 0; j < cwPartyCount; j++)
+            for (var i = 0; i < cwPartyCount; ++i)
             {
-                var partyMember = InfoProxyCrossRealm.fpGetGroupMember((uint)j, cwPartyIndex);
+                var groupMember = InfoProxyCrossRealm.fpGetGroupMember((uint)i, cwPartyIndex);
 
-                var name = Encoding.UTF8.GetString(partyMember->Name, maxNameLength).Trim();
-                var homeWorld = _dataManager.Excel.GetSheet<World>()?.GetRow((uint)partyMember->HomeWorld)?.Name;
+                var nameRaw = Encoding.UTF8.GetString(groupMember->Name, maxNameLength);
+                var name = new string(nameRaw.TakeWhile(chr => chr > 0).ToArray());
+                var homeWorld = ByteToWorld((byte)groupMember->HomeWorld);
 
-                if (homeWorld == null)
+                if (string.IsNullOrWhiteSpace(homeWorld))
                 {
                     PluginLog.Log($"Unable to parse home world for party member '{name}'");
                     continue;
                 }
 
-                output.Add(new(name, homeWorld));
+                var partyMember = new PartyMember(name, homeWorld);
+                output.Add(partyMember);
             }
 
             return output;

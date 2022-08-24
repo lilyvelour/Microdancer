@@ -173,8 +173,9 @@ namespace Microdancer
 
                     await Task.Delay(tickRate);
                 }
-                catch
+                catch (Exception e)
                 {
+                    PluginLog.Warning(e.Message);
                     await Task.Delay(tickRate);
                 }
             }
