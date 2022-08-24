@@ -224,7 +224,7 @@ namespace Microdancer
                     UseItem = Marshal.GetDelegateForFunctionPointer<UseItemDelegate>(
                         _sigScanner.ScanText(Signatures.UseItem)
                     );
-                    itemContextMenuAgent = (IntPtr)agentModule->GetAgentByInternalID(10);
+                    itemContextMenuAgent = (IntPtr)agentModule->GetAgentByInternalID((uint)AgentId.InventoryContext); // TODO: May break in 6.2
 
                     GetActionId = Marshal.GetDelegateForFunctionPointer<GetActionIdDelegate>(
                         _sigScanner.ScanText(Signatures.GetActionId)

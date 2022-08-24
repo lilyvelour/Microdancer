@@ -10,6 +10,6 @@
   "AssemblyVersion": "1.0.0.0",
   "ApplicableVersion": "any",
   "LoadPriority": 0,
-  "DalamudApiLevel": 6,
+  "DalamudApiLevel": 7,
   "IconUrl": "https://microdancer.s3.amazonaws.com/icon.png"
 }
