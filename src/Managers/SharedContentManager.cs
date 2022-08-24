@@ -81,14 +81,14 @@ namespace Microdancer
                         .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
                         .ToHashSet();
 
-                    // var party = _partyManager
-                    //     .GetInfoFromParty()
-                    //     .Where(p => !(p.Name == playerName && p.World == playerWorld));
+                    var party = _partyManager
+                        .GetInfoFromParty()
+                        .Where(p => !(p.Name == playerName && p.World == playerWorld));
 
-                    // foreach (var partyMember in party)
-                    // {
-                    //     nearby.Add($"{partyMember.Name}@{partyMember.World}");
-                    // }
+                    foreach (var partyMember in party)
+                    {
+                        nearby.Add($"{partyMember.Name}@{partyMember.World}");
+                    }
 
                     var shared = _pluginInterface
                         .Configuration()

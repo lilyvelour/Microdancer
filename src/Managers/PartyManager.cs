@@ -11,6 +11,9 @@ using Dalamud.Data;
 using Dalamud.Game.Gui;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
+using FFXIVClientStructs.FFXIV.Client.UI.Info;
+using Dalamud.Game.Text.SeStringHandling;
+using System.Text;
 
 namespace Microdancer
 {
@@ -41,8 +44,10 @@ namespace Microdancer
         private delegate IntPtr InfoProxyCrossRealm_GetPtr();
         public delegate byte GetCrossRealmPartySize();
 
-        private readonly InfoProxyCrossRealm_GetPtr InfoProxyCrossRealm_GetPtrDelegate;
-        private readonly GetCrossRealmPartySize getCrossRealmPartySize;
+        //private readonly InfoProxyCrossRealm_GetPtr InfoProxyCrossRealm_GetPtrDelegate;
+        //private readonly GetCrossRealmPartySize getCrossRealmPartySize;
+
+        private InfoProxyCrossRealm* _infoProxyCrossRealm;
 
         private readonly DataManager _dataManager;
         private readonly GameGui _gameGui;
@@ -62,69 +67,39 @@ namespace Microdancer
             _gameGui = gameGui;
             _clientState = clientState;
             _partyList = partyList;
+            _infoProxyCrossRealm = InfoProxyCrossRealm.Instance();
 
-            // This needs to be started when the plugin is loaded to identify the
-            // location in memory where the cross-world party exists. This will
-            // probably break if SE ever changes the offsets or the layout
-            // of the CrossRealmGroup class.
-            // src: gist.github.com/Eternita-S/c21192996d181c41740c6322f2760e16
-            var ipcr_ptr = sigScanner.ScanText(Signatures.InfoProxyCrossRealm);
-            InfoProxyCrossRealm_GetPtrDelegate = Marshal.GetDelegateForFunctionPointer<InfoProxyCrossRealm_GetPtr>(
-                ipcr_ptr
-            );
-            var gcrps_ptr = sigScanner.ScanText(Signatures.GetCrossRealmPartySize);
-            getCrossRealmPartySize = Marshal.GetDelegateForFunctionPointer<GetCrossRealmPartySize>(gcrps_ptr);
+            // // This needs to be started when the plugin is loaded to identify the
+            // // location in memory where the cross-world party exists. This will
+            // // probably break if SE ever changes the offsets or the layout
+            // // of the CrossRealmGroup class.
+            // // src: gist.github.com/Eternita-S/c21192996d181c41740c6322f2760e16
+            // var ipcr_ptr = sigScanner.ScanText(Signatures.InfoProxyCrossRealm);
+            // InfoProxyCrossRealm_GetPtrDelegate = Marshal.GetDelegateForFunctionPointer<InfoProxyCrossRealm_GetPtr>(
+            //     ipcr_ptr
+            // );
+            // var gcrps_ptr = sigScanner.ScanText(Signatures.GetCrossRealmPartySize);
+            // getCrossRealmPartySize = Marshal.GetDelegateForFunctionPointer<GetCrossRealmPartySize>(gcrps_ptr);
         }
 
-        private PartyMember GetCrossRealmPlayer(int index)
-        {
-            // Utilizes the results of the SigScanner from Init() to locate
-            // information about a specific crossworld player and build a
-            // playerInfo object based on the provided index. If there's any error,
-            // returns a default playerInfo object instead
-            try
-            {
-                var playerPtr = InfoProxyCrossRealm_GetPtrDelegate() + 0x3c2 + 0x50 * index;
-                var playerName = Marshal.PtrToStringUTF8(playerPtr + 0x8) ?? "NotFound";
-                var world = WorldNameFromByte(*(byte*)playerPtr);
-                return new PartyMember(playerName, world);
-            }
-            catch
-            {
-                return new PartyMember("NotFound", "NotFound");
-            }
-        }
-
-        private string ClassJobFromByte(byte classJobByte)
-        {
-            // Given a classJob byte, returns a string correlating to the actual
-            // classJob. This isn't really used since in regular parties, the job
-            // is not known to the client unless you are in the same zone as the
-            // party member. In that case, the classJob ends up resolving to the
-            // default "adventurer". The actual information is *somewhere* in the
-            // memory since you can see the job in the party list... but I don't
-            // want to deal with that :3 + I don't really care that much.
-#pragma warning disable 8632
-            var ClassJobSheet = _dataManager.GetExcelSheet<ClassJob>();
-            var ClassJobs = ClassJobSheet?.ToArray();
-            if (ClassJobs != null) // We found the ClassJobs!
-            {
-                ClassJob? ClassJob = Array.Find(ClassJobs, x => x.RowId == classJobByte);
-                if (ClassJob != null)
-                {
-                    return ClassJob.Name.ToString();
-                }
-                else
-                {
-                    return $"UnknownClassJobForByteID={classJobByte}";
-                }
-            }
-            else
-            {
-                return "UnableToFindWorld";
-            }
-#pragma warning restore 8632
-        }
+        // private PartyMember GetCrossRealmPlayer(int index)
+        // {
+        //     // Utilizes the results of the SigScanner from Init() to locate
+        //     // information about a specific crossworld player and build a
+        //     // playerInfo object based on the provided index. If there's any error,
+        //     // returns a default playerInfo object instead
+        //     try
+        //     {
+        //         var playerPtr = InfoProxyCrossRealm_GetPtrDelegate() + 0x3c2 + 0x50 * index;
+        //         var playerName = Marshal.PtrToStringUTF8(playerPtr + 0x8) ?? "NotFound";
+        //         var world = WorldNameFromByte(*(byte*)playerPtr);
+        //         return new PartyMember(playerName, world);
+        //     }
+        //     catch
+        //     {
+        //         return new PartyMember("NotFound", "NotFound");
+        //     }
+        // }
 
         private string WorldNameFromByte(byte worldByte)
         {
@@ -250,11 +225,27 @@ namespace Microdancer
             // Generates a list of playerInfo objects from the game's memory
             // assuming the party is a cross-world party
             var output = new List<PartyMember>();
-            var pSize = getCrossRealmPartySize();
-            for (int i = 0; i < pSize; i++)
+            const int maxNameLength = 30;
+
+            var cwPartyIndex = 0;
+            var cwPartyCount = InfoProxyCrossRealm.GetGroupMemberCount(cwPartyIndex);
+
+            for (int j = 0; j < cwPartyCount; j++)
             {
-                output.Add(GetCrossRealmPlayer(i));
+                var partyMember = InfoProxyCrossRealm.fpGetGroupMember((uint)j, cwPartyIndex);
+
+                var name = Encoding.UTF8.GetString(partyMember->Name, maxNameLength).Trim();
+                var homeWorld = _dataManager.Excel.GetSheet<World>()?.GetRow((uint)partyMember->HomeWorld)?.Name;
+
+                if (homeWorld == null)
+                {
+                    PluginLog.Log($"Unable to parse home world for party member '{name}'");
+                    continue;
+                }
+
+                output.Add(new(name, homeWorld));
             }
+
             return output;
         }
 
