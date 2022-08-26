@@ -5,11 +5,28 @@ namespace Microdancer
     public sealed class PickRandomCommand : CommandBase
     {
         private readonly GameManager _gameManager;
-        private readonly Random _random = new();
+        private Random _random = new();
 
         public PickRandomCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
             _gameManager = serviceLocator.Get<GameManager>();
+        }
+
+        [Command(
+            "setrandomseed",
+            "randomseed",
+            HelpMessage = "Syntax: /setrandomseed [#] - determines the seed for pickrandom, or resets to the default."
+        )]
+        public void RandomSeed(int? seed = null)
+        {
+            if (seed != null)
+            {
+                _random = new Random(seed.Value);
+            }
+            else
+            {
+                _random = new Random();
+            }
         }
 
         [Command(
