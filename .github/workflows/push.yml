@@ -10,7 +10,7 @@ jobs:
   build-and-deploy:
     env:
       ProgressPreference: "SilentlyContinue"
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -31,9 +31,10 @@ jobs:
 
       - name: Download Dalamud
         run: |
-          mkdir -p dalamud-distrib
-          wget -q https://goatcorp.github.io/dalamud-distrib/latest.zip
-          unzip -d dalamud-distrib/ latest.zip
+          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
+          Invoke-WebRequest https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile latest.zip
+          Expand-Archive -Path latest.zip -DestinationPath dalamud-distrib
+        shell: pwsh
 
       - name: Edit package manifest
         run: |
