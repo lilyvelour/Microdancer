@@ -36,13 +36,15 @@ namespace Microdancer
             pluginInterface.SavePluginConfig(Configuration(pluginInterface));
         }
 
-        public static T? RegisterService<T>(this DalamudPluginInterface _, T? service) where T : class
+        public static T? RegisterService<T>(this DalamudPluginInterface _, T? service, bool ignoreDisposable = false)
+            where T : class
         {
             if (service != null)
             {
                 _services.Add(service);
             }
-            if (service is IDisposable disposable)
+
+            if (!ignoreDisposable && service is IDisposable disposable)
             {
                 _disposables.Add(disposable);
             }

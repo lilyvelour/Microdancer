@@ -27,11 +27,14 @@ namespace Microdancer.UI
         private string? _previousConfigJson;
         private int _frameCount;
 
+        private readonly AudioManager _audioManager;
+
         public MicrodancerUi(Framework framework, ClientState clientState, Service.Locator serviceLocator)
             : base(clientState)
         {
             _framework = framework;
             _license = serviceLocator.Get<LicenseChecker>();
+            _audioManager = serviceLocator.Get<AudioManager>();
 
             _framework.Update += Update;
         }
@@ -55,6 +58,20 @@ namespace Microdancer.UI
 
             if (draw)
             {
+                // TODO: Move this
+                if (_audioManager.IsRecording)
+                {
+                    var dB = _audioManager.LinearToDecibel(_audioManager.SmoothedPeakValue);
+
+                    ImGui.PushItemWidth(100);
+                    ImGui.ProgressBar(
+                        _audioManager.SmoothedPeakValue,
+                        new(-1, 30),
+                        $"Audio level: {(dB < -250 ? "-inf" : dB.ToString("0.00"))} dB"
+                    );
+                    ImGui.PopItemWidth();
+                }
+
                 if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
                 {
                     ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");

@@ -43,6 +43,7 @@
 
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="2.1.6" />
+        <PackageReference Include="NAudio" Version="2.1.0" />
         <PackageReference Include="XivCommon" Version="6.0.0" />
     </ItemGroup>
 

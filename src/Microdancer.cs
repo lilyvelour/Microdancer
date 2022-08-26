@@ -5,6 +5,7 @@ using System.Linq;
 using Microdancer.UI;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
+using Dalamud.Game;
 
 namespace Microdancer
 {
@@ -18,16 +19,23 @@ namespace Microdancer
 
         internal static DalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-        public Microdancer(DalamudPluginInterface pluginInterface, CommandManager commandManager, ChatGui chatGui)
+        public Microdancer(
+            DalamudPluginInterface pluginInterface,
+            CommandManager commandManager,
+            ChatGui chatGui,
+            Framework framework
+        )
         {
             PluginInterface = pluginInterface;
 
             // Dalamud services we have to locate manually go here
-            pluginInterface.RegisterService(commandManager);
-            pluginInterface.RegisterService(chatGui);
+            pluginInterface.RegisterService(commandManager, ignoreDisposable: true);
+            pluginInterface.RegisterService(chatGui, ignoreDisposable: true);
+            pluginInterface.RegisterService(framework, ignoreDisposable: true);
 
             var licenseChecker = pluginInterface.CreateService<LicenseChecker>();
 
+            pluginInterface.CreateService<AudioManager>();
             pluginInterface.CreateService<GameManager>();
             pluginInterface.CreateService<PartyManager>();
             pluginInterface.CreateService<CPoseManager>();
