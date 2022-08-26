@@ -93,6 +93,7 @@ namespace Microdancer
                     break;
                 case false:
                     _volumeTriggers.Clear();
+                    _lastPeakValue_dB = float.NegativeInfinity;
                     _audioManager.StopRecording();
                     break;
                 default:
