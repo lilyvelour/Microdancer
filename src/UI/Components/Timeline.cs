@@ -69,13 +69,13 @@ namespace Microdancer
             var timecodeWidth = ImGui.CalcTextSize("##:##:##:###").X * 1.25f * ImGuiHelpers.GlobalScale;
             ImGui.SetWindowFontScale(1.0f);
 
-            var duration = _info.AllCommands.Length > 0 ? (float)_info.TotalTime.TotalSeconds : 5.0f;
+            var duration = Math.Max((float)_info.TotalTime.TotalSeconds, 5.0f);
             if (!Config.TimelineZoomFactor.TryGetValue(_info.Id, out var increment))
             {
                 Config.TimelineZoomFactor[_info.Id] = increment = 50.0f;
             }
 
-            var usableWidth = duration / increment * timecodeWidth * 1.5f;
+            var usableWidth = duration / Math.Max(increment, float.Epsilon) * timecodeWidth * 1.5f;
             var usableHeight = frameSize.Y - Theme.GetStyle<float>(ImGuiStyleVar.ScrollbarSize);
 
             var regionsSize = new Vector2(usableWidth, usableHeight * 0.33f);
