@@ -14,13 +14,30 @@ namespace Microdancer
         private static readonly Regex _waitExp =
             new(@"/wait (\d+(?:\.\d+)?)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly List<string> _specialCommands =
+            new()
+            {
+                "/defaultwait",
+                "/loop",
+                "/autocountdown",
+                "/autocd",
+                "/autoping",
+                "/autobusy",
+                "/autobussy",
+                "/captureaudio",
+                "/recordaudio",
+                "/volumetrigger",
+                "/padding",
+                "/pad"
+            };
+
         private MicroCommand? _currentCommand;
         private bool _isPlaying;
 
         public Guid Id { get; }
         public Micro Micro { get; }
         public bool IsSingleRegion { get; private set; }
-        public bool DriftCompensation { get; private set; } = true;
+        public bool FastFrames { get; private set; }
         public MicroCommand[] Commands { get; } = Array.Empty<MicroCommand>();
         public MicroRegion[] Regions { get; } = Array.Empty<MicroRegion>();
         public MicroCommand[] AllCommands { get; private set; } = Array.Empty<MicroCommand>();
@@ -181,9 +198,9 @@ namespace Microdancer
                     currentRegion = new MicroRegion(lineNumber + 1);
                     continue;
                 }
-                else if (line.StartsWith("#! disable-drift-comp"))
+                else if (line.StartsWith("#! fast-frames"))
                 {
-                    DriftCompensation = false;
+                    FastFrames = true;
                     continue;
                 }
                 else if (line.StartsWith("#"))
@@ -282,15 +299,7 @@ namespace Microdancer
                     seconds = t + 0.5f;
                 }
             }
-            else if ( // Special commands
-                command == "/defaultwait"
-                || command == "/loop"
-                || command == "/autocountdown"
-                || command == "/autocd"
-                || command == "/autoping"
-                || command == "/autobusy"
-                || command == "/autobussy"
-            )
+            else if (_specialCommands.Contains(command))
             {
                 seconds = 0;
             }

@@ -1,19 +1,18 @@
-﻿using Dalamud.Game;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState;
 using Dalamud.Game.Gui;
-using Dalamud.IoC;
 using Dalamud.Plugin;
 using System;
 using System.Linq;
-using System.Threading.Channels;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microdancer
 {
     public class MicroManager : IDisposable
     {
-        public const int FRAME_TIME = 33;
+        public const int FAST_FRAME_TIME = 33;
+        public const int DEFAULT_FRAME_TIME = 33;
+        public int _frameTime = DEFAULT_FRAME_TIME;
 
         private bool _disposedValue;
         private bool _ready;
@@ -164,6 +163,12 @@ namespace Microdancer
             // Auto-countdown
             string? autoCountdown = null;
 
+            // Flags
+            if (microInfo.FastFrames)
+            {
+                _frameTime = FAST_FRAME_TIME;
+            }
+
             // Keep track of the line we're at in the Micro
             var i = 0;
 
@@ -177,7 +182,7 @@ namespace Microdancer
             {
                 if (GetPlaybackState(microInfo, out var shouldBreakLoop) == PlaybackState.Paused)
                 {
-                    await Task.Delay(FRAME_TIME);
+                    await Task.Delay(_frameTime);
 
                     if (shouldBreakLoop)
                     {
@@ -272,6 +277,39 @@ namespace Microdancer
                     await _gameManager.ExecuteCommand("/gaction \"Glamour Plate\"");
                     await _gameManager.ExecuteCommand("/gaction \"Glamour Plate\"");
                 }
+                else if (command.Text.StartsWith("/pad ") || command.Text.StartsWith("/padding "))
+                {
+                    if (command.Text.Length > 5)
+                    {
+                        var padCommand = command.Text[(command.Text.StartsWith("/padding ") ? 9 : 5)..];
+                        var padCount = 40;
+                        var split = padCommand.Split();
+                        if (split.Length > 1)
+                        {
+                            if (int.TryParse(split[0], out padCount))
+                            {
+                                padCommand = padCommand[(padCount.ToString().Length + 1)..];
+                            }
+                            else
+                            {
+                                padCount = 40;
+                            }
+                        }
+
+                        padCount = Math.Clamp(padCount, 1, 100);
+
+                        _ = Task.Run(
+                            async () =>
+                            {
+                                for (var i = 0; i < padCount; ++i)
+                                {
+                                    await _gameManager.ExecuteCommand($"/{padCommand}");
+                                    Thread.Sleep(10);
+                                }
+                            }
+                        );
+                    }
+                }
                 // Send the command to the channel (ignore /microcancel)
                 else if (command.Text != "/microcancel")
                 {
@@ -279,17 +317,13 @@ namespace Microdancer
                 }
 
                 var waitTime = command.WaitTime - autoPing;
-                if (!microInfo.DriftCompensation)
-                {
-                    delay = TimeSpan.Zero;
-                }
                 delay += waitTime - command.CurrentTime;
                 while (delay > TimeSpan.Zero)
                 {
                     autoPing = TimeSpan.Zero;
 
                     var t = command.CurrentTime;
-                    await Task.Delay(Math.Min((int)delay.TotalMilliseconds, FRAME_TIME));
+                    await Task.Delay(Math.Min((int)delay.TotalMilliseconds, _frameTime));
                     var dt = command.CurrentTime - t;
 
                     // Micro is currently paused
@@ -325,6 +359,7 @@ namespace Microdancer
 
             if (Current == microInfo)
             {
+                _frameTime = DEFAULT_FRAME_TIME;
                 Current = null;
             }
 

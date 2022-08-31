@@ -40,5 +40,15 @@ namespace Microdancer
         {
             PrintError("This command can only be used in a Micro.");
         }
+
+        [Command(
+            "padding",
+            "pad",
+            HelpMessage = "[Micro-only] Adds padding to an emote. Syntax: /pad [# of times to pad] <command>. Commands that are padded will execute repeatedly every 5 milliseconds. The default padding is 80 times (400 milliseconds)."
+        )]
+        public void Padding(string _)
+        {
+            PrintError("This command can only be used in a Micro.");
+        }
     }
 }
