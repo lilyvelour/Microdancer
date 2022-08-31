@@ -15,6 +15,7 @@ namespace Microdancer
         [Command(
             "setrandomseed",
             "randomseed",
+            "setrandom",
             HelpMessage = "Syntax: /setrandomseed [#] - determines the seed for pickrandom, or resets to the default."
         )]
         public void RandomSeed(int? seed = null)
@@ -48,7 +49,7 @@ namespace Microdancer
             if (commands.Length > 0)
             {
                 var index = _random.Next(0, commands.Length);
-                await _gameManager.ExecuteCommand(commands[index]);
+                await _gameManager.ExecuteCommand($"/{commands[index].Trim()}");
             }
         }
     }
