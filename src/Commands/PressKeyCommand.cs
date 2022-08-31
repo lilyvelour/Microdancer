@@ -55,19 +55,19 @@ namespace Microdancer
             var releaseNextFrame = holdDuration.TotalMilliseconds <= 0;
             var keyStack = new Stack<Keys>();
 
-            if (mods.Contains("+"))
+            if (mods.Contains('+'))
             {
                 _gameManager.SendKeyHold(Keys.ShiftKey, releaseNextFrame);
                 keyStack.Push(Keys.ShiftKey);
             }
 
-            if (mods.Contains("^"))
+            if (mods.Contains('^'))
             {
                 _gameManager.SendKeyHold(Keys.ControlKey, releaseNextFrame);
                 keyStack.Push(Keys.ControlKey);
             }
 
-            if (mods.Contains("%"))
+            if (mods.Contains('%'))
             {
                 _gameManager.SendKeyHold(Keys.Menu, releaseNextFrame);
                 keyStack.Push(Keys.Menu);
