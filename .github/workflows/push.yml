@@ -13,7 +13,7 @@ jobs:
   build-and-deploy:
     env:
       ProgressPreference: "SilentlyContinue"
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -28,20 +28,17 @@ jobs:
         env:
           HUSKY: 0
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
-          dotnet restore
+          dotnet restore -p:TargetFramework=net6.0
         shell: pwsh
 
       - name: Download Dalamud
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           Invoke-WebRequest https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile latest.zip
           Expand-Archive -Path latest.zip -DestinationPath dalamud-distrib
         shell: pwsh
 
       - name: Edit package manifest
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           $ver = (./scripts/get-version.ps1).Version
           $path = './src/Microdancer.json'
           $content = Get-Content -path $path
@@ -51,28 +48,55 @@ jobs:
 
       - name: Build
         run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
           $ver = (./scripts/get-version.ps1).Version
-          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
+          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net6.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
         shell: pwsh
 
-      - name: Create icon
+      - name: Package
         run: |
-          Copy-Item 'images/icon.png' 'bin/Release/Microdancer/icon.png'
-        shell: pwsh
+          # Get version and branch
+          $verObj = ./scripts/get-version.ps1
+          $ver = $verObj.Version
+          $branch = $verObj.Branch
 
-      - name: Create repo manifest
-        run: |
-          $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText;
-          $ver = (./scripts/get-version.ps1).Version
+          # Get package folder
+          $pkg_folder = './bin/Release/Microdancer'
+
+          # Get repo file
           $path = './base_repo.json'
-          $new_path = './bin/Release/Microdancer/Microdancer.json'
+
+          # Replace version and file names in repo file
           $content = Get-Content -path $path
           $content = $content -replace '1.0.0.0',$ver
+          $content = $content -replace 'icon.png',"icon${branch}.png"
+          $content = $content -replace 'latest.zip',"latest${branch}.zip"
+
+          # Remove old JSON file
+          Remove-Item -Path "${pkg_folder}/Microdancer.json"
+
+          # Create repo file
+          $new_path = "${pkg_folder}/Microdancer${branch}.json"
           Set-Content -Path $new_path -Value $content
+
+          # Copy icon
+          Copy-Item 'images/icon.png' "bin/Release/Microdancer/icon${branch}.png"
+
+          # Rename zip file
+          Rename-Item -Path "${pkg_folder}/latest.zip" -NewName "latest${branch}.zip"
+
+          Write-Output "Created package:"
+          Write-Output ""
+
+          Write-Output "Files:"
+          Get-ChildItem "${pkg_folder}" -Name
+          Write-Output ""
+
+          Write-Output "Repo manifest:"
+          $content
+          Write-Output ""
         shell: pwsh
 
-      - name: Upload to S3
+      - name: Deploy (S3)
         uses: reggionick/s3-deploy@v3
         if: ${{ !env.ACT }}
         env:

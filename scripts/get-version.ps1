@@ -1,11 +1,22 @@
 $tag = Invoke-Expression "git describe --tags --always"
+
 $regex = [regex]"v\d+\.\d+\.\d+\-?\d*"
-$match = $regex.Match($tag)
-$result = $match.Captures[0].value
-$result = $result -replace '-', '.'
-$result = $result -replace 'v', ''
-$charCount = ($result.ToCharArray() | Where-Object { $_ -eq '.' } | Measure-Object).Count
-if ( $charCount -eq 2 ) {
-    $result += '.0'
+$tagMatch = $regex.Match($tag)
+
+$version = $tagMatch.Captures[0].value -replace '-', '.' -replace 'v', ''
+$branch = (Invoke-Expression "git branch --show-current") -replace 'main', ''
+
+$versionCharCount = ($version.ToCharArray() | Where-Object { $_ -eq '.' } | Measure-Object).Count
+if ( $versionCharCount -eq 2 ) {
+    $version += '.0'
 }
-New-Object PSObject -Property @{Version = $result }
+
+$branchCharCount = ($branch.ToCharArray()).Count
+if ( $branchCharCount -ne 0 ) {
+    $branch = '.' + $branch
+}
+
+New-Object PSObject -Property @{
+    Version = $version;
+    Branch  = $branch;
+}

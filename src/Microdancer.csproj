@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net6.0-windows7.0</TargetFramework>
+        <TargetFramework>net6-windows7.0</TargetFramework>
         <Platforms>x64</Platforms>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
@@ -44,7 +44,6 @@
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="2.1.6" />
         <PackageReference Include="NAudio" Version="2.1.0" />
-        <PackageReference Include="XivCommon" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
