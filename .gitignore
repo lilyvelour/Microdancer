@@ -363,3 +363,7 @@ FodyWeavers.xsd
 
 .notes
 .secrets
+
+/latest.zip
+/dalamud-distrib/
+/build/
