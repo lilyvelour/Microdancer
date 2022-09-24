@@ -172,10 +172,25 @@ namespace Microdancer
             return node ?? default;
         }
 
-        internal void MarkAsDirty()
+        internal void MarkAsDirty(bool forceReload = false)
         {
             EnsureWatchers();
-            _shouldRebuild = true;
+
+            if (forceReload)
+            {
+                // HACK: This could race
+                Task.Run(async () =>
+                {
+                    while (_isBuilding)
+                    {
+                        await Task.Delay(10);
+                    }
+                    _cachedNodes.Clear();
+
+                    _shouldRebuild = true;
+                    GetNodes();
+                });
+            }
         }
 
         private INode BuildLibrary(DirectoryInfo dir, out INode starred)

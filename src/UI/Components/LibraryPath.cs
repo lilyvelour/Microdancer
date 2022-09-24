@@ -30,6 +30,16 @@ namespace Microdancer
                 Directory.CreateDirectory(Config.LibraryPath);
                 Open(Config.LibraryPath);
             }
+
+            if (hasLibrary)
+            {
+                ImGui.SameLine();
+                if (ImGui.Button("Reload Library"))
+                {
+                    Library.MarkAsDirty(forceReload: true);
+                }
+            }
+
             ImGui.EndChildFrame();
 
             return true;
