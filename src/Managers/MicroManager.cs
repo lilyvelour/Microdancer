@@ -408,7 +408,9 @@ namespace Microdancer
                 return;
             }
 
-            var cdTime = TimeSpan.FromSeconds(autoCountdown == "start" ? 4.98 : 5.48);
+            var cd = autoCountdown == "start" ? 5.0 : 6.0;
+            const double reactionTimeMagicNumber = 0.02; // 20 ms
+            var cdTime = TimeSpan.FromSeconds(cd - reactionTimeMagicNumber);
             var delay = region.WaitTime - cdTime;
 
             Task.Run(
