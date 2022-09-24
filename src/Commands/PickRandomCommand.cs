@@ -5,7 +5,7 @@ namespace Microdancer
     public sealed class PickRandomCommand : CommandBase
     {
         private readonly GameManager _gameManager;
-        private Random _random = new();
+        private static Random _random = new();
 
         public PickRandomCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
