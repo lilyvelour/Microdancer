@@ -50,7 +50,7 @@ namespace Microdancer
         private async void SharedContentUpdate()
         {
             using var client = new HttpClient();
-            var tickRate = TimeSpan.FromSeconds(2.5f);
+            var tickRate = TimeSpan.FromSeconds(3.5f);
 
             while (!_disposedValue)
             {

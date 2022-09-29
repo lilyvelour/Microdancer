@@ -15,6 +15,7 @@ namespace Microdancer
         private DateTime _cacheTime = DateTime.MinValue;
 
         private DateTime? _modifiedTime;
+        private TimeSpan? _nextModifyCheck;
 
         public Micro(FileInfo file, INode? parent = null, bool isReadOnly = false) : base(file, parent, isReadOnly)
         {
@@ -24,7 +25,7 @@ namespace Microdancer
 
         public IEnumerable<string> GetBody()
         {
-            if (_cache != null && DateTime.Now - _cacheTime > TimeSpan.FromMinutes(5 + _random.NextDouble()))
+            if (_cache != null && DateTime.Now - _cacheTime > _nextModifyCheck)
             {
                 try
                 {
@@ -56,6 +57,8 @@ namespace Microdancer
                             _cache = File.ReadAllLines(Path).Take(10000).ToArray();
                             _cacheTime = DateTime.Now;
                             _modifiedTime = fi.LastWriteTime;
+                            _nextModifyCheck =
+                                TimeSpan.FromSeconds(1 + 1 * _random.NextDouble());
                             break;
                         }
                         else
