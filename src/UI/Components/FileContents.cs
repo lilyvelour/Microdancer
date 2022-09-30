@@ -17,7 +17,7 @@ namespace Microdancer
                 _info = new MicroInfo(micro);
             }
 
-            ImGui.InvisibleButton("file-contents-spacer", new(-1, 0.0f));
+            ImGui.InvisibleButton($"file-contents-spacer-{micro.Id}", new(-1, 0.0f));
 
             var framePadding = ImGui.GetStyle().FramePadding;
             var fileContentsSize = ImGui.GetContentRegionAvail();
@@ -113,7 +113,7 @@ namespace Microdancer
                     ImGui.SameLine();
 
                     ImGui.PushStyleColor(ImGuiCol.Text, textColor);
-                    if (ImGui.Selectable($"{lines[i]}##{i}", isRunning && currentLineNumber == lineNumber))
+                    if (ImGui.Selectable($"{lines[i]}##{micro.Id}-{i}", isRunning && currentLineNumber == lineNumber))
                     {
                         MicroManager.StartMicro(micro, i + 1);
                     }
