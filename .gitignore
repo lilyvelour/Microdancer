@@ -367,3 +367,5 @@ FodyWeavers.xsd
 /latest.zip
 /dalamud-distrib/
 /build/
+
+.DS_Store

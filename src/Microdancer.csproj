@@ -38,7 +38,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-		<DalamudLibPath>dalamud-distrib/</DalamudLibPath>
+		<DalamudLibPath>../dalamud-distrib/</DalamudLibPath>
     </PropertyGroup>
 
     <ItemGroup>
