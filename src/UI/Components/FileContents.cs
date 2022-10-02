@@ -12,10 +12,7 @@ namespace Microdancer
 
         public bool Draw(Micro micro)
         {
-            if (_info?.Micro != micro)
-            {
-                _info = new MicroInfo(micro);
-            }
+            _info = new MicroInfo(micro);
 
             ImGui.InvisibleButton($"file-contents-spacer-{micro.Id}", new(-1, 0.0f));
 
