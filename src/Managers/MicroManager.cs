@@ -22,6 +22,7 @@ namespace Microdancer
         private readonly GameManager _gameManager;
 
         private bool? _autoBusy;
+        private bool? _autoMare;
 
         public MicroInfo? Current { get; private set; }
 
@@ -234,6 +235,11 @@ namespace Microdancer
                         _autoBusy = false;
                     }
 
+                    if (_autoMare == true)
+                    {
+                        _autoMare = false;
+                    }
+
                     i = 0;
                     microInfo.Loop();
                     continue;
@@ -252,6 +258,15 @@ namespace Microdancer
                             await _gameManager.ExecuteCommand($"/echo Bussy Gang Bussy Gang Bussy Gang <se.{s}>");
                         }
                     }
+
+                    ++i;
+                    continue;
+                }
+                // Set auto-busy
+                else if (command.Text.StartsWith("/automare"))
+                {
+                    _autoMare = true;
+                    await _gameManager.ExecuteCommand("/mare toggle off");
 
                     ++i;
                     continue;
@@ -376,6 +391,24 @@ namespace Microdancer
                         {
                             _autoBusy = null;
                             await _gameManager.ExecuteCommand("/busy off");
+                        }
+                    }
+                );
+            }
+
+            if (_autoMare == true)
+            {
+                _autoMare = false;
+
+                await Task.Run(
+                    async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(120));
+
+                        if (_autoMare == false)
+                        {
+                            _autoMare = null;
+                            await _gameManager.ExecuteCommand("/mare toggle on");
                         }
                     }
                 );
