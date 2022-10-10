@@ -15,7 +15,7 @@ namespace Microdancer
         private bool _disposedValue;
 
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly ConcurrentBag<INode> _cachedNodes = new();
+        private readonly List<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
