@@ -191,6 +191,10 @@ namespace Microdancer
                     GetNodes();
                 });
             }
+            else
+            {
+                _shouldRebuild = true;
+            }
         }
 
         private INode BuildLibrary(DirectoryInfo dir, out INode starred)
