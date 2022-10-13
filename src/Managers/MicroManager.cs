@@ -431,8 +431,19 @@ namespace Microdancer
                 return;
             }
 
-            // Only dispatch if we have another region we can run
-            var hasNextRegion = microInfo.AllCommands[lineNumber..].Any(
+            // Only dispatch if we have another region we can run.
+            // We need to check all commands!
+            var commandIndex = 0;
+            for(var i = 0; i < microInfo.AllCommands.Length; ++i)
+            {
+                if (microInfo.AllCommands[i].LineNumber >= lineNumber)
+                {
+                    commandIndex = i;
+                    break;
+                }
+            }
+
+            var hasNextRegion = microInfo.AllCommands[commandIndex..].Any(
                 c => c.Region != region && !c.Region.IsNamedRegion && !c.Region.IsDefaultRegion
             );
 
