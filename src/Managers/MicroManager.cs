@@ -217,7 +217,7 @@ namespace Microdancer
                     }
                     else if (autoCountdown != null)
                     {
-                        DispatchAutoCountdown(microInfo, command.Region, autoCountdown, i);
+                        DispatchAutoCountdown(microInfo, command.Region, autoCountdown, command.LineNumber);
                     }
                 }
 
@@ -415,12 +415,11 @@ namespace Microdancer
             }
         }
 
-        private void DispatchAutoCountdown(MicroInfo microInfo, MicroRegion region, string autoCountdown, int i)
+        private void DispatchAutoCountdown(MicroInfo microInfo, MicroRegion region, string autoCountdown, int lineNumber)
         {
-            // Dispatch countdown task if we have any additional regions (unless we're in a named or default region)
-            var isNamedOrDefaultRegion = region.IsNamedRegion || region.IsDefaultRegion;
-
-            if (isNamedOrDefaultRegion)
+            // Don't dispatch a countdown if we're executing a named region
+            var isNamedRegion = region.IsNamedRegion;
+            if (isNamedRegion)
             {
                 return;
             }
@@ -432,7 +431,8 @@ namespace Microdancer
                 return;
             }
 
-            var hasNextRegion = microInfo.Commands[i..].Any(
+            // Only dispatch if we have another region we can run
+            var hasNextRegion = microInfo.AllCommands[lineNumber..].Any(
                 c => c.Region != region && !c.Region.IsNamedRegion && !c.Region.IsDefaultRegion
             );
 
@@ -441,8 +441,8 @@ namespace Microdancer
                 return;
             }
 
-            var cd = autoCountdown == "start" ? 5.0 : 6.0;
-            const double reactionTimeMagicNumber = 0.02; // 20 ms
+            var cd = autoCountdown == "start" ? 5.0 : 5.75;
+            const double reactionTimeMagicNumber = 0.04; // 40 ms
             var cdTime = TimeSpan.FromSeconds(cd - reactionTimeMagicNumber);
             var delay = region.WaitTime - cdTime;
 
@@ -476,7 +476,8 @@ namespace Microdancer
             }
             else
             {
-                var autocd = command.Split(' ')[^1].Trim();
+                var autocd = command.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)[^1];
+
                 if (string.Equals(autocd, "start", StringComparison.InvariantCultureIgnoreCase))
                 {
                     autoCountdown = "start";

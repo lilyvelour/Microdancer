@@ -90,18 +90,17 @@ namespace Microdancer
             Micro = micro;
 
             var body = Micro.GetBody().ToArray();
-            IsSingleRegion = false;
 
             var commands = ParseCommands(body, null, lineNumber);
             var offsetMs = commands.Sum(
                 c =>
                 {
-                    if (c.LineNumber >= lineNumber)
+                    if (c.LineNumber >= lineNumber || c.Region.IsDefaultRegion)
                         return 0;
                     return (int)c.WaitTime.TotalMilliseconds;
                 }
             );
-            Commands = commands.Where(c => c.LineNumber >= lineNumber).ToArray();
+            Commands = commands.Where(c => c.Region.IsDefaultRegion || c.LineNumber >= lineNumber).ToArray();
 
             Regions = Commands.Select(c => c.Region).Distinct().ToArray();
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
@@ -153,6 +152,7 @@ namespace Microdancer
             var currentRegion = new MicroRegion(1);
 
             bool? overrideInclude = null;
+            var processedSingleRegion = false;
 
             for (var i = 0; i < body.Length; ++i)
             {
@@ -190,6 +190,7 @@ namespace Microdancer
                     {
                         overrideInclude = false;
                         IsSingleRegion = currentRegion?.IsNamedRegion == true;
+                        processedSingleRegion = IsSingleRegion;
                     }
                     if (currentRegion != null)
                     {
@@ -234,6 +235,11 @@ namespace Microdancer
                         overrideInclude = true;
                     }
 
+                    if (processedSingleRegion)
+                    {
+                        continue;
+                    }
+
                     if (overrideInclude == true)
                     {
                         yield return microCommand;
@@ -241,7 +247,9 @@ namespace Microdancer
                     else
                     {
                         // Don't include named regions unless they are explicitly executed
-                        if (!IsSingleRegion && currentRegion.IsNamedRegion == true)
+                        if (!IsSingleRegion
+                            && currentRegion.IsNamedRegion == true
+                            && !currentRegion.IsDefaultRegion)
                         {
                             continue;
                         }
