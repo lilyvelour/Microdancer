@@ -247,7 +247,9 @@ namespace Microdancer
                         }
 
                         // Only include executable commands
-                        if (!IsSingleRegion || region == currentRegion.Name)
+                        if (!IsSingleRegion ||
+                            region == currentRegion.Name ||
+                            currentRegion.IsDefaultRegion)
                         {
                             yield return microCommand;
                         }
