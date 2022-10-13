@@ -262,7 +262,7 @@ namespace Microdancer
                     ++i;
                     continue;
                 }
-                // Set auto-busy
+                // Set auto-mare
                 else if (command.Text.StartsWith("/automare"))
                 {
                     _autoMare = true;
@@ -403,7 +403,7 @@ namespace Microdancer
                 await Task.Run(
                     async () =>
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(120));
+                        await Task.Delay(TimeSpan.FromMinutes(10));
 
                         if (_autoMare == false)
                         {
