@@ -49,8 +49,8 @@ namespace Microdancer
         public MicroRegion(string? name, bool isNamedRegion, int lineNumber)
         {
             Name = name ?? string.Empty;
-            IsNamedRegion = isNamedRegion;
             IsDefaultRegion = name == null;
+            IsNamedRegion = isNamedRegion && !IsDefaultRegion;
             StartLineNumber = lineNumber;
         }
 
