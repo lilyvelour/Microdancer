@@ -276,7 +276,7 @@ namespace Microdancer
 #region :Before
 /target <me> <wait.0>
 /bm off <wait.0>
-/setpose weapon 2 <wait.0>
+/setpose weapon 1 <wait.0>
 /setpose stand 1 <wait.0>
 /snapchange ""[My Gear Set]"" <wait.2>
 #endregion
