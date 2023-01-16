@@ -22,13 +22,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.201
+          dotnet-version: 7.0.102
 
       - name: Restore dependencies
         env:
           HUSKY: 0
         run: |
-          dotnet restore -p:TargetFramework=net6.0
+          dotnet restore -p:TargetFramework=net7.0
         shell: pwsh
 
       - name: Download Dalamud
@@ -49,7 +49,7 @@ jobs:
       - name: Build
         run: |
           $ver = (./scripts/get-version.ps1).Version
-          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net6.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
+          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net7.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
         shell: pwsh
 
       - name: Package

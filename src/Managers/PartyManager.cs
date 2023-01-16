@@ -182,7 +182,7 @@ namespace Microdancer
 
             for (var i = 0; i < cwPartyCount; ++i)
             {
-                var groupMember = InfoProxyCrossRealm.fpGetGroupMember((uint)i, cwPartyIndex);
+                var groupMember = InfoProxyCrossRealm.GetGroupMember((uint)i, cwPartyIndex);
 
                 var nameRaw = Encoding.UTF8.GetString(groupMember->Name, maxNameLength);
                 var name = new string(nameRaw.TakeWhile(chr => chr > 0).ToArray());

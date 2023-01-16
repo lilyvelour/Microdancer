@@ -86,10 +86,10 @@ namespace Microdancer
             {
                 PoseType.Stand => 7,
                 PoseType.Weapon => 2,
-                PoseType.Sit => 3,
+                PoseType.Sit => 5,
                 PoseType.GroundSit => 4,
                 PoseType.Doze => 3,
-                PoseType.Parasol => 3,
+                PoseType.Parasol => 4,
                 _ => 0,
             };
         }

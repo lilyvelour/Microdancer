@@ -38,7 +38,6 @@ namespace Microdancer
             return result;
         }
 
-        [Obsolete("Cause it aint", false)]
         private bool DrawImpl(INode node, string? filter, ref bool shouldDraw)
         {
             if (node == null)
@@ -229,7 +228,7 @@ namespace Microdancer
                     _ignoreInput = true;
                 }
 
-                if (ImGui.IsKeyPressed(ImGui.GetKeyIndex(ImGuiKey.Escape)))
+                if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 {
                     _renaming = Guid.Empty;
                     _newName = string.Empty;

@@ -12,7 +12,6 @@ namespace Microdancer
 
         private float _lastColumnWidth;
 
-        [Obsolete("Cause it aint", false)] // HACK
         public bool Draw(Micro micro)
         {
             if (MicroManager.Current?.Micro == micro)
@@ -170,7 +169,7 @@ namespace Microdancer
 
             if (newColumnWidth != null && regions.Length > 0 && !ImGui.IsMouseDragging(ImGuiMouseButton.Left))
             {
-                ImGui.SetColumnOffset(2, Math.Max(ImGui.GetWindowContentRegionWidth() - newColumnWidth.Value, 2));
+                ImGui.SetColumnOffset(2, Math.Max(ImGui.GetWindowContentRegionMax().X - newColumnWidth.Value, 2));
                 _lastColumnWidth = newColumnWidth.Value;
             }
 
