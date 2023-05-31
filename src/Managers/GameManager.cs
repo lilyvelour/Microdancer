@@ -116,8 +116,6 @@ namespace Microdancer
         public ref uint QueuedUseType => ref *(uint*)(ActionManager + 0x80);
         public ref uint QueuedPVPAction => ref *(uint*)(ActionManager + 0x84);
 
-        public IntPtr CPoseSettings = IntPtr.Zero;
-
         public ValueTask ExecuteCommand(string command, byte actionCommandRequestType = 2)
         {
             return _channel.Writer.WriteAsync((command, actionCommandRequestType));
@@ -174,6 +172,15 @@ namespace Microdancer
 
             GetKeyState(stateIndex) &= ~1;
             return true;
+        }
+
+        private delegate void DoPerformActionDelegate(IntPtr performInfoPtr, uint instrumentId, int a3 = 0);
+        private DoPerformActionDelegate? DoPerformAction;
+        private IntPtr PerformanceStruct;
+
+        public void OpenInstrument(uint instrumentId)
+        {
+            DoPerformAction?.Invoke(PerformanceStruct, instrumentId);
         }
 
         private void Initialize()
@@ -278,12 +285,16 @@ namespace Microdancer
 
             try
             {
-                CPoseSettings = _sigScanner.GetStaticAddressFromSig(Signatures.CPoseSettings);
+                DoPerformAction = Marshal.GetDelegateForFunctionPointer<DoPerformActionDelegate>(
+                    _sigScanner.ScanText(Signatures.DoPerformAction)
+                );
+                PerformanceStruct = _sigScanner
+                    .GetStaticAddressFromSig(Signatures.PerformanceStructPtr);
             }
             catch (Exception e)
             {
                 PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load CPoseSettings");
+                PluginLog.LogWarning("Failed to load DoPerformAction");
             }
         }
 

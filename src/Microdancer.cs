@@ -38,7 +38,6 @@ namespace Microdancer
             pluginInterface.CreateService<AudioManager>();
             pluginInterface.CreateService<GameManager>();
             pluginInterface.CreateService<PartyManager>();
-            pluginInterface.CreateService<CPoseManager>();
             pluginInterface.CreateService<MicroManager>();
             pluginInterface.CreateService<LibraryManager>();
             pluginInterface.CreateService<SharedContentManager>();
