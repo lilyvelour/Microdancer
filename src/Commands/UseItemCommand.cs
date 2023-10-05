@@ -1,35 +1,31 @@
-using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dalamud.Data;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
     public sealed class UseItemCommand : CommandBase
     {
-        private readonly DataManager _dataManager;
+        private readonly IDataManager _dataManager;
         private readonly GameManager _gameManager;
 
         private Dictionary<uint, string>? _usableItems;
 
-        public UseItemCommand(DataManager dataManager, Service.Locator serviceLocator) : base(serviceLocator)
+        public UseItemCommand(IDataManager dataManager, Service.Locator serviceLocator) : base(serviceLocator)
         {
             _dataManager = dataManager;
             _gameManager = serviceLocator.Get<GameManager>();
 
             Task.Run(
-                async () =>
+                /*async*/ () =>
                 {
-                    while (!_dataManager.IsDataReady)
-                    {
-                        await Task.Delay(TimeSpan.FromMilliseconds(10));
-                    }
+                    // TODO: Is this still needed?
+                    // while (!_dataManager.IsDataReady)
+                    // {
+                    //     await Task.Delay(TimeSpan.FromMilliseconds(10));
+                    // }
 
                     _usableItems = _dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!
                         .Where(i => i.ItemAction.Row > 0)

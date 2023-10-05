@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
@@ -15,15 +14,17 @@ namespace Microdancer
         private bool _disposedValue;
 
         private readonly DalamudPluginInterface _pluginInterface;
+        private readonly IPluginLog _pluginLog;
         private readonly List<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
 
-        public LibraryManager(DalamudPluginInterface pluginInterface, Service.Locator _)
+        public LibraryManager(DalamudPluginInterface pluginInterface, IPluginLog pluginLog, Service.Locator _)
         {
             _pluginInterface = pluginInterface;
+            _pluginLog = pluginLog;
 
             EnsureWatchers();
         }
@@ -69,7 +70,7 @@ namespace Microdancer
         {
             try
             {
-                PluginLog.Log("[LibraryManager] Building nodes...");
+                _pluginLog.Info("[LibraryManager] Building nodes...");
 
                 var config = _pluginInterface.Configuration();
 
@@ -102,7 +103,7 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
+                _pluginLog.Error(e, e.Message);
                 _shouldRebuild = true;
             }
             finally

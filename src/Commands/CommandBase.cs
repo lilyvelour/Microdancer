@@ -6,15 +6,14 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
-using Dalamud.IoC;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
     public abstract class CommandBase : IDisposable
     {
-        private readonly CommandManager _commandManager;
-        private readonly ChatGui _chatGui;
+        private readonly ICommandManager _commandManager;
+        private readonly IChatGui _chatGui;
         private readonly LicenseChecker _license;
 
         protected Dictionary<string, CommandInfo> CommandInfo { get; } = new();
@@ -23,8 +22,8 @@ namespace Microdancer
 
         protected CommandBase(Service.Locator serviceLocator)
         {
-            _commandManager = serviceLocator.Get<CommandManager>();
-            _chatGui = serviceLocator.Get<ChatGui>();
+            _commandManager = serviceLocator.Get<ICommandManager>();
+            _chatGui = serviceLocator.Get<IChatGui>();
             _license = serviceLocator.Get<LicenseChecker>();
 
             CommandInfo = GetType()

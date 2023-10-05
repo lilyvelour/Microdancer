@@ -1,12 +1,12 @@
 using System;
-using Dalamud.Game;
+using Dalamud.Plugin.Services;
 using NAudio.Wave;
 
 namespace Microdancer
 {
     public class AudioManager : IDisposable
     {
-        private readonly Framework _framework;
+        private readonly IFramework _framework;
         private readonly WasapiLoopbackCapture _capture;
         private bool _disposedValue;
 
@@ -20,7 +20,7 @@ namespace Microdancer
             return (float)Math.Log(x) * 20.0f;
         }
 
-        public AudioManager(Framework framework, Service.Locator _)
+        public AudioManager(IFramework framework, Service.Locator _)
         {
             _framework = framework;
 
@@ -79,7 +79,7 @@ namespace Microdancer
             PeakValue = peak;
         }
 
-        private void OnFrameworkUpdate(Framework framework)
+        private void OnFrameworkUpdate(IFramework framework)
         {
             SmoothedPeakValue = MathExt.Lerp(
                 SmoothedPeakValue,

@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using Dalamud.Interface;
-using Dalamud.Logging;
 using ImGuiNET;
 
 namespace Microdancer

@@ -1,19 +1,19 @@
 using System;
-using System.Threading.Tasks;
-using Dalamud.Game.Gui;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
     public sealed class DoEmoteCommand : CommandBase
     {
-        private readonly GameGui _gameGui;
+        private readonly IGameGui _gameGui;
         private readonly GameManager _gameManager;
+        private readonly IPluginLog _pluginLog;
 
-        public DoEmoteCommand(GameGui gameGui, Service.Locator serviceLocator) : base(serviceLocator)
+        public DoEmoteCommand(IGameGui gameGui, IPluginLog pluginLog, Service.Locator serviceLocator) : base(serviceLocator)
         {
             _gameGui = gameGui;
             _gameManager = serviceLocator.Get<GameManager>();
+            _pluginLog = pluginLog;
         }
 
         [Command("doemote", HelpMessage = "Performs the specified emote by ID.")]
@@ -26,7 +26,7 @@ namespace Microdancer
 
             if (_gameManager.emoteAgent == IntPtr.Zero)
             {
-                PluginLog.LogError(
+                _pluginLog.Error(
                     "Failed to get emote agent - open the emote window and then use this command to initialize it."
                 );
                 return;
@@ -38,7 +38,7 @@ namespace Microdancer
             }
             else
             {
-                PluginLog.LogError("Emote must be specified by an ID.");
+                _pluginLog.Error("Emote must be specified by an ID.");
             }
         }
 

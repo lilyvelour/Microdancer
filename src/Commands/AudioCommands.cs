@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Dalamud.Game;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
@@ -23,7 +22,7 @@ namespace Microdancer
 
         private readonly AudioManager _audioManager;
         private readonly GameManager _gameManager;
-        private readonly Framework _framework;
+        private readonly IFramework _framework;
         private readonly TimeSpan _updateInterval;
 
         private readonly List<VolumeTriggerInfo> _volumeTriggers = new();
@@ -36,13 +35,13 @@ namespace Microdancer
             _audioManager = serviceLocator.Get<AudioManager>();
             _gameManager = serviceLocator.Get<GameManager>();
 
-            _framework = serviceLocator.Get<Framework>();
+            _framework = serviceLocator.Get<IFramework>();
             _framework.Update += OnUpdate;
 
             _updateInterval = TimeSpan.FromMilliseconds(10);
         }
 
-        private async void OnUpdate(Framework framework)
+        private async void OnUpdate(IFramework framework)
         {
             var now = DateTime.Now;
             if (now - _lastUpdate >= _updateInterval)

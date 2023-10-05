@@ -1,6 +1,5 @@
-﻿using Dalamud.Game.ClientState;
-using Dalamud.Game.Gui;
-using Dalamud.Plugin;
+﻿using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using System;
 using System.Linq;
 using System.Threading;
@@ -17,8 +16,8 @@ namespace Microdancer
         private bool _disposedValue;
         private bool _ready;
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly ClientState _clientState;
-        private readonly ChatGui _chatGui;
+        private readonly IClientState _clientState;
+        private readonly IChatGui _chatGui;
         private readonly GameManager _gameManager;
 
         private bool? _autoBusy;
@@ -28,8 +27,8 @@ namespace Microdancer
 
         public MicroManager(
             DalamudPluginInterface pluginInterface,
-            ClientState clientState,
-            ChatGui chatGui,
+            IClientState clientState,
+            IChatGui chatGui,
             Service.Locator serviceLocator
         )
         {
@@ -107,12 +106,12 @@ namespace Microdancer
             Task.Run(() => ExecuteMicro(Current));
         }
 
-        private void Login(object? sender, EventArgs args)
+        private void Login()
         {
             _ready = true;
         }
 
-        private void Logout(object? sender, EventArgs args)
+        private void Logout()
         {
             _ready = false;
 

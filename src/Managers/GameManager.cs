@@ -3,14 +3,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Dalamud;
 using Dalamud.Game;
-using Dalamud.Game.Gui;
-using Dalamud.IoC;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using XIVFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Dalamud.Game.ClientState;
 using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -21,11 +18,12 @@ namespace Microdancer
     // https://github.com/Ottermandias/AutoVisor/blob/c0b22286119d6ff207715c3dd1726137bb146863/SeFunctions/CPoseSettings.cs
     public unsafe class GameManager : IDisposable
     {
-        private readonly GameGui _gameGui;
-        private readonly SigScanner _sigScanner;
-        private readonly ClientState _clientState;
-        private readonly Framework _framework;
-        private readonly Condition _condition;
+        private readonly IGameGui _gameGui;
+        private readonly ISigScanner _sigScanner;
+        private readonly IClientState _clientState;
+        private readonly IFramework _framework;
+        private readonly ICondition _condition;
+        private readonly IPluginLog _pluginLog;
         private readonly Channel<(string command, byte actionCommandRequestType)> _channel =
             Channel.CreateUnbounded<(string, byte)>();
 
@@ -34,11 +32,12 @@ namespace Microdancer
         private bool _disposedValue;
 
         public GameManager(
-            GameGui gameGui,
-            SigScanner sigScanner,
-            ClientState clientState,
-            Framework framework,
-            Condition condition,
+            IGameGui gameGui,
+            ISigScanner sigScanner,
+            IClientState clientState,
+            IFramework framework,
+            ICondition condition,
+            IPluginLog pluginLog,
             Service.Locator _
         )
         {
@@ -47,6 +46,7 @@ namespace Microdancer
             _clientState = clientState;
             _framework = framework;
             _condition = condition;
+            _pluginLog = pluginLog;
 
             _framework.Update += Update;
 
@@ -194,8 +194,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load ProcessChatBox");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to load ProcessChatBox");
             }
 
             try
@@ -205,8 +205,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load /walk");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to load /walk");
             }
 
             try
@@ -222,8 +222,8 @@ namespace Microdancer
                 }
                 catch (Exception e)
                 {
-                    PluginLog.LogError(e, e.Message);
-                    PluginLog.LogWarning("Failed to load /doemote");
+                    _pluginLog.Error(e, e.Message);
+                    _pluginLog.Warning("Failed to load /doemote");
                 }
 
                 try
@@ -239,14 +239,14 @@ namespace Microdancer
                 }
                 catch (Exception e)
                 {
-                    PluginLog.LogError(e, e.Message);
-                    PluginLog.LogWarning("Failed to load /useitem");
+                    _pluginLog.Error(e, e.Message);
+                    _pluginLog.Warning("Failed to load /useitem");
                 }
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to get agent module");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to get agent module");
             }
 
             // Located 1 function deep in Client__UI__Shell__ShellCommandAction_ExecuteCommand
@@ -256,8 +256,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load /qac");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to load /qac");
             }
 
             try
@@ -269,8 +269,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load /sendkey");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to load /sendkey");
             }
 
             try
@@ -279,8 +279,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load ActionManager");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to load ActionManager");
             }
 
             try
@@ -293,8 +293,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                PluginLog.LogError(e, e.Message);
-                PluginLog.LogWarning("Failed to load DoPerformAction");
+                _pluginLog.Error(e, e.Message);
+                _pluginLog.Warning("Failed to load DoPerformAction");
             }
         }
 
@@ -316,11 +316,11 @@ namespace Microdancer
             }
             catch
             {
-                PluginLog.LogError("ExecuteCommand: Failed injecting command");
+                _pluginLog.Error("ExecuteCommand: Failed injecting command");
             }
         }
 
-        private void Update(Framework _)
+        private void Update(IFramework _)
         {
             if (_heldKeys.Count > 0)
             {

@@ -1,18 +1,10 @@
 using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using Dalamud.Logging;
-using Dalamud.Game.ClientState.Party;
 using Lumina.Excel.GeneratedSheets;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using Dalamud.Game;
-using Dalamud.Data;
-using Dalamud.Game.Gui;
-using Dalamud.Game.ClientState;
-using Dalamud.IoC;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
-using Dalamud.Game.Text.SeStringHandling;
 using System.Text;
 
 namespace Microdancer
@@ -46,16 +38,18 @@ namespace Microdancer
 
         private readonly InfoProxyCrossRealm* _infoProxyCrossRealm;
 
-        private readonly DataManager _dataManager;
-        private readonly GameGui _gameGui;
-        private readonly ClientState _clientState;
-        private readonly PartyList _partyList;
+        private readonly IDataManager _dataManager;
+        private readonly IGameGui _gameGui;
+        private readonly IClientState _clientState;
+        private readonly IPartyList _partyList;
+        private readonly IPluginLog _pluginLog;
 
         public PartyManager(
-            DataManager dataManager,
-            GameGui gameGui,
-            ClientState clientState,
-            PartyList partyList,
+            IDataManager dataManager,
+            IGameGui gameGui,
+            IClientState clientState,
+            IPartyList partyList,
+            IPluginLog pluginLog,
             Service.Locator _
         )
         {
@@ -63,6 +57,7 @@ namespace Microdancer
             _gameGui = gameGui;
             _clientState = clientState;
             _partyList = partyList;
+            _pluginLog = pluginLog;
             _infoProxyCrossRealm = InfoProxyCrossRealm.Instance();
         }
 
@@ -116,13 +111,13 @@ namespace Microdancer
                     case "Alliance I":
                         return 3;
                     default:
-                        PluginLog.Debug($"PartyLookup: Warning (Unexpected party type): {pType}");
+                        _pluginLog.Debug($"PartyLookup: Warning (Unexpected party type): {pType}");
                         return -1;
                 }
             }
             catch (Exception e)
             {
-                PluginLog.Error(e, e.Message);
+                _pluginLog.Error(e, e.Message);
                 return -1;
             }
         }
@@ -190,7 +185,7 @@ namespace Microdancer
 
                 if (string.IsNullOrWhiteSpace(homeWorld))
                 {
-                    PluginLog.Log($"Unable to parse home world for party member '{name}'");
+                    _pluginLog.Info($"Unable to parse home world for party member '{name}'");
                     continue;
                 }
 

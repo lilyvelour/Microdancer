@@ -2,9 +2,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System;
 using System.Net.Http.Json;
-using Dalamud.Logging;
-using Dalamud.Game.ClientState;
-using Dalamud.IoC;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
@@ -16,12 +14,12 @@ namespace Microdancer
 
         private const string ENDPOINT = "https://example.com/prod/v1/license";
 
-        public LicenseChecker(ClientState clientState, Service.Locator _)
+        public LicenseChecker(IClientState clientState, IPluginLog pluginLog, Service.Locator _)
         {
             Task.Run(
                 async () =>
                 {
-                    PluginLog.Log("Initializing license checker...");
+                    pluginLog.Info("Initializing license checker...");
 
                     while (!_disposedValue)
                     {
@@ -40,7 +38,7 @@ namespace Microdancer
 
                             using var client = new HttpClient();
 
-                            PluginLog.LogVerbose(
+                            pluginLog.Info(
                                 "Checking license status. name={0}, world={1}",
                                 playerName,
                                 playerWorld
@@ -56,18 +54,18 @@ namespace Microdancer
                                 && licenseIsValid
                             )
                             {
-                                PluginLog.LogVerbose("License valid.");
+                                pluginLog.Info("License valid.");
                                 IsValidLicense = true;
                             }
                             else
                             {
-                                PluginLog.LogWarning("Microdancer license invalid.");
+                                pluginLog.Warning("Microdancer license invalid.");
                                 IsValidLicense = false;
                             }
                         }
                         catch (Exception e)
                         {
-                            PluginLog.LogError(e, e.Message);
+                            pluginLog.Error(e, e.Message);
                             IsValidLicense = false;
                         }
                         finally

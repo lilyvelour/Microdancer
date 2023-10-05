@@ -1,18 +1,17 @@
-﻿using Dalamud.Interface;
-using ImGuiNET;
+﻿using ImGuiNET;
 using System.Numerics;
-using Dalamud.Game.ClientState;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Text.Json;
-using Dalamud.Game;
+using Dalamud.Plugin.Services;
+using Dalamud.Interface.Utility;
 
 namespace Microdancer.UI
 {
     public class MicrodancerUi : PluginWindow
     {
-        private readonly Framework _framework;
+        private readonly IFramework _framework;
         private readonly LicenseChecker _license;
         private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
@@ -29,7 +28,7 @@ namespace Microdancer.UI
 
         private readonly AudioManager _audioManager;
 
-        public MicrodancerUi(Framework framework, ClientState clientState, Service.Locator serviceLocator)
+        public MicrodancerUi(IFramework framework, IClientState clientState, Service.Locator serviceLocator)
             : base(clientState)
         {
             _framework = framework;
@@ -310,7 +309,7 @@ namespace Microdancer.UI
             }
         }
 
-        private void Update(Framework framework)
+        private void Update(IFramework framework)
         {
             _frameCount++;
 

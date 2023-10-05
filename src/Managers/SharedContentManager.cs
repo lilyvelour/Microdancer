@@ -5,14 +5,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Numerics;
-using System.Threading;
 using System.Threading.Tasks;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.IoC;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using Dalamud.Plugin;
 using IOPath = System.IO.Path;
 
@@ -21,10 +17,11 @@ namespace Microdancer
     public sealed class SharedContentManager : IDisposable
     {
         private readonly DalamudPluginInterface _pluginInterface;
-        private readonly ClientState _clientState;
-        private readonly ObjectTable _objectTable;
+        private readonly IClientState _clientState;
+        private readonly IObjectTable _objectTable;
         private readonly LibraryManager _library;
         private readonly PartyManager _partyManager;
+        private readonly IPluginLog _pluginLog;
 
         private bool _disposedValue;
 
@@ -32,19 +29,21 @@ namespace Microdancer
 
         public SharedContentManager(
             DalamudPluginInterface pluginInterface,
-            ClientState clientState,
-            ObjectTable objectTable,
+            IClientState clientState,
+            IObjectTable objectTable,
+            IPluginLog pluginLog,
             Service.Locator serviceLocator
         )
         {
             _pluginInterface = pluginInterface;
             _clientState = clientState;
             _objectTable = objectTable;
+            _pluginLog = pluginLog;
 
             _library = serviceLocator.Get<LibraryManager>();
             _partyManager = serviceLocator.Get<PartyManager>();
 
-            Task.Run(() => SharedContentUpdate());
+            Task.Run(SharedContentUpdate);
         }
 
         private async void SharedContentUpdate()
@@ -167,7 +166,7 @@ namespace Microdancer
                         }
                         catch (Exception e)
                         {
-                            PluginLog.Warning(e.Message);
+                            _pluginLog.Warning(e.Message);
                         }
                     }
 
@@ -175,7 +174,7 @@ namespace Microdancer
                 }
                 catch (Exception e)
                 {
-                    PluginLog.Warning(e.Message);
+                    _pluginLog.Warning(e.Message);
                     await Task.Delay(tickRate);
                 }
             }
@@ -242,13 +241,13 @@ namespace Microdancer
                     }
                     catch (Exception e)
                     {
-                        PluginLog.Error(e, e.Message);
+                        _pluginLog.Error(e, e.Message);
                     }
                 }
             }
             catch (Exception e)
             {
-                PluginLog.Error(e, e.Message);
+                _pluginLog.Error(e, e.Message);
             }
         }
 

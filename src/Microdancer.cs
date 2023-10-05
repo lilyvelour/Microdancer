@@ -3,9 +3,7 @@ using Dalamud.Plugin;
 using System;
 using System.Linq;
 using Microdancer.UI;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
-using Dalamud.Game;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
@@ -21,9 +19,9 @@ namespace Microdancer
 
         public Microdancer(
             DalamudPluginInterface pluginInterface,
-            CommandManager commandManager,
-            ChatGui chatGui,
-            Framework framework
+            ICommandManager commandManager,
+            IChatGui chatGui,
+            IFramework framework
         )
         {
             PluginInterface = pluginInterface;
@@ -40,6 +38,7 @@ namespace Microdancer
             pluginInterface.CreateService<PartyManager>();
             pluginInterface.CreateService<MicroManager>();
             pluginInterface.CreateService<LibraryManager>();
+            pluginInterface.CreateService<MidiManager>();
             pluginInterface.CreateService<SharedContentManager>();
             pluginInterface.CreateService<MicrodancerUi>();
 
