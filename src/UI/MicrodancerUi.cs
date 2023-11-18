@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text.Json;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
+using System.Threading.Tasks;
 
 namespace Microdancer.UI
 {
     public class MicrodancerUi : PluginWindow
     {
-        private readonly IFramework _framework;
         private readonly LicenseChecker _license;
         private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
@@ -24,18 +24,16 @@ namespace Microdancer.UI
         private Guid _focused;
         private readonly Dictionary<Guid, float> _dockReleased = new();
         private string? _previousConfigJson;
-        private int _frameCount;
 
         private readonly AudioManager _audioManager;
 
-        public MicrodancerUi(IFramework framework, IClientState clientState, Service.Locator serviceLocator)
+        public MicrodancerUi(IClientState clientState, Service.Locator serviceLocator)
             : base(clientState)
         {
-            _framework = framework;
             _license = serviceLocator.Get<LicenseChecker>();
             _audioManager = serviceLocator.Get<AudioManager>();
 
-            _framework.Update += Update;
+            Task.Run(Update);
         }
 
         public override void Draw()
@@ -309,11 +307,9 @@ namespace Microdancer.UI
             }
         }
 
-        private void Update(IFramework framework)
+        private async void Update()
         {
-            _frameCount++;
-
-            if (_frameCount % 200 == 0)
+            while (!_disposedValue)
             {
                 var configJson = JsonSerializer.Serialize(Config);
                 if (configJson != _previousConfigJson)
@@ -321,6 +317,8 @@ namespace Microdancer.UI
                     PluginInterface.SaveConfiguration();
                     _previousConfigJson = configJson;
                 }
+
+                await Task.Delay(10000);
             }
         }
 
@@ -329,11 +327,6 @@ namespace Microdancer.UI
             if (_disposedValue)
             {
                 return;
-            }
-
-            if (disposing)
-            {
-                _framework.Update -= Update;
             }
 
             base.Dispose(disposing);
