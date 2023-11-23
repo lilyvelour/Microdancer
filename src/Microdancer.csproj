@@ -50,37 +50,37 @@
         <Reference Include="Dalamud">
             <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Dalamud.dll</HintPath>
             <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/Dalamud.dll</HintPath>
-            <!--<HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Dalamud.dll</HintPath>-->
+            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/Dalamud.dll</HintPath>
             <Private>False</Private>
         </Reference>
          <Reference Include="Lumina">
             <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Lumina.dll</HintPath>
             <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/Lumina.dll</HintPath>
-            <!--<HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.dll</HintPath>-->
+            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Lumina.Excel">
             <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Lumina.Excel.dll</HintPath>
             <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/Lumina.Excel.dll</HintPath>
-            <!--<HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.Excel.dll</HintPath>-->
+            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.Excel.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="FFXIVClientStructs">
             <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/FFXIVClientStructs.dll</HintPath>
             <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/FFXIVClientStructs.dll</HintPath>
-            <!--<HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/FFXIVClientStructs.dll</HintPath>-->
+            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/FFXIVClientStructs.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="ImGui.NET">
+        <Reference Include="ImGuiNET">
             <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/ImGui.NET.dll</HintPath>
             <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/ImGui.NET.dll</HintPath>
-            <!--<HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGui.NET.dll</HintPath>-->
+            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/ImGui.NET.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ImGuiScene">
             <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/ImGuiScene.dll</HintPath>
             <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/ImGuiScene.dll</HintPath>
-            <!--<HintPath>$(AppData)/XIVLauncher/addon/Hooks/dev/ImGuiScene.dll</HintPath>-->
+            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/ImGuiScene.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>

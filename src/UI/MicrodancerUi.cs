@@ -23,7 +23,6 @@ namespace Microdancer.UI
 
         private Guid _focused;
         private readonly Dictionary<Guid, float> _dockReleased = new();
-        private string? _previousConfigJson;
 
         private readonly AudioManager _audioManager;
 
@@ -32,8 +31,6 @@ namespace Microdancer.UI
         {
             _license = serviceLocator.Get<LicenseChecker>();
             _audioManager = serviceLocator.Get<AudioManager>();
-
-            Task.Run(Update);
         }
 
         public override void Draw()
@@ -304,21 +301,6 @@ namespace Microdancer.UI
             if (!_timelines.ContainsKey(guid))
             {
                 _timelines[guid] = new Timeline();
-            }
-        }
-
-        private async void Update()
-        {
-            while (!_disposedValue)
-            {
-                var configJson = JsonSerializer.Serialize(Config);
-                if (configJson != _previousConfigJson)
-                {
-                    PluginInterface.SaveConfiguration();
-                    _previousConfigJson = configJson;
-                }
-
-                await Task.Delay(10000);
             }
         }
 

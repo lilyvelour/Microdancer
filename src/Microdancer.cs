@@ -69,6 +69,7 @@ namespace Microdancer
 
             if (disposing)
             {
+                PluginInterface.SaveConfiguration();
                 Service.DisposeAll();
             }
 
