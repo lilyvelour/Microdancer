@@ -91,9 +91,7 @@ namespace Microdancer
                         }
                     }
 
-                    _gameManager.ActionCommandRequestType = 0;
                     _gameManager.UseItem?.Invoke(_gameManager.itemContextMenuAgent, id, 9999, 0, 0);
-                    _gameManager.ActionCommandRequestType = 2;
                     break;
                 }
             }
