@@ -28,7 +28,7 @@ namespace Microdancer
             Library = serviceLocator.Get<LibraryManager>();
             MicroManager = serviceLocator.Get<MicroManager>();
             Config = PluginInterface.Configuration();
-            Theme = new BurgundyTheme(); // TODO: Configurable themes
+            Theme = new MicrodancerTheme();
         }
 
         protected void Open(string path)

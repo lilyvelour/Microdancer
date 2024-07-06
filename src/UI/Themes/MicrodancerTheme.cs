@@ -4,7 +4,7 @@ using ImGuiNET;
 
 namespace Microdancer
 {
-    public sealed class BurgundyTheme : Theme
+    public sealed class MicrodancerTheme : Theme
     {
         private readonly Dictionary<ImGuiStyleVar, object> _styles =
             new()
