@@ -18,7 +18,8 @@ namespace Microdancer
         )]
         public void Instrument(uint id)
         {
-            _gameManager.OpenInstrument(id);
+            PrintError("Command is temporarily disabled pending an update!");
+            //_gameManager.OpenInstrument(id);
         }
     }
 }

@@ -179,18 +179,21 @@ namespace Microdancer
             {
                 var groupMember = InfoProxyCrossRealm.GetGroupMember((uint)i, cwPartyIndex);
 
-                var nameRaw = Encoding.UTF8.GetString(groupMember->Name, maxNameLength);
-                var name = new string(nameRaw.TakeWhile(chr => chr > 0).ToArray());
-                var homeWorld = ByteToWorld((byte)groupMember->HomeWorld);
-
-                if (string.IsNullOrWhiteSpace(homeWorld))
+                fixed (byte* nameRawBytes = &groupMember->Name.GetPinnableReference())
                 {
-                    _pluginLog.Info($"Unable to parse home world for party member '{name}'");
-                    continue;
-                }
+                    var nameRaw = Encoding.UTF8.GetString(nameRawBytes, maxNameLength);
+                    var name = new string(nameRaw.TakeWhile(chr => chr > 0).ToArray());
+                    var homeWorld = ByteToWorld((byte)groupMember->HomeWorld);
 
-                var partyMember = new PartyMember(name, homeWorld);
-                output.Add(partyMember);
+                    if (string.IsNullOrWhiteSpace(homeWorld))
+                    {
+                        _pluginLog.Info($"Unable to parse home world for party member '{name}'");
+                        continue;
+                    }
+
+                    var partyMember = new PartyMember(name, homeWorld);
+                    output.Add(partyMember);
+                }
             }
 
             return output;

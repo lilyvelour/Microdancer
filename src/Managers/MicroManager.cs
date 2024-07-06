@@ -15,7 +15,7 @@ namespace Microdancer
 
         private bool _disposedValue;
         private bool _ready;
-        private readonly DalamudPluginInterface _pluginInterface;
+        private readonly IDalamudPluginInterface _pluginInterface;
         private readonly IClientState _clientState;
         private readonly IChatGui _chatGui;
         private readonly GameManager _gameManager;
@@ -26,7 +26,7 @@ namespace Microdancer
         public MicroInfo? Current { get; private set; }
 
         public MicroManager(
-            DalamudPluginInterface pluginInterface,
+            IDalamudPluginInterface pluginInterface,
             IClientState clientState,
             IChatGui chatGui,
             Service.Locator serviceLocator

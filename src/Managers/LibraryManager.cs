@@ -13,7 +13,7 @@ namespace Microdancer
     {
         private bool _disposedValue;
 
-        private readonly DalamudPluginInterface _pluginInterface;
+        private readonly IDalamudPluginInterface _pluginInterface;
         private readonly IPluginLog _pluginLog;
         private readonly List<INode> _cachedNodes = new();
         private bool _shouldRebuild;
@@ -21,7 +21,7 @@ namespace Microdancer
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
 
-        public LibraryManager(DalamudPluginInterface pluginInterface, IPluginLog pluginLog, Service.Locator _)
+        public LibraryManager(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog, Service.Locator _)
         {
             _pluginInterface = pluginInterface;
             _pluginLog = pluginLog;

@@ -26,17 +26,17 @@ namespace Microdancer
             }
         }
 
-        public static Configuration Configuration(this DalamudPluginInterface pluginInterface)
+        public static Configuration Configuration(this IDalamudPluginInterface pluginInterface)
         {
             return _configuration ??= pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         }
 
-        public static void SaveConfiguration(this DalamudPluginInterface pluginInterface)
+        public static void SaveConfiguration(this IDalamudPluginInterface pluginInterface)
         {
             pluginInterface.SavePluginConfig(Configuration(pluginInterface));
         }
 
-        public static T? RegisterService<T>(this DalamudPluginInterface _, T? service, bool ignoreDisposable = false)
+        public static T? RegisterService<T>(this IDalamudPluginInterface _, T? service, bool ignoreDisposable = false)
             where T : class
         {
             if (service != null)
@@ -52,18 +52,18 @@ namespace Microdancer
             return service;
         }
 
-        public static T? CreateService<T>(this DalamudPluginInterface pluginInterface) where T : class
+        public static T? CreateService<T>(this IDalamudPluginInterface pluginInterface) where T : class
         {
             var service = pluginInterface.Create<T>(new Locator());
             return RegisterService(pluginInterface, service);
         }
 
-        public static object? CreateService(this DalamudPluginInterface pluginInterface, Type type)
+        public static object? CreateService(this IDalamudPluginInterface pluginInterface, Type type)
         {
             // HACK: Not as risky since this is public code
-            var method = typeof(DalamudPluginInterface).GetMethod(nameof(DalamudPluginInterface.Create));
+            var method = typeof(IDalamudPluginInterface).GetMethod(nameof(IDalamudPluginInterface.Create));
             var generic = method!.MakeGenericMethod(type);
-            var service = generic.Invoke(pluginInterface, new object[] { new object[] { new Locator() } });
+            var service = generic.Invoke(pluginInterface, [new object[] { new Locator() }]);
 
             return RegisterService(pluginInterface, service);
         }

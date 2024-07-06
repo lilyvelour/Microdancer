@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace Microdancer
 {
@@ -49,7 +50,7 @@ namespace Microdancer
                 return;
             }
 
-            if (_usableItems == null || _gameManager.GetActionId == null || _gameManager.UseItem == null)
+            if (_usableItems == null)
             {
                 PrintError("Not yet initialized - try opening your inventory and using this command again.");
                 return;
@@ -77,7 +78,7 @@ namespace Microdancer
                     var t = DateTime.Now;
                     if (id < 2_000_000)
                     {
-                        var actionID = _gameManager.GetActionId?.Invoke(2, id) ?? 0;
+                        var actionID = _gameManager.GetSpellIdForAction(ActionType.Item, id);
                         if (actionID == 0)
                         {
                             await Task.Delay(TimeSpan.FromMilliseconds(10));
@@ -91,7 +92,7 @@ namespace Microdancer
                         }
                     }
 
-                    _gameManager.UseItem?.Invoke(_gameManager.itemContextMenuAgent, id, 9999, 0, 0);
+                    _gameManager.UseItem(id, 9999, 0, 0);
                     break;
                 }
             }

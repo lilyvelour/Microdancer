@@ -13,7 +13,7 @@ namespace Microdancer
             this.ClientState.Logout += Logout;
 
             PluginInterface.UiBuilder.Draw += Draw;
-            PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
+            PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
         }
 
         protected bool _disposedValue;
@@ -36,7 +36,7 @@ namespace Microdancer
             if (disposing)
             {
                 PluginInterface.UiBuilder.Draw -= Draw;
-                PluginInterface.UiBuilder.OpenConfigUi -= OpenConfigUi;
+                PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
                 ClientState.Logout -= Logout;
             }
 
@@ -48,7 +48,7 @@ namespace Microdancer
             Config.WindowVisible = false;
         }
 
-        private void OpenConfigUi()
+        private void OpenMainUi()
         {
             Config.WindowVisible = true;
         }

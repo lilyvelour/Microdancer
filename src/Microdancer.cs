@@ -15,10 +15,10 @@ namespace Microdancer
 
         public string Name => PLUGIN_NAME;
 
-        internal static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+        internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
         public Microdancer(
-            DalamudPluginInterface pluginInterface,
+            IDalamudPluginInterface pluginInterface,
             ICommandManager commandManager,
             IChatGui chatGui,
             IFramework framework

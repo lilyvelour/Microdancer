@@ -16,7 +16,7 @@ namespace Microdancer
         private int _lastValue = -1;
 
         public MidiManager(
-            DalamudPluginInterface pluginInterface,
+            IDalamudPluginInterface pluginInterface,
             IPluginLog pluginLog,
             Service.Locator serviceLocator
         )

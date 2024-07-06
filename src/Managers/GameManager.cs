@@ -84,18 +84,15 @@ namespace Microdancer
         public delegate void DoEmoteDelegate(IntPtr agent, uint emoteID, long a3, bool a4, bool a5);
         public DoEmoteDelegate? DoEmote;
 
-        public IntPtr itemContextMenuAgent = IntPtr.Zero;
-        public delegate void UseItemDelegate(
-            IntPtr itemContextMenuAgent,
-            uint itemID,
-            uint inventoryPage,
-            uint inventorySlot,
-            short a5
-        );
-        public UseItemDelegate? UseItem;
-
-        public delegate uint GetActionIdDelegate(uint actionType, uint actionCategoryID);
-        public GetActionIdDelegate? GetActionId;
+        private AgentInventoryContext* agentInventoryContext;
+        public uint GetSpellIdForAction(ActionType actionType, uint id)
+        {
+            return ActionManager.GetSpellIdForAction(actionType, id);
+        }
+        public void UseItem(uint id, uint inventoryType = 9999, uint itemSlot = 0, short a5 = 0)
+        {
+            agentInventoryContext->UseItem(id, inventoryType, itemSlot, a5);
+        }
 
         public IntPtr actionCommandRequestTypePtr = IntPtr.Zero;
         public byte ActionCommandRequestType
@@ -107,14 +104,6 @@ namespace Microdancer
                     SafeMemory.WriteBytes(actionCommandRequestTypePtr, new[] { value });
             }
         }
-
-        public IntPtr ActionManager = IntPtr.Zero;
-        public ref bool IsQueued => ref *(bool*)(ActionManager + 0x68);
-        public ref uint QueuedActionType => ref *(uint*)(ActionManager + 0x6C);
-        public ref uint QueuedAction => ref *(uint*)(ActionManager + 0x70);
-        public ref long QueuedTarget => ref *(long*)(ActionManager + 0x78);
-        public ref uint QueuedUseType => ref *(uint*)(ActionManager + 0x80);
-        public ref uint QueuedPVPAction => ref *(uint*)(ActionManager + 0x84);
 
         public ValueTask ExecuteCommand(string command, byte actionCommandRequestType = 2)
         {
@@ -180,7 +169,8 @@ namespace Microdancer
 
         public void OpenInstrument(uint instrumentId)
         {
-            DoPerformAction?.Invoke(PerformanceStruct, instrumentId);
+            // TODO
+            // DoPerformAction?.Invoke(PerformanceStruct, instrumentId);
         }
 
         private void Initialize()
@@ -200,7 +190,6 @@ namespace Microdancer
 
             try
             {
-                // also found around g_PlayerMoveController+523
                 walkingBoolPtr = _sigScanner.GetStaticAddressFromSig(Signatures.IsWalking);
             }
             catch (Exception e)
@@ -211,14 +200,14 @@ namespace Microdancer
 
             try
             {
-                var agentModule = XIVFramework.Instance()->GetUiModule()->GetAgentModule();
+                var agentModule = XIVFramework.Instance()->GetUIModule()->GetAgentModule();
 
                 try
                 {
                     DoEmote = Marshal.GetDelegateForFunctionPointer<DoEmoteDelegate>(
                         _sigScanner.ScanText(Signatures.DoEmote)
                     );
-                    emoteAgent = (IntPtr)agentModule->GetAgentByInternalID((uint)AgentId.Emote);
+                    emoteAgent = (IntPtr)agentModule->GetAgentByInternalId(AgentId.Emote);
                 }
                 catch (Exception e)
                 {
@@ -228,14 +217,7 @@ namespace Microdancer
 
                 try
                 {
-                    UseItem = Marshal.GetDelegateForFunctionPointer<UseItemDelegate>(
-                        _sigScanner.ScanText(Signatures.UseItem)
-                    );
-                    itemContextMenuAgent = (IntPtr)agentModule->GetAgentByInternalID((uint)AgentId.InventoryContext); // TODO: May break in 6.2
-
-                    GetActionId = Marshal.GetDelegateForFunctionPointer<GetActionIdDelegate>(
-                        _sigScanner.ScanText(Signatures.GetActionId)
-                    );
+                    agentInventoryContext = (AgentInventoryContext*)agentModule->GetAgentByInternalId(AgentId.InventoryContext);
                 }
                 catch (Exception e)
                 {
@@ -270,17 +252,7 @@ namespace Microdancer
             catch (Exception e)
             {
                 _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load /sendkey");
-            }
-
-            try
-            {
-                ActionManager = (IntPtr)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
-            }
-            catch (Exception e)
-            {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load ActionManager");
+                _pluginLog.Warning("Failed to load /presskey");
             }
 
             try

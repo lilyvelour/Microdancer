@@ -5,7 +5,7 @@ namespace Microdancer
 {
     public static class DalamudPluginExtensions
     {
-        public static string SharedFolderPath(this DalamudPluginInterface pluginInterface) =>
+        public static string SharedFolderPath(this IDalamudPluginInterface pluginInterface) =>
             Path.Combine(pluginInterface.GetPluginConfigDirectory(), "shared");
     }
 }

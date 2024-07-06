@@ -133,9 +133,9 @@ namespace Microdancer
             }
         }
 
-        private CommandInfo.HandlerDelegate GetHandler(CommandAttribute command, MethodInfo method)
+        private IReadOnlyCommandInfo.HandlerDelegate GetHandler(CommandAttribute command, MethodInfo method)
         {
-            return new CommandInfo.HandlerDelegate(
+            return new IReadOnlyCommandInfo.HandlerDelegate(
                 (_, args) =>
                 {
                     var parameters = method.GetParameters();

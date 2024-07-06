@@ -16,7 +16,8 @@ namespace Microdancer
 {
     public sealed class SharedContentManager : IDisposable
     {
-        private readonly DalamudPluginInterface _pluginInterface;
+        private readonly IDalamudPluginInterface _pluginInterface;
+        private readonly IFramework _framework;
         private readonly IClientState _clientState;
         private readonly IObjectTable _objectTable;
         private readonly LibraryManager _library;
@@ -27,8 +28,14 @@ namespace Microdancer
 
         private const string ENDPOINT = "https://example.com/prod/v1/share";
 
+        private string? _playerName;
+        private string? _playerWorld;
+        private HashSet<string>? _nearby;
+        private bool _shouldUpdateNearby;
+
         public SharedContentManager(
-            DalamudPluginInterface pluginInterface,
+            IDalamudPluginInterface pluginInterface,
+            IFramework framework,
             IClientState clientState,
             IObjectTable objectTable,
             IPluginLog pluginLog,
@@ -36,6 +43,7 @@ namespace Microdancer
         )
         {
             _pluginInterface = pluginInterface;
+            _framework = framework;
             _clientState = clientState;
             _objectTable = objectTable;
             _pluginLog = pluginLog;
@@ -43,7 +51,51 @@ namespace Microdancer
             _library = serviceLocator.Get<LibraryManager>();
             _partyManager = serviceLocator.Get<PartyManager>();
 
+            _framework.Update += UpdateNearby;
+
             Task.Run(SharedContentUpdate);
+        }
+
+        private void UpdateNearby(IFramework framework)
+        {
+            if (!_shouldUpdateNearby)
+            {
+                return;
+            }
+
+            if (!_clientState.IsLoggedIn || _clientState.LocalPlayer == null)
+            {
+                _playerName = null;
+                _playerWorld = null;
+                _nearby = null;
+                _shouldUpdateNearby = false;
+                return;
+            }
+
+            var player = _clientState.LocalPlayer;
+            var playerName = player.Name.ToString();
+            var playerWorld = player.HomeWorld.GameData?.Name.RawString ?? string.Empty;
+
+            _playerName = playerName;
+            _playerWorld = playerWorld;
+            _nearby = _objectTable
+                .Where(o => o.ObjectKind == ObjectKind.Player)
+                .Where(o => o.GameObjectId != player.GameObjectId)
+                .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
+                .Select(o => (IPlayerCharacter)o)
+                .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
+                .ToHashSet();
+
+            var party = _partyManager
+                .GetInfoFromParty()
+                .Where(p => !(p.Name == playerName && p.World == playerWorld));
+
+            foreach (var partyMember in party)
+            {
+                _nearby.Add($"{partyMember.Name}@{partyMember.World}");
+            }
+
+            _shouldUpdateNearby = false;
         }
 
         private async void SharedContentUpdate()
@@ -62,46 +114,35 @@ namespace Microdancer
                         continue;
                     }
 
-                    var player = _clientState.LocalPlayer;
-                    if (player == null)
+                    _shouldUpdateNearby = true;
+
+                    while(_shouldUpdateNearby)
+                    {
+                        await Task.Delay(tickRate);
+                    }
+
+                    var playerName = _playerName;
+                    var playerWorld = _playerWorld;
+                    var nearby = _nearby;
+                    if (playerName == null || playerWorld == null || nearby == null)
                     {
                         await Task.Delay(tickRate);
                         continue;
                     }
 
-                    var playerName = player.Name.ToString();
-                    var playerWorld = player.HomeWorld.GameData?.Name.RawString;
-
-                    var nearby = _objectTable
-                        .Where(o => o.ObjectKind == ObjectKind.Player)
-                        .Where(o => o.ObjectId != player.ObjectId)
-                        .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
-                        .Select(o => (PlayerCharacter)o)
-                        .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
-                        .ToHashSet();
-
-                    var party = _partyManager
-                        .GetInfoFromParty()
-                        .Where(p => !(p.Name == playerName && p.World == playerWorld));
-
-                    foreach (var partyMember in party)
-                    {
-                        nearby.Add($"{partyMember.Name}@{partyMember.World}");
-                    }
-
                     var shared = _pluginInterface
                         .Configuration()
-                        .SharedItems.Select(id => _library.Find<Micro>(id))
+                        .SharedItems.Select(_library.Find<Micro>)
                         .Where(micro => micro != null)
                         .Select(micro => new SharedMicro(micro!, _pluginInterface.Configuration().LibraryPath))
                         .ToArray();
 
                     var request = new SharedContent
                     {
-                        Name = player.Name.ToString(),
-                        World = player.HomeWorld.GameData?.Name.RawString ?? string.Empty,
+                        Name = playerName,
+                        World = playerWorld,
                         Timestamp = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds(),
-                        Nearby = nearby.ToArray(),
+                        Nearby = [.. nearby],
                         Shared = shared,
                     };
 
@@ -187,11 +228,16 @@ namespace Microdancer
             GC.SuppressFinalize(this);
         }
 
-        private void Dispose(bool _)
+        private void Dispose(bool disposing)
         {
             if (_disposedValue)
             {
                 return;
+            }
+
+            if (disposing)
+            {
+                _framework.Update -= UpdateNearby;
             }
 
             _disposedValue = true;

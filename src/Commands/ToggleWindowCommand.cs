@@ -5,10 +5,10 @@ namespace Microdancer
 {
     public sealed class ToggleWindowCommand : CommandBase
     {
-        private readonly DalamudPluginInterface _pluginInterface;
+        private readonly IDalamudPluginInterface _pluginInterface;
         private readonly Configuration _configuration;
 
-        public ToggleWindowCommand(DalamudPluginInterface pluginInterface, Service.Locator serviceLocator)
+        public ToggleWindowCommand(IDalamudPluginInterface pluginInterface, Service.Locator serviceLocator)
             : base(serviceLocator)
         {
             _pluginInterface = pluginInterface;
