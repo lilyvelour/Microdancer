@@ -6,6 +6,7 @@ using Dalamud.Game;
 using Dalamud.Plugin.Services;
 using XIVFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -57,21 +58,16 @@ namespace Microdancer
 
         private ProcessChatBoxDelegate? ProcessChatBox;
         private IntPtr uiModule = IntPtr.Zero;
-        private IntPtr walkingBoolPtr = IntPtr.Zero;
 
         public string? PlayerName => _clientState.LocalPlayer?.Name?.ToString();
         public bool IsLoggedIn => _clientState.IsLoggedIn;
 
         public bool IsWalking
         {
-            get => walkingBoolPtr != IntPtr.Zero && *(bool*)walkingBoolPtr;
+            get => Control.Instance()->IsWalking;
             set
             {
-                if (walkingBoolPtr != IntPtr.Zero)
-                {
-                    *(bool*)walkingBoolPtr = value;
-                    *(bool*)(walkingBoolPtr - 0x10B) = value; // Autorun
-                }
+                Control.Instance()->IsWalking = value;
             }
         }
 
@@ -186,16 +182,6 @@ namespace Microdancer
             {
                 _pluginLog.Error(e, e.Message);
                 _pluginLog.Warning("Failed to load ProcessChatBox");
-            }
-
-            try
-            {
-                walkingBoolPtr = _sigScanner.GetStaticAddressFromSig(Signatures.IsWalking);
-            }
-            catch (Exception e)
-            {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load /walk");
             }
 
             try

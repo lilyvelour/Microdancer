@@ -10,10 +10,7 @@ namespace Microdancer
         // void ProcessChatBox(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4)
         public const string ProcessChatBox = "48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9";
 
-        // bool*
-        public const string IsWalking = "40 38 35 ?? ?? ?? ?? 75 2D"; // TODO
-
-        // void DoEmote(IntPtr agent, uint emoteID, long a3, bool a4, bool a5)
+       // void DoEmote(IntPtr agent, uint emoteID, long a3, bool a4, bool a5)
         public const string DoEmote = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B8 0A 00 00 00";
 
         // byte
