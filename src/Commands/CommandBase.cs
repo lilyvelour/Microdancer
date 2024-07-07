@@ -14,7 +14,6 @@ namespace Microdancer
     {
         private readonly ICommandManager _commandManager;
         private readonly IChatGui _chatGui;
-        private readonly LicenseChecker _license;
 
         protected Dictionary<string, CommandInfo> CommandInfo { get; } = new();
 
@@ -24,7 +23,6 @@ namespace Microdancer
         {
             _commandManager = serviceLocator.Get<ICommandManager>();
             _chatGui = serviceLocator.Get<IChatGui>();
-            _license = serviceLocator.Get<LicenseChecker>();
 
             CommandInfo = GetType()
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
@@ -210,20 +208,6 @@ namespace Microdancer
 
         private void ExecCommand(MethodInfo method, object?[]? parameters = null)
         {
-            if (_license.IsValidLicense == null)
-            {
-                _chatGui.PrintError("Microdancer is not yet initialized. Please wait before using any commands.");
-                return;
-            }
-
-            if (_license.IsValidLicense != true)
-            {
-                _chatGui.PrintError(
-                    "Microdancer is not currently licensed for this character. Please contact Dance Mom for access!"
-                );
-                return;
-            }
-
             if (method.ReturnType == typeof(Task))
             {
                 Task.Run(() => (Task)method.Invoke(this, parameters)!);

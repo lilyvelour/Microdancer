@@ -11,7 +11,6 @@ namespace Microdancer.UI
     public class MicrodancerUi : PluginWindow
     {
         private readonly IClientState _clientState;
-        private readonly LicenseChecker _license;
         private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
         private readonly PlaybackControls _playbackControls = new();
@@ -29,7 +28,6 @@ namespace Microdancer.UI
             : base()
         {
             _clientState = clientState;
-            _license = serviceLocator.Get<LicenseChecker>();
             _audioManager = serviceLocator.Get<AudioManager>();
 
             PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
@@ -69,16 +67,9 @@ namespace Microdancer.UI
                     ImGui.PopItemWidth();
                 }
 
-                if (_clientState.LocalPlayer == null || _license.IsValidLicense == null)
+                if (_clientState.LocalPlayer == null)
                 {
                     ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
-                }
-                else if (_license.IsValidLicense == false)
-                {
-                    ImGui.TextColored(
-                        new(1.0f, 0.0f, 0.0f, 1.0f),
-                        "Microdancer is not currently licensed for this character. Please contact Dance Mom for access!"
-                    );
                 }
                 else
                 {

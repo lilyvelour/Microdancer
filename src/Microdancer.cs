@@ -31,8 +31,6 @@ namespace Microdancer
             pluginInterface.RegisterService(chatGui, ignoreDisposable: true);
             pluginInterface.RegisterService(framework, ignoreDisposable: true);
 
-            var licenseChecker = pluginInterface.CreateService<LicenseChecker>();
-
             pluginInterface.CreateService<AudioManager>();
             pluginInterface.CreateService<GameManager>();
             pluginInterface.CreateService<PartyManager>();
