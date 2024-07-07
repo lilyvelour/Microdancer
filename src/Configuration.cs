@@ -12,6 +12,7 @@ namespace Microdancer
         public int Version { get; set; } = 1;
         public string LibraryPath { get; set; } = "C:\\FFXIV\\Microdancer";
         public bool WindowVisible { get; set; } = false;
+        public bool SettingsVisible { get; set; } = false;
         public Guid LibrarySelection { get; set; }
         public bool IgnoreLooping { get; set; }
         public bool IgnoreAutoCountdown { get; set; }

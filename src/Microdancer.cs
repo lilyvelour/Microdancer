@@ -41,6 +41,7 @@ namespace Microdancer
             pluginInterface.CreateService<MidiManager>();
             pluginInterface.CreateService<SharedContentManager>();
             pluginInterface.CreateService<MicrodancerUi>();
+            pluginInterface.CreateService<SettingsUi>();
 
             var commandTypes = Assembly
                 .GetExecutingAssembly()

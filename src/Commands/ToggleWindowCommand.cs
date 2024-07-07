@@ -20,5 +20,11 @@ namespace Microdancer
         {
             _configuration.WindowVisible ^= true;
         }
+
+        [Command("microsettings", HelpMessage = "Open the Microdancer settings window.")]
+        public void ToggleSettings()
+        {
+            _configuration.SettingsVisible ^= true;
+        }
     }
 }

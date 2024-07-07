@@ -3,10 +3,8 @@ using System.Numerics;
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using System.Text.Json;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
-using System.Threading.Tasks;
 
 namespace Microdancer.UI
 {
