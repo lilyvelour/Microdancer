@@ -33,6 +33,8 @@ namespace Microdancer
         private HashSet<string>? _nearby;
         private bool _shouldUpdateNearby;
 
+        public bool Connected { get; private set; }
+
         public SharedContentManager(
             IDalamudPluginInterface pluginInterface,
             IFramework framework,
@@ -159,6 +161,8 @@ namespace Microdancer
 
                     if (response.IsSuccessStatusCode)
                     {
+                        Connected = true;
+
                         var pathsToKeep = new HashSet<string>();
 
                         try
@@ -218,6 +222,10 @@ namespace Microdancer
                         {
                             _pluginLog.Warning(e.Message);
                         }
+                    }
+                    else
+                    {
+                        Connected = false;
                     }
 
                     await Task.Delay(tickRate);

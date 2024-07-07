@@ -64,6 +64,23 @@ namespace Microdancer
             }
             ImGui.EndChild();
 
+            ImGui.Spacing();
+
+            ImGui.BeginChild("Connection Status", new Vector2(-1, 25 * ImGuiHelpers.GlobalScale));
+            ImGui.Columns(2, "Connection Status", false);
+            ImGui.SetColumnWidth(0, 100 * ImGuiHelpers.GlobalScale);
+            ImGui.NextColumn();
+            if (SharedContent.Connected)
+            {
+                ImGui.TextColored(new Vector4(0, 1, 0, 1), "Connected");
+            }
+            else
+            {
+                ImGui.TextColored(new Vector4(1, 0, 0, 1), "Disconnected");
+            }
+            ImGui.EndChild();
+
+
             return true;
         }
     }

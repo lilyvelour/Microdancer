@@ -16,6 +16,7 @@ namespace Microdancer
         protected IDalamudPluginInterface PluginInterface { get; }
         protected GameManager GameManager { get; }
         protected LibraryManager Library { get; }
+        protected SharedContentManager SharedContent { get; }
         protected MicroManager MicroManager { get; }
         protected Configuration Config { get; }
         protected Theme Theme { get; }
@@ -27,6 +28,7 @@ namespace Microdancer
             PluginInterface = Microdancer.PluginInterface;
             GameManager = serviceLocator.Get<GameManager>();
             Library = serviceLocator.Get<LibraryManager>();
+            SharedContent = serviceLocator.Get<SharedContentManager>();
             MicroManager = serviceLocator.Get<MicroManager>();
             Config = PluginInterface.Configuration();
             Theme = new MicrodancerTheme();
