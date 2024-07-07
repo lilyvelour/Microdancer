@@ -12,6 +12,7 @@ namespace Microdancer.UI
 {
     public class MicrodancerUi : PluginWindow
     {
+        private readonly IClientState _clientState;
         private readonly LicenseChecker _license;
         private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
@@ -27,15 +28,19 @@ namespace Microdancer.UI
         private readonly AudioManager _audioManager;
 
         public MicrodancerUi(IClientState clientState, Service.Locator serviceLocator)
-            : base(clientState)
+            : base()
         {
+            _clientState = clientState;
             _license = serviceLocator.Get<LicenseChecker>();
             _audioManager = serviceLocator.Get<AudioManager>();
+
+            PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
+            _clientState.Logout += Logout;
         }
 
         public override void Draw()
         {
-            if (!Config.WindowVisible || !ClientState.IsLoggedIn)
+            if (!Config.WindowVisible || !_clientState.IsLoggedIn)
             {
                 return;
             }
@@ -47,7 +52,7 @@ namespace Microdancer.UI
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
 
             ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(400, 400), ImGui.GetMainViewport().WorkSize);
-            var draw = ImGui.Begin(Microdancer.PLUGIN_NAME + " - Because size doesn't always matter™", ref windowVisible, ImGuiWindowFlags.NoDocking);
+            var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible, ImGuiWindowFlags.NoDocking);
             ImGui.PopStyleVar();
 
             if (draw)
@@ -66,7 +71,7 @@ namespace Microdancer.UI
                     ImGui.PopItemWidth();
                 }
 
-                if (ClientState.LocalPlayer == null || _license.IsValidLicense == null)
+                if (_clientState.LocalPlayer == null || _license.IsValidLicense == null)
                 {
                     ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
                 }
@@ -304,11 +309,27 @@ namespace Microdancer.UI
             }
         }
 
+        private void OpenMainUi()
+        {
+            Config.WindowVisible = true;
+        }
+
+        private void Logout()
+        {
+            Config.WindowVisible = false;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (_disposedValue)
             {
                 return;
+            }
+
+            if (disposing)
+            {
+                PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
+                _clientState.Logout -= Logout;
             }
 
             base.Dispose(disposing);

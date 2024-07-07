@@ -5,15 +5,9 @@ namespace Microdancer
 {
     public abstract class PluginWindow : PluginUiBase, IDisposable
     {
-        protected IClientState ClientState { get; }
-
-        protected PluginWindow(IClientState clientState)
+        protected PluginWindow() : base()
         {
-            ClientState = clientState;
-            this.ClientState.Logout += Logout;
-
             PluginInterface.UiBuilder.Draw += Draw;
-            PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
         }
 
         protected bool _disposedValue;
@@ -36,21 +30,9 @@ namespace Microdancer
             if (disposing)
             {
                 PluginInterface.UiBuilder.Draw -= Draw;
-                PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
-                ClientState.Logout -= Logout;
             }
 
             _disposedValue = true;
-        }
-
-        private void Logout()
-        {
-            Config.WindowVisible = false;
-        }
-
-        private void OpenMainUi()
-        {
-            Config.WindowVisible = true;
         }
     }
 }

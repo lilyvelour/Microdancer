@@ -11,7 +11,7 @@ namespace Microdancer
     {
         private bool _disposedValue;
 
-        public const string PLUGIN_NAME = "Microdancer [Burgundy Edition]";
+        public const string PLUGIN_NAME = "Microdancer";
 
         public string Name => PLUGIN_NAME;
 
