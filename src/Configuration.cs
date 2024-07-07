@@ -10,7 +10,7 @@ namespace Microdancer
     public class Configuration : IPluginConfiguration
     {
         public int Version { get; set; } = 1;
-        public string LibraryPath { get; set; } = "C:\\FFXIV\\Microdancer";
+        public string LibraryPath { get; set; } = string.Empty;
         public bool WindowVisible { get; set; } = false;
         public bool SettingsVisible { get; set; } = false;
         public Guid LibrarySelection { get; set; }
@@ -20,7 +20,9 @@ namespace Microdancer
         public List<Guid> SharedItems { get; set; } = [];
         public List<Guid> StarredItems { get; set; } = [];
         public string ServerUri { get; set; } = string.Empty;
-        public string ServerPassword { get; set; } = string.Empty;
+        public string ServerUsername { get; set; } = string.Empty;
+        public string ServerPasswordHash { get; set; } = string.Empty;
+        public string ServerPasswordPlaceholder { get; set; } = string.Empty;
         public Dictionary<Guid, float> TimelineZoomFactor { get; set; } = [];
         public Guid NextFocus { get; set; }
 

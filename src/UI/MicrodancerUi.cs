@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
+using System.IO;
 
 namespace Microdancer.UI
 {
@@ -53,22 +54,38 @@ namespace Microdancer.UI
             if (draw)
             {
                 // TODO: Move this
-                if (_audioManager.IsRecording)
-                {
-                    var dB = _audioManager.LinearToDecibel(_audioManager.SmoothedPeakValue);
+                // if (_audioManager.IsRecording)
+                // {
+                //     var dB = _audioManager.LinearToDecibel(_audioManager.SmoothedPeakValue);
 
-                    ImGui.PushItemWidth(100);
-                    ImGui.ProgressBar(
-                        _audioManager.SmoothedPeakValue,
-                        new(-1, 30),
-                        $"Audio level: {(dB < -250 ? "-inf" : dB.ToString("0.00"))} dB"
-                    );
-                    ImGui.PopItemWidth();
+                //     ImGui.PushItemWidth(100);
+                //     ImGui.ProgressBar(
+                //         _audioManager.SmoothedPeakValue,
+                //         new(-1, 30),
+                //         $"Audio level: {(dB < -250 ? "-inf" : dB.ToString("0.00"))} dB"
+                //     );
+                //     ImGui.PopItemWidth();
+                // }
+
+                if (!Directory.Exists(Config.LibraryPath))
+                {
+                    ImGui.BeginChildFrame(123456, new Vector2(-1, -1), ImGuiWindowFlags.NoBackground);
+                    ImGui.Text("No library found!");
+                    ImGui.Spacing();
+                    ImGui.Spacing();
+                    ImGui.Text("Microdancer requires a library folder in order to store micro files.");
+                    ImGui.Text("A library folder can be selected in the settings window.");
+                    if (ImGui.Button("Open Settings"))
+                    {
+                        Config.SettingsVisible = true;
+                    }
+                    ImGui.EndChildFrame();
                 }
-
-                if (_clientState.LocalPlayer == null)
+                else if (_clientState.LocalPlayer == null)
                 {
+                    ImGui.BeginChildFrame(123456, new Vector2(-1, -1), ImGuiWindowFlags.NoBackground);
                     ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
+                    ImGui.EndChildFrame();
                 }
                 else
                 {

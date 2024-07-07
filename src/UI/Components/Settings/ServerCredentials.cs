@@ -1,5 +1,8 @@
+using System;
 using System.IO;
 using System.Numerics;
+using System.Security.Cryptography;
+using System.Text;
 using Dalamud.Interface.Utility;
 using ImGuiNET;
 
@@ -20,23 +23,46 @@ namespace Microdancer
             ImGui.Spacing();
             ImGui.Spacing();
 
+            ImGui.BeginChild("Server URI", new Vector2(-1, 25 * ImGuiHelpers.GlobalScale));
+            ImGui.Columns(2, "Server URI", false);
+            ImGui.SetColumnWidth(0, 100 * ImGuiHelpers.GlobalScale);
+            ImGui.Spacing();
             ImGui.Text("Server URI");
-            ImGui.SameLine();
+            ImGui.NextColumn();
             var serverUri = Config.ServerUri;
-            if (ImGui.InputTextWithHint("##server-uri", "https://example.com/share", ref serverUri,
-                8192, ImGuiInputTextFlags.EnterReturnsTrue))
+            if (ImGui.InputTextWithHint("##server-uri", "https://example.com/share", ref serverUri, 8192))
             {
                 Config.ServerUri = serverUri;
             }
+            ImGui.EndChild();
 
-            ImGui.Text("Server Password");
-            ImGui.SameLine();
-            var serverPassword = Config.ServerPassword;
-            if (ImGui.InputText("##server-password", ref serverPassword, 8192,
-                ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password))
+            ImGui.BeginChild("Username", new Vector2(-1, 25 * ImGuiHelpers.GlobalScale));
+            ImGui.Columns(2, "Username", false);
+            ImGui.SetColumnWidth(0, 100 * ImGuiHelpers.GlobalScale);
+            ImGui.Spacing();
+            ImGui.Text("Username");
+            ImGui.NextColumn();
+            var serverUsername = Config.ServerUsername;
+            if (ImGui.InputTextWithHint("##server-username", "username", ref serverUsername, 8192))
             {
-                Config.ServerPassword = serverPassword;
+                Config.ServerUsername = serverUsername;
             }
+            ImGui.EndChild();
+
+            ImGui.BeginChild("Password", new Vector2(-1, 25 * ImGuiHelpers.GlobalScale));
+            ImGui.Columns(2, "Password", false);
+            ImGui.SetColumnWidth(0, 100 * ImGuiHelpers.GlobalScale);
+            ImGui.Spacing();
+            ImGui.Text("Password");
+            ImGui.NextColumn();
+            var serverPassword = Config.ServerPasswordPlaceholder;
+            if (ImGui.InputTextWithHint("##server-password", "password", ref serverPassword, 256, ImGuiInputTextFlags.Password))
+            {
+                var hash = BitConverter.ToString(SHA256.HashData(Encoding.UTF8.GetBytes(serverPassword))).Replace("-", "");
+                Config.ServerPasswordHash = hash;
+                Config.ServerPasswordPlaceholder = hash[..serverPassword.Length];
+            }
+            ImGui.EndChild();
 
             return true;
         }

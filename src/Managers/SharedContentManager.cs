@@ -11,6 +11,8 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
 using Dalamud.Plugin;
 using IOPath = System.IO.Path;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace Microdancer
 {
@@ -137,7 +139,7 @@ namespace Microdancer
                         .Select(micro => new SharedMicro(micro!, _pluginInterface.Configuration().LibraryPath))
                         .ToArray();
 
-                    var request = new SharedContent
+                    var requestContent = new SharedContent
                     {
                         Name = playerName,
                         World = playerWorld,
@@ -146,7 +148,14 @@ namespace Microdancer
                         Shared = shared,
                     };
 
-                    var response = await client.PostAsJsonAsync(_pluginInterface.Configuration().ServerUri, request);
+                    var request = new HttpRequestMessage(HttpMethod.Post, serverUri)
+                    {
+                        Content = new StringContent(JsonSerializer.Serialize(requestContent))
+                    };
+                    request.Headers.Authorization =
+                        new BasicAuthenticationHeaderValue(playerName, _pluginInterface.Configuration().ServerPasswordHash);
+
+                    var response = await client.SendAsync(request);
 
                     if (response.IsSuccessStatusCode)
                     {

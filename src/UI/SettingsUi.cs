@@ -31,14 +31,16 @@ namespace Microdancer.UI
 
             var settingsVisible = true;
 
-            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(640, 400), ImGui.GetMainViewport().WorkSize);
+            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(720, 400), ImGui.GetMainViewport().WorkSize);
             var draw = ImGui.Begin($"{Microdancer.PLUGIN_NAME} Settings", ref settingsVisible, ImGuiWindowFlags.NoDocking);
 
             if (draw)
             {
                 _libraryPath.Draw();
 
+                ImGui.Spacing();
                 ImGui.Separator();
+                ImGui.Spacing();
 
                 _serverCredentials.Draw();
             }
