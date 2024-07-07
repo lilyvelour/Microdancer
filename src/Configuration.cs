@@ -16,10 +16,12 @@ namespace Microdancer
         public Guid LibrarySelection { get; set; }
         public bool IgnoreLooping { get; set; }
         public bool IgnoreAutoCountdown { get; set; }
-        public List<Guid> OpenWindows { get; set; } = new();
-        public List<Guid> SharedItems { get; set; } = new();
-        public List<Guid> StarredItems { get; set; } = new();
-        public Dictionary<Guid, float> TimelineZoomFactor { get; set; } = new();
+        public List<Guid> OpenWindows { get; set; } = [];
+        public List<Guid> SharedItems { get; set; } = [];
+        public List<Guid> StarredItems { get; set; } = [];
+        public string ServerUri { get; set; } = string.Empty;
+        public string ServerPassword { get; set; } = string.Empty;
+        public Dictionary<Guid, float> TimelineZoomFactor { get; set; } = [];
         public Guid NextFocus { get; set; }
 
         public void View(Guid item)

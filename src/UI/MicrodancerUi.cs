@@ -11,7 +11,6 @@ namespace Microdancer.UI
     public class MicrodancerUi : PluginWindow
     {
         private readonly IClientState _clientState;
-        private readonly LibraryPath _libraryPath = new();
         private readonly DisplayLibrary _library = new();
         private readonly PlaybackControls _playbackControls = new();
         private readonly RegionBar _regionBar = new();
@@ -47,7 +46,7 @@ namespace Microdancer.UI
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
 
-            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(400, 400), ImGui.GetMainViewport().WorkSize);
+            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(640, 400), ImGui.GetMainViewport().WorkSize);
             var draw = ImGui.Begin(Microdancer.PLUGIN_NAME, ref windowVisible, ImGuiWindowFlags.NoDocking);
             ImGui.PopStyleVar();
 
@@ -229,10 +228,6 @@ namespace Microdancer.UI
         private void DrawMainContent()
         {
             ImGui.Columns(1);
-
-            _libraryPath.Draw();
-
-            ImGui.Spacing();
 
             var guid = _focused;
             if (guid == Guid.Empty)

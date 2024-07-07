@@ -8,6 +8,8 @@ namespace Microdancer.UI
     public class SettingsUi : PluginWindow
     {
         private readonly IClientState _clientState;
+        private readonly LibraryPath _libraryPath = new();
+        private readonly ServerCredentials _serverCredentials = new();
 
         public SettingsUi(IClientState clientState)
             : base()
@@ -29,15 +31,16 @@ namespace Microdancer.UI
 
             var settingsVisible = true;
 
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
-
-            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(400, 400), ImGui.GetMainViewport().WorkSize);
+            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(640, 400), ImGui.GetMainViewport().WorkSize);
             var draw = ImGui.Begin($"{Microdancer.PLUGIN_NAME} Settings", ref settingsVisible, ImGuiWindowFlags.NoDocking);
-            ImGui.PopStyleVar();
 
             if (draw)
             {
-                // TODO: Configuration UI
+                _libraryPath.Draw();
+
+                ImGui.Separator();
+
+                _serverCredentials.Draw();
             }
 
             ImGui.End();

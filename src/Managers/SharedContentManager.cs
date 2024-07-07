@@ -26,8 +26,6 @@ namespace Microdancer
 
         private bool _disposedValue;
 
-        private const string ENDPOINT = "https://example.com/prod/v1/share";
-
         private string? _playerName;
         private string? _playerWorld;
         private HashSet<string>? _nearby;
@@ -107,7 +105,9 @@ namespace Microdancer
             {
                 try
                 {
-                    if (!_clientState.IsLoggedIn)
+                    var serverUri = _pluginInterface.Configuration().ServerUri;
+
+                    if (string.IsNullOrWhiteSpace(serverUri) || !_clientState.IsLoggedIn)
                     {
                         await ClearSharedFolder();
                         await Task.Delay(tickRate);
@@ -146,7 +146,7 @@ namespace Microdancer
                         Shared = shared,
                     };
 
-                    var response = await client.PostAsJsonAsync(ENDPOINT, request);
+                    var response = await client.PostAsJsonAsync(_pluginInterface.Configuration().ServerUri, request);
 
                     if (response.IsSuccessStatusCode)
                     {
