@@ -10,6 +10,7 @@ namespace Microdancer.UI
         private readonly IClientState _clientState;
         private readonly LibraryPath _libraryPath = new();
         private readonly ServerCredentials _serverCredentials = new();
+        private readonly ThemeSettings _themeSettings = new();
         private readonly Link _link = new();
 
         public SettingsUi(IClientState clientState)
@@ -31,9 +32,11 @@ namespace Microdancer.UI
             Theme.Begin();
 
             var settingsVisible = true;
-
-            ImGui.SetNextWindowSizeConstraints(ImGuiHelpers.ScaledVector2(720, 400), ImGui.GetMainViewport().WorkSize);
-            var draw = ImGui.Begin($"{Microdancer.PLUGIN_NAME} Settings", ref settingsVisible, ImGuiWindowFlags.NoDocking);
+            var windowSize = ImGuiHelpers.ScaledVector2(720, 420);
+            ImGui.SetNextWindowSizeConstraints(
+                windowSize,
+                windowSize);
+            var draw = ImGui.Begin($"{Microdancer.PLUGIN_NAME} Settings", ref settingsVisible, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoResize);
 
             if (draw)
             {
@@ -44,6 +47,12 @@ namespace Microdancer.UI
                 ImGui.Spacing();
 
                 _serverCredentials.Draw();
+
+                ImGui.Spacing();
+                ImGui.Separator();
+                ImGui.Spacing();
+
+                _themeSettings.Draw();
 
                 ImGui.BeginChild(
                     "SettingsUiSpacer",

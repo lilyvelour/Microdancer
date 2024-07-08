@@ -3,6 +3,7 @@ using Dalamud.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace Microdancer
 {
@@ -23,6 +24,7 @@ namespace Microdancer
         public string ServerUsername { get; set; } = string.Empty;
         public string ServerPasswordHash { get; set; } = string.Empty;
         public string ServerPasswordPlaceholder { get; set; } = string.Empty;
+        public Vector3 UiColor { get; set; } = new Vector3(0.89411765f, 0.0f, 0.06666667f);
         public Dictionary<Guid, float> TimelineZoomFactor { get; set; } = [];
         public Guid NextFocus { get; set; }
 

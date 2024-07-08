@@ -150,7 +150,7 @@ namespace Microdancer
 
                     if (canDelete)
                     {
-                        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.89411765f, 0.0f, 0.06666667f, 1.0f));
+                        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
                         if (ImGui.Selectable("Delete"))
                         {
                             _deleting = node.Id;

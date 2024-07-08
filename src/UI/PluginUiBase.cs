@@ -31,7 +31,7 @@ namespace Microdancer
             SharedContent = serviceLocator.Get<SharedContentManager>();
             MicroManager = serviceLocator.Get<MicroManager>();
             Config = PluginInterface.Configuration();
-            Theme = new MicrodancerTheme();
+            Theme = new DefaultTheme(Config);
         }
 
         protected void Open(string path)
