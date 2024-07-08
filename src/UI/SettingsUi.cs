@@ -53,7 +53,7 @@ namespace Microdancer.UI
                 _link.Draw(new() {
                     Label = "GitHub",
                     Url = "https://github.com/lilyvelour/microdancer",
-                    Tooltip = "Official GitHub project URL for Microdancer",
+                    Tooltip = "Official GitHub project for Microdancer",
                 });
 
                 ImGui.SameLine();
