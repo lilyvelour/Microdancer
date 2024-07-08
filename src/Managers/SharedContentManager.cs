@@ -151,9 +151,15 @@ namespace Microdancer
                         Shared = shared,
                     };
 
+                    var options = new JsonSerializerOptions {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    };
+                    var json = JsonSerializer.Serialize(requestContent, options);
+                    _pluginLog.Info(json);
+
                     var request = new HttpRequestMessage(HttpMethod.Post, serverUri)
                     {
-                        Content = new StringContent(JsonSerializer.Serialize(requestContent))
+                        Content = new StringContent(json),
                     };
                     request.Headers.Authorization =
                         new BasicAuthenticationHeaderValue(
