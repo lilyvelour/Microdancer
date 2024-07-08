@@ -34,6 +34,7 @@ namespace Microdancer
         private bool _shouldUpdateNearby;
 
         public bool Connected { get; private set; }
+        public string LastError { get; private set;}
 
         public SharedContentManager(
             IDalamudPluginInterface pluginInterface,
@@ -155,13 +156,16 @@ namespace Microdancer
                         Content = new StringContent(JsonSerializer.Serialize(requestContent))
                     };
                     request.Headers.Authorization =
-                        new BasicAuthenticationHeaderValue(playerName, _pluginInterface.Configuration().ServerPasswordHash);
+                        new BasicAuthenticationHeaderValue(
+                            _pluginInterface.Configuration().ServerUsername,
+                            _pluginInterface.Configuration().ServerPasswordHash);
 
                     var response = await client.SendAsync(request);
 
                     if (response.IsSuccessStatusCode)
                     {
                         Connected = true;
+                        LastError = string.Empty;
 
                         var pathsToKeep = new HashSet<string>();
 
@@ -220,18 +224,22 @@ namespace Microdancer
                         }
                         catch (Exception e)
                         {
+                            Connected = false;
+                            LastError = e.Message;
                             _pluginLog.Warning(e.Message);
                         }
                     }
                     else
                     {
                         Connected = false;
+                        LastError = $"{(int)response.StatusCode} {response.StatusCode}";
                     }
 
                     await Task.Delay(tickRate);
                 }
                 catch (Exception e)
                 {
+                    Connected = false;
                     _pluginLog.Warning(e.Message);
                     await Task.Delay(tickRate);
                 }

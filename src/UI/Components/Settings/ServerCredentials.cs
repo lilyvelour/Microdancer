@@ -76,7 +76,18 @@ namespace Microdancer
             }
             else
             {
-                ImGui.TextColored(new Vector4(1, 0, 0, 1), "Disconnected");
+                if (string.IsNullOrWhiteSpace(SharedContent.LastError))
+                {
+                    ImGui.TextColored(
+                        new Vector4(1, 0, 0, 1),
+                        "Disconnected");
+                }
+                else
+                {
+                    ImGui.TextColored(
+                        new Vector4(1, 0, 0, 1),
+                        $"Disconnected ({SharedContent.LastError})");
+                }
             }
             ImGui.EndChild();
 
