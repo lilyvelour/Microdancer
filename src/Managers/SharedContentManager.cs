@@ -155,7 +155,6 @@ namespace Microdancer
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     };
                     var json = JsonSerializer.Serialize(requestContent, options);
-                    _pluginLog.Info(json);
 
                     var request = new HttpRequestMessage(HttpMethod.Post, serverUri)
                     {
