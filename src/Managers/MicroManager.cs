@@ -244,19 +244,10 @@ namespace Microdancer
                     continue;
                 }
                 // Set auto-busy
-                else if (command.Text.StartsWith("/autobusy") || command.Text.StartsWith("/autobussy"))
+                else if (command.Text.StartsWith("/autobusy"))
                 {
                     _autoBusy = true;
                     await _gameManager.ExecuteCommand("/busy on");
-
-                    if (command.Text.StartsWith("/autobussy"))
-                    {
-                        for (var s = 1; s <= 12; ++s)
-                        {
-                            // This is Kibby's fault
-                            await _gameManager.ExecuteCommand($"/echo Bussy Gang Bussy Gang Bussy Gang <se.{s}>");
-                        }
-                    }
 
                     ++i;
                     continue;

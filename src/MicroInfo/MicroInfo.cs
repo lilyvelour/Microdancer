@@ -23,7 +23,6 @@ namespace Microdancer
                 "/autocd",
                 "/autoping",
                 "/autobusy",
-                "/autobussy",
                 "/captureaudio",
                 "/recordaudio",
                 "/volumetrigger",
