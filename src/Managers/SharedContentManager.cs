@@ -34,7 +34,7 @@ namespace Microdancer
         private bool _shouldUpdateNearby;
 
         public bool Connected { get; private set; }
-        public string LastError { get; private set;}
+        public string? LastError { get; private set;}
 
         public SharedContentManager(
             IDalamudPluginInterface pluginInterface,

@@ -10,6 +10,7 @@ namespace Microdancer.UI
         private readonly IClientState _clientState;
         private readonly LibraryPath _libraryPath = new();
         private readonly ServerCredentials _serverCredentials = new();
+        private readonly Link _link = new();
 
         public SettingsUi(IClientState clientState)
             : base()
@@ -43,6 +44,40 @@ namespace Microdancer.UI
                 ImGui.Spacing();
 
                 _serverCredentials.Draw();
+
+                ImGui.BeginChild(
+                    "SettingsUiSpacer",
+                    new Vector2(-1, ImGui.GetContentRegionAvail().Y - (20 * ImGuiHelpers.GlobalScale)));
+                ImGui.EndChild();
+
+                _link.Draw(new() {
+                    Label = "GitHub",
+                    Url = "https://github.com/lilyvelour/microdancer",
+                    Tooltip = "Official GitHub project URL for Microdancer",
+                });
+
+                ImGui.SameLine();
+                ImGui.TextUnformatted("•");
+                ImGui.SameLine();
+
+                _link.Draw(new() {
+                    Label = "Ko-fi",
+                    Url = "https://ko-fi.com/lily",
+                    Tooltip = "Any support is truly appreciated. Thank you!",
+                });
+
+#if DEBUG
+                ImGui.SetCursorPos(ImGui.GetCursorPos() + ImGui.GetContentRegionAvail() - ImGui.CalcTextSize("dev"));
+                ImGui.TextUnformatted("dev");
+#else
+                var version = GetType().Assembly.GetName().Version;
+                if (version != null)
+                {
+                    var ver = $"v {version.ToString()}";
+                    ImGui.SetCursorPos(ImGui.GetCursorPos() + ImGui.GetContentRegionAvail() - ImGui.CalcTextSize(ver));
+                    ImGui.TextUnformatted(ver);
+                }
+#endif
             }
 
             ImGui.End();

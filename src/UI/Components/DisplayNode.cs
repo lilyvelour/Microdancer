@@ -326,7 +326,7 @@ namespace Microdancer
                 else if (node is SharedFolderRoot && node.Children.Count == 0)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, Theme.GetColor(ImGuiCol.TextDisabled));
-                    ImGui.TreeNodeEx($"{_idPrefix}{node.Id}empty", ImGuiTreeNodeFlags.Leaf, "- None -");
+                    ImGui.TreeNodeEx($"{_idPrefix}{node.Id}empty", ImGuiTreeNodeFlags.Leaf, SharedContent.Connected ? "- None -" : "- Disconnected -");
                     ImGui.PopStyleColor();
                     ImGui.TreePop();
                 }

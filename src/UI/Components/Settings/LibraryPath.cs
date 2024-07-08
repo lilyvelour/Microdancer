@@ -49,6 +49,25 @@ namespace Microdancer
             }
             ImGui.EndChild();
 
+            if (libPath != Config.LibraryPath)
+            {
+                ImGui.BeginChild("Library Press Enter", new Vector2(-1, 25 * ImGuiHelpers.GlobalScale));
+                ImGui.Columns(2, "Library Press Enter", false);
+                ImGui.SetColumnWidth(0, 100 * ImGuiHelpers.GlobalScale);
+                ImGui.NextColumn();
+                ImGui.TextUnformatted("Press Enter to confirm");
+                ImGui.EndChild();
+            } else if (!hasLibrary)
+            {
+                ImGui.BeginChild("Library Not Found", new Vector2(-1, 25 * ImGuiHelpers.GlobalScale));
+                ImGui.Columns(2, "Library Not Found", false);
+                ImGui.SetColumnWidth(0, 100 * ImGuiHelpers.GlobalScale);
+                ImGui.NextColumn();
+                ImGui.TextColored(new Vector4(1, 0, 0, 1), $"Specified path does not exist");
+                ImGui.EndChild();
+            }
+
+
             return true;
         }
     }
