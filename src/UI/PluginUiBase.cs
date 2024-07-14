@@ -274,7 +274,6 @@ namespace Microdancer
 
 /autocountdown <wait.0>
 /autobusy <wait.0>
-# /automare <wait.0>
 
 #region :Before
 /target <me> <wait.0>
