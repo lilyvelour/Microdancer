@@ -5,8 +5,6 @@ on:
     branches: ["*"]
     tags-ignore: ["*"]
   create:
-    branches: ["*"]
-    tags-ignore: ["*"]
 
 jobs:
   build-and-deploy:
@@ -103,6 +101,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ACT: ${{ env.ACT }}
         with:
           folder: bin/Release/Microdancer
           bucket: ${{ secrets.AWS_S3_BUCKET }}
