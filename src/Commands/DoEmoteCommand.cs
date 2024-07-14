@@ -60,12 +60,6 @@ namespace Microdancer
             DoEmote("93");
         }
 
-        [Command("idle", "idle1", HelpMessage = "Alias for /ppose stand 1. (Requires AutoVisor)")]
-        public async void Idle1()
-        {
-            await _gameManager.ExecuteCommand("/ppose stand 1");
-        }
-
         [Command("idle2", HelpMessage = "Alias for /doemote 91")]
         public void Idle2()
         {
