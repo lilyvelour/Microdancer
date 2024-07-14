@@ -9,5 +9,5 @@
   "ApplicableVersion": "any",
   "LoadPriority": 0,
   "DalamudApiLevel": 10,
-  "IconUrl": "https://github.com/lilyvelour/Microdancer/blob/main/images/icon.png?raw=true"
+  "IconUrl": "https://microdancer.s3.amazonaws.com/icon.png"
 }

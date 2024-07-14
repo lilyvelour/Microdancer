@@ -2,14 +2,13 @@ name: Microdancer
 
 on:
   push:
-    branches: ['*']
-    tags-ignore: ['*']
+    branches: ["*"]
+    tags-ignore: ["*"]
   create:
-    branches: ['*']
-    tags-ignore: ['*']
+    branches: ["*"]
+    tags-ignore: ["*"]
 
 jobs:
-
   build-and-deploy:
     env:
       ProgressPreference: "SilentlyContinue"
@@ -109,4 +108,3 @@ jobs:
           bucket: ${{ secrets.AWS_S3_BUCKET }}
           bucket-region: us-east-1
           no-cache: true
-
