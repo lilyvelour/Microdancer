@@ -32,7 +32,7 @@ namespace Microdancer.UI
             Theme.Begin();
 
             var settingsVisible = true;
-            var windowSize = ImGuiHelpers.ScaledVector2(720, 420);
+            var windowSize = ImGuiHelpers.ScaledVector2(720, 460);
             ImGui.SetNextWindowSizeConstraints(
                 windowSize,
                 windowSize);
@@ -59,7 +59,8 @@ namespace Microdancer.UI
                     new Vector2(-1, ImGui.GetContentRegionAvail().Y - (20 * ImGuiHelpers.GlobalScale)));
                 ImGui.EndChild();
 
-                _link.Draw(new() {
+                _link.Draw(new()
+                {
                     Label = "GitHub",
                     Url = "https://github.com/lilyvelour/microdancer",
                     Tooltip = "Official GitHub project for Microdancer",
@@ -69,7 +70,8 @@ namespace Microdancer.UI
                 ImGui.TextUnformatted("•");
                 ImGui.SameLine();
 
-                _link.Draw(new() {
+                _link.Draw(new()
+                {
                     Label = "Ko-fi",
                     Url = "https://ko-fi.com/lily",
                     Tooltip = "Any support is truly appreciated. Thank you!",
