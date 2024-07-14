@@ -31,12 +31,10 @@ namespace Microdancer
             pluginInterface.RegisterService(chatGui, ignoreDisposable: true);
             pluginInterface.RegisterService(framework, ignoreDisposable: true);
 
-            pluginInterface.CreateService<AudioManager>();
             pluginInterface.CreateService<GameManager>();
             pluginInterface.CreateService<PartyManager>();
             pluginInterface.CreateService<MicroManager>();
             pluginInterface.CreateService<LibraryManager>();
-            pluginInterface.CreateService<MidiManager>();
             pluginInterface.CreateService<SharedContentManager>();
             pluginInterface.CreateService<MicrodancerUi>();
             pluginInterface.CreateService<SettingsUi>();

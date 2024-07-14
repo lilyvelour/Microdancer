@@ -33,8 +33,9 @@ namespace Microdancer
         private HashSet<string>? _nearby;
         private bool _shouldUpdateNearby;
 
+        // TODO: More robust status system
         public bool Connected { get; private set; }
-        public string? LastError { get; private set;}
+        public string? LastError { get; private set; }
 
         public SharedContentManager(
             IDalamudPluginInterface pluginInterface,
@@ -121,7 +122,7 @@ namespace Microdancer
 
                     _shouldUpdateNearby = true;
 
-                    while(_shouldUpdateNearby)
+                    while (_shouldUpdateNearby)
                     {
                         await Task.Delay(tickRate);
                     }
@@ -151,7 +152,8 @@ namespace Microdancer
                         Shared = shared,
                     };
 
-                    var options = new JsonSerializerOptions {
+                    var options = new JsonSerializerOptions
+                    {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     };
                     var json = JsonSerializer.Serialize(requestContent, options);

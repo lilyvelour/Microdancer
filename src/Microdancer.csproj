@@ -44,7 +44,6 @@
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="2.1.6" />
         <PackageReference Include="IdentityModel" Version="7.0.0" />
-        <PackageReference Include="NAudio" Version="2.1.0" />
     </ItemGroup>
 
     <ItemGroup>

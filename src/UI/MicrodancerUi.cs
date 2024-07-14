@@ -22,13 +22,10 @@ namespace Microdancer.UI
         private Guid _focused;
         private readonly Dictionary<Guid, float> _dockReleased = new();
 
-        private readonly AudioManager _audioManager;
-
-        public MicrodancerUi(IClientState clientState, Service.Locator serviceLocator)
+        public MicrodancerUi(IClientState clientState)
             : base()
         {
             _clientState = clientState;
-            _audioManager = serviceLocator.Get<AudioManager>();
 
             PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
             _clientState.Logout += Logout;
@@ -53,20 +50,6 @@ namespace Microdancer.UI
 
             if (draw)
             {
-                // TODO: Move this
-                // if (_audioManager.IsRecording)
-                // {
-                //     var dB = _audioManager.LinearToDecibel(_audioManager.SmoothedPeakValue);
-
-                //     ImGui.PushItemWidth(100);
-                //     ImGui.ProgressBar(
-                //         _audioManager.SmoothedPeakValue,
-                //         new(-1, 30),
-                //         $"Audio level: {(dB < -250 ? "-inf" : dB.ToString("0.00"))} dB"
-                //     );
-                //     ImGui.PopItemWidth();
-                // }
-
                 if (!Directory.Exists(Config.LibraryPath))
                 {
                     ImGui.BeginChildFrame(123456, new Vector2(-1, -1), ImGuiWindowFlags.NoBackground);

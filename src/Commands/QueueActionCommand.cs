@@ -33,7 +33,6 @@ namespace Microdancer
         )]
         public async void QueueBlueAction(string action)
         {
-            // TODO: Does this actually work?
             await QueueActionImpl("/blueaction", action);
         }
 

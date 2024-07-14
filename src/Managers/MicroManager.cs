@@ -175,7 +175,6 @@ namespace Microdancer
             // Set current time to zero
             microInfo.Start();
 
-            var autoPing = TimeSpan.Zero;
             var delay = TimeSpan.Zero;
 
             while (i < microInfo.Commands.Length)
@@ -269,14 +268,6 @@ namespace Microdancer
                     ++i;
                     continue;
                 }
-                // Set auto-countdown
-                else if (command.Text.StartsWith("/autoping") || command.Text.StartsWith("/autoping"))
-                {
-                    autoPing = TimeSpan.FromMilliseconds(57); // TODO: Not hardcoded ping!
-
-                    ++i;
-                    continue;
-                }
                 else if (command.Text.StartsWith("/acancel")) // Animation cancel
                 {
                     await _gameManager.ExecuteCommand("/gaction \"Glamour Plate\"");
@@ -321,12 +312,9 @@ namespace Microdancer
                     await _gameManager.ExecuteCommand(command.Text);
                 }
 
-                var waitTime = command.WaitTime - autoPing;
-                delay += waitTime - command.CurrentTime;
+                delay += command.WaitTime - command.CurrentTime;
                 while (delay > TimeSpan.Zero)
                 {
-                    autoPing = TimeSpan.Zero;
-
                     var t = command.CurrentTime;
                     await Task.Delay(Math.Min((int)delay.TotalMilliseconds, _frameTime));
                     var dt = command.CurrentTime - t;
@@ -424,7 +412,7 @@ namespace Microdancer
             // Only dispatch if we have another region we can run.
             // We need to check all commands!
             var commandIndex = 0;
-            for(var i = 0; i < microInfo.AllCommands.Length; ++i)
+            for (var i = 0; i < microInfo.AllCommands.Length; ++i)
             {
                 if (microInfo.AllCommands[i].LineNumber >= lineNumber)
                 {

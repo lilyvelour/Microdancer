@@ -20,14 +20,8 @@ namespace Microdancer
             _gameManager = serviceLocator.Get<GameManager>();
 
             Task.Run(
-                /*async*/ () =>
+                () =>
                 {
-                    // TODO: Is this still needed?
-                    // while (!_dataManager.IsDataReady)
-                    // {
-                    //     await Task.Delay(TimeSpan.FromMilliseconds(10));
-                    // }
-
                     _usableItems = _dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!
                         .Where(i => i.ItemAction.Row > 0)
                         .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant())

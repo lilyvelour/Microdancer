@@ -21,11 +21,7 @@ namespace Microdancer
                 "/loop",
                 "/autocountdown",
                 "/autocd",
-                "/autoping",
                 "/autobusy",
-                "/captureaudio",
-                "/recordaudio",
-                "/volumetrigger",
                 "/padding",
                 "/pad"
             };
