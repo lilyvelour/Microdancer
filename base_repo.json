@@ -4,7 +4,7 @@
     "Name": "Microdancer",
     "Punchline": "Make your dances better",
     "Description": "Microdancer is a tool for RP dance performance. It is an alternative system to macros used out of combat, with features such as infinite line length, fractional wait times, comments, pausing, looping, and ability queueing.",
-    "CategoryTags": ["social"],
+    "Tags": ["social"],
     "IconUrl": "https://github.com/lilyvelour/Microdancer/blob/main/images/icon.png?raw=true",
     "InternalName": "Microdancer",
     "AssemblyVersion": "1.0.0.0",
