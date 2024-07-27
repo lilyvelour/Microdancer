@@ -60,6 +60,7 @@ namespace Microdancer
         private IntPtr uiModule = IntPtr.Zero;
 
         public string? PlayerName => _clientState.LocalPlayer?.Name?.ToString();
+        public string? PlayerWorld => _clientState.LocalPlayer?.HomeWorld?.GameData?.Name.RawString;
         public bool IsLoggedIn => _clientState.IsLoggedIn;
 
         public bool IsWalking

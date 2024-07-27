@@ -8,7 +8,8 @@ namespace Microdancer
     {
         public bool Draw()
         {
-            ImGui.Text("Theme Settings");
+            if (!ImGui.TreeNode("Theme Settings"))
+                return true;
 
             ImGui.Spacing();
             ImGui.Spacing();
@@ -28,6 +29,7 @@ namespace Microdancer
             }
             ImGui.EndChild();
 
+            ImGui.TreePop();
             return true;
         }
     }

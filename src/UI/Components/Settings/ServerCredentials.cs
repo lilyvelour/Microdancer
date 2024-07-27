@@ -12,7 +12,8 @@ namespace Microdancer
     {
         public bool Draw()
         {
-            ImGui.Text("Server Credentials (optional)");
+            if (!ImGui.TreeNode("Server Credentials (optional)"))
+                return true;
 
             ImGui.Spacing();
             ImGui.Spacing();
@@ -92,7 +93,7 @@ namespace Microdancer
             }
             ImGui.EndChild();
 
-
+            ImGui.TreePop();
             return true;
         }
     }

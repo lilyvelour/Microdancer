@@ -267,37 +267,18 @@ namespace Microdancer
 
         private string GetMicroTemplate(string name)
         {
-            return $@"# =====================================================
-# {name}
-# Choreography © {DateTime.Now.Year} by {GameManager.PlayerName ?? "[Author]"}
-# =====================================================
+            var templatePath = Path.Combine(Config.LibraryPath, ".template.micro");
+            if (!File.Exists(templatePath))
+            {
+                return string.Empty;
+            }
 
-/autocountdown <wait.0>
-/autobusy <wait.0>
-
-#region :Before
-/target <me> <wait.0>
-/bm off <wait.0>
-/snapchange ""[My Gear Set]"" <wait.2>
-#endregion
-
-#region Verse 1
-#endregion
-
-#region Chorus 1
-#endregion
-
-#region Verse 2
-#endregion
-
-#region Chorus 2
-#endregion
-
-#region Bridge
-#endregion
-
-#region Outro
-#endregion";
+            var template = File.ReadAllText(templatePath);
+            return template
+                .Replace("[fileName]", name ?? "[fileName]")
+                .Replace("[year]", DateTime.Now.Year.ToString())
+                .Replace("[playerName]", GameManager.PlayerName ?? "[playerName]")
+                .Replace("[playerWorld]", GameManager.PlayerWorld ?? "[playerWorld]");
         }
     }
 }

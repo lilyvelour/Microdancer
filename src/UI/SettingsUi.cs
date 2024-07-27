@@ -10,6 +10,7 @@ namespace Microdancer.UI
         private readonly IClientState _clientState;
         private readonly LibraryPath _libraryPath = new();
         private readonly ServerCredentials _serverCredentials = new();
+        private readonly NewFileTemplate _newFileTemplate = new();
         private readonly ThemeSettings _themeSettings = new();
         private readonly Link _link = new();
 
@@ -32,21 +33,25 @@ namespace Microdancer.UI
             Theme.Begin();
 
             var settingsVisible = true;
-            var windowSize = ImGuiHelpers.ScaledVector2(720, 460);
             ImGui.SetNextWindowSizeConstraints(
-                windowSize,
-                windowSize);
-            var draw = ImGui.Begin($"{Microdancer.PLUGIN_NAME} Settings", ref settingsVisible, ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoResize);
+                ImGuiHelpers.ScaledVector2(720, 240),
+                ImGui.GetMainViewport().WorkSize);
+            var draw = ImGui.Begin($"{Microdancer.PLUGIN_NAME} Settings", ref settingsVisible, ImGuiWindowFlags.NoDocking);
 
             if (draw)
             {
+                ImGui.PushStyleColor(ImGuiCol.FrameBg, Vector4.Zero);
+                ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
+
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
+                ImGui.BeginChildFrame(67876, new Vector2(-1, ImGui.GetContentRegionAvail().Y - (20 * ImGuiHelpers.GlobalScale)));
+                ImGui.PopStyleVar();
+                ImGui.PopStyleVar();
+                ImGui.PopStyleColor();
+                ImGui.PopStyleColor();
+
                 _libraryPath.Draw();
-
-                ImGui.Spacing();
-                ImGui.Separator();
-                ImGui.Spacing();
-
-                _serverCredentials.Draw();
 
                 ImGui.Spacing();
                 ImGui.Separator();
@@ -54,9 +59,18 @@ namespace Microdancer.UI
 
                 _themeSettings.Draw();
 
-                ImGui.BeginChild(
-                    "SettingsUiSpacer",
-                    new Vector2(-1, ImGui.GetContentRegionAvail().Y - (20 * ImGuiHelpers.GlobalScale)));
+                ImGui.Spacing();
+                ImGui.Separator();
+                ImGui.Spacing();
+
+                _newFileTemplate.Draw();
+
+                ImGui.Spacing();
+                ImGui.Separator();
+                ImGui.Spacing();
+
+                _serverCredentials.Draw();
+
                 ImGui.EndChild();
 
                 _link.Draw(new()
