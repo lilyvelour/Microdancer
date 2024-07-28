@@ -98,7 +98,7 @@ namespace Microdancer.UI
                 var version = GetType().Assembly.GetName().Version;
                 if (version != null)
                 {
-                    var ver = $"v {version.ToString()}";
+                    var ver = $"v{version.ToString()}";
                     ImGui.SetCursorPos(ImGui.GetCursorPos() + ImGui.GetContentRegionAvail() - ImGui.CalcTextSize(ver));
                     ImGui.TextUnformatted(ver);
                 }
