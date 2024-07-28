@@ -86,6 +86,17 @@ namespace Microdancer.UI
 
                 _link.Draw(new()
                 {
+                    Label = "Discord",
+                    Url = "https://discord.gg/kN4f5PbCDR",
+                    Tooltip = "Official Discord server for Microdancer",
+                });
+
+                ImGui.SameLine();
+                ImGui.TextUnformatted("•");
+                ImGui.SameLine();
+
+                _link.Draw(new()
+                {
                     Label = "Ko-fi",
                     Url = "https://ko-fi.com/lily",
                     Tooltip = "Any support is truly appreciated. Thank you!",
