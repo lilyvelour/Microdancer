@@ -115,19 +115,19 @@ namespace Microdancer
         }
 
         [Command("parasol2", HelpMessage = "Alias for /doemote 243")]
-        public void Parasol1()
+        public void Parasol2()
         {
             DoEmote("243");
         }
 
         [Command("parasol3", HelpMessage = "Alias for /doemote 244")]
-        public void Parasol2()
+        public void Parasol3()
         {
             DoEmote("244");
         }
 
-        [Command("parasol3", HelpMessage = "Alias for /doemote 253")]
-        public void Parasol3()
+        [Command("parasol4", HelpMessage = "Alias for /doemote 253")]
+        public void Parasol4()
         {
             DoEmote("253");
         }
