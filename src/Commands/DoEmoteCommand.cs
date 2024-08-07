@@ -54,6 +54,24 @@ namespace Microdancer
             DoEmote("96");
         }
 
+        [Command("chair2", HelpMessage = "Alias for /doemote 95.")]
+        public void Chair2()
+        {
+            DoEmote("95");
+        }
+
+        [Command("chair3", HelpMessage = "Alias for /doemote 254.")]
+        public void Chair3()
+        {
+            DoEmote("254");
+        }
+
+        [Command("chair4", HelpMessage = "Alias for /doemote 255.")]
+        public void Chair4()
+        {
+            DoEmote("255");
+        }
+
         [Command("weapon", HelpMessage = "Alias for /doemote 93.")]
         public void Weapon()
         {
@@ -94,6 +112,24 @@ namespace Microdancer
         public void Idle7()
         {
             DoEmote("219");
+        }
+
+        [Command("parasol2", HelpMessage = "Alias for /doemote 243")]
+        public void Parasol1()
+        {
+            DoEmote("243");
+        }
+
+        [Command("parasol3", HelpMessage = "Alias for /doemote 244")]
+        public void Parasol2()
+        {
+            DoEmote("244");
+        }
+
+        [Command("parasol3", HelpMessage = "Alias for /doemote 253")]
+        public void Parasol3()
+        {
+            DoEmote("253");
         }
     }
 }
