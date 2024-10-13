@@ -7,13 +7,11 @@ namespace Microdancer
     {
         private readonly IGameGui _gameGui;
         private readonly GameManager _gameManager;
-        private readonly IPluginLog _pluginLog;
 
-        public DoEmoteCommand(IGameGui gameGui, IPluginLog pluginLog, Service.Locator serviceLocator) : base(serviceLocator)
+        public DoEmoteCommand(IGameGui gameGui, Service.Locator serviceLocator) : base(serviceLocator)
         {
             _gameGui = gameGui;
             _gameManager = serviceLocator.Get<GameManager>();
-            _pluginLog = pluginLog;
         }
 
         [Command("doemote", HelpMessage = "Performs the specified emote by ID.")]
@@ -26,7 +24,7 @@ namespace Microdancer
 
             if (_gameManager.emoteAgent == IntPtr.Zero)
             {
-                _pluginLog.Error(
+                Microdancer.PluginLog.Error(
                     "Failed to get emote agent - open the emote window and then use this command to initialize it."
                 );
                 return;
@@ -38,7 +36,7 @@ namespace Microdancer
             }
             else
             {
-                _pluginLog.Error("Emote must be specified by an ID.");
+                Microdancer.PluginLog.Error("Emote must be specified by an ID.");
             }
         }
 

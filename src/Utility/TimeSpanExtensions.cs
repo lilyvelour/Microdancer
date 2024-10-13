@@ -40,7 +40,12 @@ namespace Microdancer
 
         public static string ToSecondsString(this TimeSpan ts)
         {
-            return $"{ts.TotalSeconds:0.###} sec";
+            return ToSecondsString(ts.TotalSeconds);
+        }
+
+        public static string ToSecondsString(this double t)
+        {
+            return $"{t:0.###} sec";
         }
     }
 }

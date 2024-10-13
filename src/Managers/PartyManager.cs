@@ -42,14 +42,12 @@ namespace Microdancer
         private readonly IGameGui _gameGui;
         private readonly IClientState _clientState;
         private readonly IPartyList _partyList;
-        private readonly IPluginLog _pluginLog;
 
         public PartyManager(
             IDataManager dataManager,
             IGameGui gameGui,
             IClientState clientState,
             IPartyList partyList,
-            IPluginLog pluginLog,
             Service.Locator _
         )
         {
@@ -57,7 +55,6 @@ namespace Microdancer
             _gameGui = gameGui;
             _clientState = clientState;
             _partyList = partyList;
-            _pluginLog = pluginLog;
             _infoProxyCrossRealm = InfoProxyCrossRealm.Instance();
         }
 
@@ -111,13 +108,13 @@ namespace Microdancer
                     case "Alliance I":
                         return 3;
                     default:
-                        _pluginLog.Debug($"PartyLookup: Warning (Unexpected party type): {pType}");
+                        Microdancer.PluginLog.Debug($"PartyLookup: Warning (Unexpected party type): {pType}");
                         return -1;
                 }
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Error(e, e.Message);
                 return -1;
             }
         }
@@ -187,7 +184,7 @@ namespace Microdancer
 
                     if (string.IsNullOrWhiteSpace(homeWorld))
                     {
-                        _pluginLog.Info($"Unable to parse home world for party member '{name}'");
+                        Microdancer.PluginLog.Info($"Unable to parse home world for party member '{name}'");
                         continue;
                     }
 

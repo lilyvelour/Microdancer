@@ -7,12 +7,10 @@ namespace Microdancer
     public sealed class QueueActionCommand : CommandBase
     {
         private readonly GameManager _gameManager;
-        private readonly IPluginLog _pluginLog;
 
-        public QueueActionCommand(Service.Locator serviceLocator, IPluginLog pluginLog) : base(serviceLocator)
+        public QueueActionCommand(Service.Locator serviceLocator) : base(serviceLocator)
         {
             _gameManager = serviceLocator.Get<GameManager>();
-            _pluginLog = pluginLog;
         }
 
         [Command(
@@ -40,7 +38,7 @@ namespace Microdancer
         {
             if (_gameManager.actionCommandRequestTypePtr == IntPtr.Zero)
             {
-                _pluginLog.Error($"/q{cmd} is not yet initialized.");
+                Microdancer.PluginLog.Error($"/q{cmd} is not yet initialized.");
                 return;
             }
 

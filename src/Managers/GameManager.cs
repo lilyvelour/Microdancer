@@ -24,7 +24,6 @@ namespace Microdancer
         private readonly IClientState _clientState;
         private readonly IFramework _framework;
         private readonly ICondition _condition;
-        private readonly IPluginLog _pluginLog;
         private readonly Channel<(string command, byte actionCommandRequestType)> _channel =
             Channel.CreateUnbounded<(string, byte)>();
 
@@ -38,7 +37,6 @@ namespace Microdancer
             IClientState clientState,
             IFramework framework,
             ICondition condition,
-            IPluginLog pluginLog,
             Service.Locator _
         )
         {
@@ -47,7 +45,6 @@ namespace Microdancer
             _clientState = clientState;
             _framework = framework;
             _condition = condition;
-            _pluginLog = pluginLog;
 
             _framework.Update += Update;
 
@@ -181,8 +178,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load ProcessChatBox");
+                Microdancer.PluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Warning("Failed to load ProcessChatBox");
             }
 
             try
@@ -198,8 +195,8 @@ namespace Microdancer
                 }
                 catch (Exception e)
                 {
-                    _pluginLog.Error(e, e.Message);
-                    _pluginLog.Warning("Failed to load /doemote");
+                    Microdancer.PluginLog.Error(e, e.Message);
+                    Microdancer.PluginLog.Warning("Failed to load /doemote");
                 }
 
                 try
@@ -208,14 +205,14 @@ namespace Microdancer
                 }
                 catch (Exception e)
                 {
-                    _pluginLog.Error(e, e.Message);
-                    _pluginLog.Warning("Failed to load /useitem");
+                    Microdancer.PluginLog.Error(e, e.Message);
+                    Microdancer.PluginLog.Warning("Failed to load /useitem");
                 }
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to get agent module");
+                Microdancer.PluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Warning("Failed to get agent module");
             }
 
             // Located 1 function deep in Client__UI__Shell__ShellCommandAction_ExecuteCommand
@@ -225,8 +222,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load /qac");
+                Microdancer.PluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Warning("Failed to load /qac");
             }
 
             try
@@ -238,8 +235,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load /presskey");
+                Microdancer.PluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Warning("Failed to load /presskey");
             }
 
             try
@@ -252,8 +249,8 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
-                _pluginLog.Warning("Failed to load DoPerformAction");
+                Microdancer.PluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Warning("Failed to load DoPerformAction");
             }
         }
 
@@ -275,7 +272,7 @@ namespace Microdancer
             }
             catch
             {
-                _pluginLog.Error("ExecuteCommand: Failed injecting command");
+                Microdancer.PluginLog.Error("ExecuteCommand: Failed injecting command");
             }
         }
 

@@ -16,15 +16,18 @@ namespace Microdancer
         public string Name => PLUGIN_NAME;
 
         internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+        internal static IPluginLog PluginLog { get; private set; } = null;
 
         public Microdancer(
             IDalamudPluginInterface pluginInterface,
+            IPluginLog pluginLog,
             ICommandManager commandManager,
             IChatGui chatGui,
             IFramework framework
         )
         {
             PluginInterface = pluginInterface;
+            PluginLog = pluginLog;
 
             // Dalamud services we have to locate manually go here
             pluginInterface.RegisterService(commandManager, ignoreDisposable: true);

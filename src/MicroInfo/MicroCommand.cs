@@ -5,12 +5,24 @@ namespace Microdancer
 {
     public class MicroCommand : MicroInfoBase
     {
+        public enum NoteStatus
+        {
+            None,
+            Debug,
+            Info,
+            Warning,
+            Error
+        }
+
         private readonly Stopwatch _stopwatch = new();
         private bool _isPaused;
 
         public string Text { get; }
         public int LineNumber { get; }
         public MicroRegion Region { get; }
+        public string Action { get; set; }
+        public string Note { get; set; }
+        public NoteStatus Status { get; set; }
 
         public override bool IsPlaying => _stopwatch.IsRunning || IsPaused;
         public override bool IsPaused => _isPaused;

@@ -14,17 +14,15 @@ namespace Microdancer
         private bool _disposedValue;
 
         private readonly IDalamudPluginInterface _pluginInterface;
-        private readonly IPluginLog _pluginLog;
         private readonly List<INode> _cachedNodes = new();
         private bool _shouldRebuild;
         private bool _isBuilding;
         private FileSystemWatcher? _libraryWatcher;
         private FileSystemWatcher? _sharedFolderWatcher;
 
-        public LibraryManager(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog, Service.Locator _)
+        public LibraryManager(IDalamudPluginInterface pluginInterface, Service.Locator _)
         {
             _pluginInterface = pluginInterface;
-            _pluginLog = pluginLog;
 
             EnsureWatchers();
         }
@@ -70,7 +68,7 @@ namespace Microdancer
         {
             try
             {
-                _pluginLog.Info("[LibraryManager] Building nodes...");
+                Microdancer.PluginLog.Info("[LibraryManager] Building nodes...");
 
                 var config = _pluginInterface.Configuration();
 
@@ -103,7 +101,7 @@ namespace Microdancer
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Error(e, e.Message);
                 _shouldRebuild = true;
             }
             finally

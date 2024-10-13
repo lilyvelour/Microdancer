@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Dalamud.Plugin.Services;
 
 namespace Microdancer
 {
@@ -77,6 +78,8 @@ namespace Microdancer
             Regions = Commands.Select(c => c.Region).Distinct().ToArray();
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
             TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
+
+            ParseSharedCooldowns();
         }
 
         public MicroInfo(Micro micro, int lineNumber)
@@ -101,6 +104,8 @@ namespace Microdancer
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
             TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
             _offset = TimeSpan.FromMilliseconds(offsetMs);
+
+            ParseSharedCooldowns();
         }
 
         public void Start()
@@ -335,6 +340,111 @@ namespace Microdancer
             }
 
             return defaultWait;
+        }
+
+        private void ParseSharedCooldowns()
+        {
+            for (var commandIndex = 0; commandIndex < Commands.Length; ++commandIndex)
+            {
+                var command = Commands[commandIndex];
+                var commandText = command.Text;
+
+                if (commandText.Contains("qac") ||
+                    commandText.Contains("qaction") ||
+                    commandText.Contains("qblueaction") ||
+                    commandText.Contains("ac") ||
+                    commandText.Contains("action") ||
+                    commandText.Contains("blueaction"))
+                {
+                    commandText = commandText
+                        .Replace("/pad qblueaction ", string.Empty)
+                        .Replace("/pad qaction ", string.Empty)
+                        .Replace("/pad qac ", string.Empty)
+                        .Replace("/pad blueaction ", string.Empty)
+                        .Replace("/pad action ", string.Empty)
+                        .Replace("/pad ac ", string.Empty)
+                        .Replace("/qblueaction ", string.Empty)
+                        .Replace("/qaction ", string.Empty)
+                        .Replace("/qac ", string.Empty)
+                        .Replace("/blueaction ", string.Empty)
+                        .Replace("/action ", string.Empty)
+                        .Replace("/ac ", string.Empty);
+
+                    var action = Regex
+                        .Matches((commandText ?? string.Empty).Trim(), @"[\""].+?[\""]|[^ ]+")
+                        .Cast<Match>()
+                        .Select(x => x.Value.Trim('"'))
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrWhiteSpace(action))
+                    {
+                        command.Action = action;
+                    }
+                }
+            }
+
+            for (var commandIndex = 1; commandIndex < Commands.Length; ++commandIndex)
+            {
+                var command = Commands[commandIndex];
+                var action = command.Action;
+
+                if (string.IsNullOrWhiteSpace(action))
+                {
+                    continue;
+                }
+
+                if (SharedCooldowns.Lookup.TryGetValue(action.ToLowerInvariant(), out var actionCol))
+                {
+                    var sharedCooldowns = SharedCooldowns.Columns[actionCol];
+
+                    foreach (var sharedCooldown in sharedCooldowns)
+                    {
+                        if (sharedCooldown == null) continue;
+                        var shouldBreak = false;
+                        var chargeCount = 0;
+
+                        for (var previousCommandIndex = 0; previousCommandIndex < commandIndex; ++previousCommandIndex)
+                        {
+                            var previousCommand = Commands[previousCommandIndex];
+                            var previousAction = previousCommand.Action?.ToLowerInvariant();
+
+                            if (string.IsNullOrWhiteSpace(previousAction)) continue;
+
+                            if (SharedCooldowns.Lookup.TryGetValue(previousAction, out var previousActionCol))
+                            {
+                                if (previousActionCol == actionCol)
+                                {
+                                    var previousSharedCooldown = sharedCooldowns.First(cd => cd != null && cd.Action == previousAction);
+
+                                    var cd = previousSharedCooldown.Cooldown;
+
+                                    var currentTime = Commands[0..commandIndex].Sum(c => c.WaitTime.TotalSeconds);
+                                    var previousTime = Commands[0..previousCommandIndex].Sum(c => c.WaitTime.TotalSeconds);
+                                    var actualCd = currentTime - previousTime;
+
+                                    if (actualCd < cd)
+                                    {
+                                        ++chargeCount;
+
+                                        if (chargeCount >= previousSharedCooldown.Charges)
+                                        {
+                                            command.Note = $"Conflicting cooldown with line {previousCommand.LineNumber} \"{previousCommand.Action}\" ({actualCd.ToSecondsString()} < {cd.ToSecondsString()})";
+                                            command.Status = MicroCommand.NoteStatus.Error;
+                                            shouldBreak = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (shouldBreak)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 }

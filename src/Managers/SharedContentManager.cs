@@ -24,7 +24,6 @@ namespace Microdancer
         private readonly IObjectTable _objectTable;
         private readonly LibraryManager _library;
         private readonly PartyManager _partyManager;
-        private readonly IPluginLog _pluginLog;
 
         private bool _disposedValue;
 
@@ -42,7 +41,6 @@ namespace Microdancer
             IFramework framework,
             IClientState clientState,
             IObjectTable objectTable,
-            IPluginLog pluginLog,
             Service.Locator serviceLocator
         )
         {
@@ -50,7 +48,6 @@ namespace Microdancer
             _framework = framework;
             _clientState = clientState;
             _objectTable = objectTable;
-            _pluginLog = pluginLog;
 
             _library = serviceLocator.Get<LibraryManager>();
             _partyManager = serviceLocator.Get<PartyManager>();
@@ -233,7 +230,7 @@ namespace Microdancer
                         {
                             Connected = false;
                             LastError = e.Message;
-                            _pluginLog.Warning(e.Message);
+                            Microdancer.PluginLog.Warning(e.Message);
                         }
                     }
                     else
@@ -247,7 +244,7 @@ namespace Microdancer
                 catch (Exception e)
                 {
                     Connected = false;
-                    _pluginLog.Warning(e.Message);
+                    Microdancer.PluginLog.Warning(e.Message);
                     await Task.Delay(tickRate);
                 }
             }
@@ -319,13 +316,13 @@ namespace Microdancer
                     }
                     catch (Exception e)
                     {
-                        _pluginLog.Error(e, e.Message);
+                        Microdancer.PluginLog.Error(e, e.Message);
                     }
                 }
             }
             catch (Exception e)
             {
-                _pluginLog.Error(e, e.Message);
+                Microdancer.PluginLog.Error(e, e.Message);
             }
         }
 
