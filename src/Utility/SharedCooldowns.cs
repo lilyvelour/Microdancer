@@ -228,14 +228,4 @@ namespace Microdancer
             }
         }
     }
-    /*
-            {
-
-                // Column N
-                { "Essential Dignity", [11, 40, 3] },
-                { "The Warden's Paean", [11, 45, 1] },
-                { "Delerium ", [11, 60, 1]}
-
-            };
-            */
 }
