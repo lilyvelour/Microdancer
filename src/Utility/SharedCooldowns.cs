@@ -119,7 +119,7 @@ namespace Microdancer
             Columns[8][1] = new("Level 5 Death", 180, 1);
             Columns[8][2] = new("Riddle of Wind", 90, 1);
 
-            Columns[9][0] = new("Earthly Star", 60, 1);
+            Columns[9][0] = new("Earthly Star", 60, 2);
             Columns[9][1] = new("Winged Reprobation", 90, 1);
             Columns[9][2] = new("Flamethrower", 60, 1);
             Columns[9][3] = new("Meditate", 60, 1);
