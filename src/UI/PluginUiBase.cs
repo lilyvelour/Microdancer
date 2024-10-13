@@ -13,7 +13,6 @@ namespace Microdancer
 {
     public abstract class PluginUiBase
     {
-        protected IPluginLog PluginLog { get; }
         protected IDalamudPluginInterface PluginInterface { get; }
         protected GameManager GameManager { get; }
         protected LibraryManager Library { get; }

@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using Microdancer.UI;
 using Dalamud.Plugin.Services;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microdancer
 {
@@ -16,7 +17,10 @@ namespace Microdancer
         public string Name => PLUGIN_NAME;
 
         internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-        internal static IPluginLog PluginLog { get; private set; } = null;
+
+#pragma warning disable CS8618
+        internal static IPluginLog PluginLog { get; private set; }
+#pragma warning restore CS8618
 
         public Microdancer(
             IDalamudPluginInterface pluginInterface,

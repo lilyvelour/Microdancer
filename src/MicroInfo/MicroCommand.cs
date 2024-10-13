@@ -20,8 +20,8 @@ namespace Microdancer
         public string Text { get; }
         public int LineNumber { get; }
         public MicroRegion Region { get; }
-        public string Action { get; set; }
-        public string Note { get; set; }
+        public string? Action { get; set; }
+        public string? Note { get; set; }
         public NoteStatus Status { get; set; }
 
         public override bool IsPlaying => _stopwatch.IsRunning || IsPaused;
