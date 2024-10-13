@@ -81,6 +81,7 @@ namespace Microdancer
             WaitTime = TimeSpan.FromMilliseconds(Commands.Sum(c => c.WaitTime.TotalMilliseconds));
             TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
 
+            ParseDeprecated();
             ParseSharedCooldowns();
         }
 
@@ -107,6 +108,7 @@ namespace Microdancer
             TotalTime = TimeSpan.FromMilliseconds(AllCommands.Sum(c => c.WaitTime.TotalMilliseconds));
             _offset = TimeSpan.FromMilliseconds(offsetMs);
 
+            ParseDeprecated();
             ParseSharedCooldowns();
         }
 
@@ -342,6 +344,21 @@ namespace Microdancer
             }
 
             return defaultWait;
+        }
+
+        private void ParseDeprecated()
+        {
+            for (var commandIndex = 0; commandIndex < Commands.Length; ++commandIndex)
+            {
+                var command = Commands[commandIndex];
+                var commandText = command.Text;
+
+                if (commandText.StartsWith("/setpose"))
+                {
+                    command.Note = $"/setpose has been removed. Please use individual pose commands instead.";
+                    command.Status = MicroCommand.NoteStatus.Error;
+                }
+            }
         }
 
         private void ParseSharedCooldowns()
