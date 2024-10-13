@@ -14,6 +14,9 @@ namespace Microdancer
         private static readonly Regex _waitExp =
             new(@"/wait (\d+(?:\.\d+)?)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex _actionExp =
+            new(@"[\""].+?[\""]|[^ ]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private static readonly List<string> _specialCommands =
             new()
             {
@@ -369,8 +372,8 @@ namespace Microdancer
                         .Replace("/action ", string.Empty)
                         .Replace("/ac ", string.Empty);
 
-                    var action = Regex
-                        .Matches((commandText ?? string.Empty).Trim(), @"[\""].+?[\""]|[^ ]+")
+                    var action = _actionExp
+                        .Matches((commandText ?? string.Empty).Trim())
                         .Cast<Match>()
                         .Select(x => x.Value.Trim('"'))
                         .FirstOrDefault();
