@@ -18,9 +18,8 @@ namespace Microdancer
 
         internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-#pragma warning disable CS8618
+        [AllowNull]
         internal static IPluginLog PluginLog { get; private set; }
-#pragma warning restore CS8618
 
         public Microdancer(
             IDalamudPluginInterface pluginInterface,
