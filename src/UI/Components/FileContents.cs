@@ -66,25 +66,26 @@ namespace Microdancer
                     var lineNumber = i + 1;
                     var command = _info.AllCommands.FirstOrDefault(c => c.LineNumber == lineNumber);
 
-                    if (command == null) continue;
-
                     var prefixColor = Vector4.Zero;
                     var textColor = Theme.GetColor(ImGuiCol.Text) * 0.75f;
                     textColor.W = 1.0f;
 
-                    switch (command.Status)
+                    if (command != null)
                     {
-                        case MicroCommand.NoteStatus.Debug:
-                            textColor = new Vector4(0.0f, 0.8f, 0.8f, 1.0f);
-                            break;
-                        case MicroCommand.NoteStatus.Info:
-                            break;
-                        case MicroCommand.NoteStatus.Warning:
-                            textColor = new Vector4(0.8f, 0.8f, 0.0f, 1.0f);
-                            break;
-                        case MicroCommand.NoteStatus.Error:
-                            textColor = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-                            break;
+                        switch (command.Status)
+                        {
+                            case MicroCommand.NoteStatus.Debug:
+                                textColor = new Vector4(0.0f, 0.8f, 0.8f, 1.0f);
+                                break;
+                            case MicroCommand.NoteStatus.Info:
+                                break;
+                            case MicroCommand.NoteStatus.Warning:
+                                textColor = new Vector4(0.8f, 0.8f, 0.0f, 1.0f);
+                                break;
+                            case MicroCommand.NoteStatus.Error:
+                                textColor = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                                break;
+                        }
                     }
 
                     if (isRunning && currentLineNumber == lineNumber)
