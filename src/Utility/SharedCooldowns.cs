@@ -201,7 +201,8 @@ namespace Microdancer
 
             Columns[22][0] = new("Transpose", 5, 1);
             Columns[22][1] = new("Eruption", 30, 1);
-            Columns[22][2] = new("Kardia", 5, 1);
+            Columns[22][2] = new("Feather Rain", 30, 1);
+            Columns[22][3] = new("Kardia", 5, 1);
 
             Columns[23][0] = new("Second Wind", 120, 1);
 
