@@ -445,7 +445,8 @@ namespace Microdancer
                                     {
                                         ++chargeCount;
 
-                                        if (chargeCount >= previousSharedCooldown.Charges)
+                                        if (sharedCooldown.Action != previousSharedCooldown.Action ||
+                                            chargeCount >= previousSharedCooldown.Charges)
                                         {
                                             command.Note = $"Conflicting cooldown with line {previousCommand.LineNumber} \"{previousCommand.Action}\" ({actualCd.ToSecondsString()} < {cd.ToSecondsString()})";
                                             command.Status = MicroCommand.NoteStatus.Error;
