@@ -171,7 +171,7 @@ namespace Microdancer
             Columns[16][0] = new("Living Dead", 300, 1);
             Columns[16][1] = new("Superbolide", 360, 1);
             Columns[16][2] = new("Hallowed Grond", 420, 1);
-            Columns[16][3] = new("Holmgang ", 240, 1);
+            Columns[16][3] = new("Holmgang", 240, 1);
             Columns[16][4] = new("Philosopha", 180, 1);
 
             Columns[17][0] = new("The Blackest Night", 15, 1);
