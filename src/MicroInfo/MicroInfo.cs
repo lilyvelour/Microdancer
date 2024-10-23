@@ -405,14 +405,14 @@ namespace Microdancer
             for (var commandIndex = 1; commandIndex < Commands.Length; ++commandIndex)
             {
                 var command = Commands[commandIndex];
-                var action = command.Action;
-
-                if (string.IsNullOrWhiteSpace(action))
+                if (string.IsNullOrWhiteSpace(command.Action))
                 {
                     continue;
                 }
 
-                if (SharedCooldowns.Lookup.TryGetValue(action.ToLowerInvariant(), out var actionCol))
+                var action = command.Action.Trim().ToLowerInvariant();
+
+                if (SharedCooldowns.Lookup.TryGetValue(action, out var actionCol))
                 {
                     var sharedCooldowns = SharedCooldowns.Columns[actionCol];
 
@@ -425,7 +425,7 @@ namespace Microdancer
                         for (var previousCommandIndex = 0; previousCommandIndex < commandIndex; ++previousCommandIndex)
                         {
                             var previousCommand = Commands[previousCommandIndex];
-                            var previousAction = previousCommand.Action?.ToLowerInvariant();
+                            var previousAction = previousCommand.Action?.Trim().ToLowerInvariant();
 
                             if (string.IsNullOrWhiteSpace(previousAction)) continue;
 
@@ -445,8 +445,7 @@ namespace Microdancer
                                     {
                                         ++chargeCount;
 
-                                        if (sharedCooldown.Action != previousSharedCooldown.Action ||
-                                            chargeCount >= previousSharedCooldown.Charges)
+                                        if (action != previousAction || chargeCount >= previousSharedCooldown.Charges)
                                         {
                                             command.Note = $"Conflicting cooldown with line {previousCommand.LineNumber} \"{previousCommand.Action}\" ({actualCd.ToSecondsString()} < {cd.ToSecondsString()})";
                                             command.Status = MicroCommand.NoteStatus.Error;
