@@ -35,7 +35,7 @@ namespace Microdancer
             Columns[0][3] = new("Divine Benison", 30, 2);
 
             Columns[1][0] = new("Macrocosmos", 180, 2);
-            Columns[1][1] = new("Summon Seraph", 120, 1);
+            Columns[1][1] = new("Summon Seraph", 120, 2);
             Columns[1][2] = new("Liturgy of the Bell", 180, 2);
 
             Columns[2][0] = new("Exaltation", 60, 1);
