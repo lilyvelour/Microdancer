@@ -108,7 +108,7 @@ namespace Microdancer
             Columns[7][2] = new("Being Mortal", 120, 1);
             Columns[7][3] = new("Devilment", 120, 1);
             Columns[7][4] = new("Shadowed Vigil", 120, 1);
-            Columns[7][5] = new("Riddle of Earth", 120, 1);
+            Columns[7][5] = new("Riddle of Earth", 120, 2);
             Columns[7][6] = new("Shade Shift", 120, 1);
             Columns[7][7] = new("Embolden", 120, 1);
             Columns[7][8] = new("Radiant Aegis", 60, 2);
