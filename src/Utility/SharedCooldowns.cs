@@ -144,7 +144,7 @@ namespace Microdancer
 
             Columns[13][0] = new("Synastry", 120, 1);
             Columns[13][1] = new("Barrage", 120, 1);
-            Columns[13][2] = new("Ley Lines", 120, 1);
+            Columns[13][2] = new("Ley Lines", 120, 2);
             Columns[13][3] = new("Sea Shanty", 120, 1);
             Columns[13][4] = new("Technical Step", 120, 3);
             Columns[13][5] = new("Aurora", 60, 2);

@@ -1,11 +1,12 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Lumina.Excel.GeneratedSheets;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using System.Text;
+using Lumina.Excel.Sheets;
+using Dalamud.Utility;
 
 namespace Microdancer
 {
@@ -65,7 +66,7 @@ namespace Microdancer
 
             if (world != null)
             {
-                return world.Name.ToString();
+                return world.Value.Name.ExtractText();
             }
             else
             {
@@ -129,7 +130,7 @@ namespace Microdancer
             }
 
             var localPlayerName = localPlayer.Name.ToString();
-            var localPlayerWorld = ByteToWorld((byte)localPlayer.HomeWorld.Id);
+            var localPlayerWorld = ByteToWorld((byte)localPlayer.HomeWorld.RowId);
             var localPlayerInfo = new PartyMember(localPlayerName, localPlayerWorld);
             output.Add(localPlayerInfo);
 
@@ -156,7 +157,7 @@ namespace Microdancer
                 }
 
                 tempName = member.Name.ToString();
-                tempWorld = ByteToWorld((byte)member.World.Id);
+                tempWorld = ByteToWorld((byte)member.World.RowId);
                 output.Add(new(tempName, tempWorld));
             }
             return output;

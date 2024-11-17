@@ -24,7 +24,7 @@ namespace Microdancer
         private readonly IObjectTable _objectTable;
         private readonly LibraryManager _library;
         private readonly PartyManager _partyManager;
-
+        private readonly GameManager _gameManager;
         private bool _disposedValue;
 
         private string? _playerName;
@@ -51,6 +51,7 @@ namespace Microdancer
 
             _library = serviceLocator.Get<LibraryManager>();
             _partyManager = serviceLocator.Get<PartyManager>();
+            _gameManager = serviceLocator.Get<GameManager>();
 
             _framework.Update += UpdateNearby;
 
@@ -75,7 +76,7 @@ namespace Microdancer
 
             var player = _clientState.LocalPlayer;
             var playerName = player.Name.ToString();
-            var playerWorld = player.HomeWorld.GameData?.Name.RawString ?? string.Empty;
+            var playerWorld = _gameManager.PlayerWorld;
 
             _playerName = playerName;
             _playerWorld = playerWorld;
@@ -84,7 +85,7 @@ namespace Microdancer
                 .Where(o => o.GameObjectId != player.GameObjectId)
                 .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
                 .Select(o => (IPlayerCharacter)o)
-                .Select(pc => $"{pc.Name}@{pc.HomeWorld.GameData?.Name.RawString ?? string.Empty}")
+                .Select(pc => $"{pc.Name}@{pc.HomeWorld.Value.Name.ExtractText() ?? string.Empty}")
                 .ToHashSet();
 
             var party = _partyManager

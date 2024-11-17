@@ -110,7 +110,7 @@ namespace Microdancer
             _ready = true;
         }
 
-        private void Logout()
+        private void Logout(int _, int _1)
         {
             _ready = false;
 

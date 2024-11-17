@@ -298,7 +298,7 @@ namespace Microdancer.UI
             Config.WindowVisible = true;
         }
 
-        private void Logout()
+        private void Logout(int _, int _1)
         {
             Config.WindowVisible = false;
         }

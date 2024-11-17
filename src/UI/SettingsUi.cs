@@ -131,7 +131,7 @@ namespace Microdancer.UI
             Config.SettingsVisible = true;
         }
 
-        private void Logout()
+        private void Logout(int _, int _1)
         {
             Config.SettingsVisible = false;
         }

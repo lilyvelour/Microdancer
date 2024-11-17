@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using Dalamud.Utility;
 
 namespace Microdancer
 {
@@ -57,7 +58,7 @@ namespace Microdancer
         private IntPtr uiModule = IntPtr.Zero;
 
         public string? PlayerName => _clientState.LocalPlayer?.Name?.ToString();
-        public string? PlayerWorld => _clientState.LocalPlayer?.HomeWorld?.GameData?.Name.RawString;
+        public string? PlayerWorld => _clientState.LocalPlayer?.HomeWorld.Value.Name.ExtractText();
         public bool IsLoggedIn => _clientState.IsLoggedIn;
 
         public bool IsWalking

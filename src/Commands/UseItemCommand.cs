@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
+using Lumina.Excel.Sheets;
 using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace Microdancer
@@ -22,12 +23,12 @@ namespace Microdancer
             Task.Run(
                 () =>
                 {
-                    _usableItems = _dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!
-                        .Where(i => i.ItemAction.Row > 0)
+                    _usableItems = _dataManager.GetExcelSheet<Item>()!
+                        .Where(i => i.ItemAction.RowId > 0)
                         .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant())
                         .Concat(
-                            _dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.EventItem>()!
-                                .Where(i => i.Action.Row > 0)
+                            _dataManager.GetExcelSheet<EventItem>()!
+                                .Where(i => i.Action.RowId > 0)
                                 .ToDictionary(i => i.RowId, i => i.Name.ToString().ToLowerInvariant())
                         )
                         .ToDictionary(kv => kv.Key, kv => kv.Value);
