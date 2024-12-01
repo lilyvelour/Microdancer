@@ -85,10 +85,10 @@ namespace Microdancer
             Columns[5][10] = new("Fey Illumination", 120, 1);
             Columns[5][11] = new("Vengeance", 120, 1);
             Columns[5][12] = new("Damnation", 120, 1);
-            Columns[5][13] = new("Temperance", 120, 1);
+            Columns[5][13] = new("Temperance", 120, 2);
             Columns[5][14] = new("Panhaima", 120, 1);
             Columns[5][15] = new("Arcane Circle", 120, 1);
-            Columns[5][16] = new("Tempera Coat", 120, 1);
+            Columns[5][16] = new("Tempera Coat", 120, 2);
 
             Columns[6][0] = new("Lightspeed", 60, 2);
             Columns[6][1] = new("Battle Voice", 120, 1);
@@ -191,7 +191,7 @@ namespace Microdancer
             Columns[19][1] = new("Ninjutsu", 20, 2);
             Columns[19][2] = new("Kerachole", 30, 1);
 
-            Columns[20][0] = new("Closed Position", 30, 1);
+            Columns[20][0] = new("Closed Position", 30, 2);
             Columns[20][1] = new("Assize", 45, 1);
             Columns[20][2] = new("Taurochole", 45, 1);
 
