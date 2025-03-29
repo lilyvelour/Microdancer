@@ -40,9 +40,7 @@ namespace Microdancer
             _clientState.Login += Login;
             _clientState.Logout += Logout;
 
-            framework.RunOnFrameworkThread(() => {
-                _ready = _clientState.LocalPlayer is not null;
-            });
+            framework.RunOnFrameworkThread(() => _ready = _clientState.LocalPlayer is not null);
         }
 
         public void Dispose()
