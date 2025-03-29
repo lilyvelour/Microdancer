@@ -31,7 +31,7 @@ jobs:
       - name: Download Dalamud
         run: |
           Invoke-WebRequest https://goatcorp.github.io/dalamud-distrib/stg/latest.zip -OutFile latest.zip
-          Expand-Archive -Path latest.zip -DestinationPath .xlcore/dalamud/Hooks/dev/
+          Expand-Archive -Path latest.zip -DestinationPath (HOME)/.xlcore/dalamud/Hooks/dev/
         shell: pwsh
 
       - name: Edit package manifest
