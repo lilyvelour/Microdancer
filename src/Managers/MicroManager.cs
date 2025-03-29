@@ -28,6 +28,7 @@ namespace Microdancer
             IDalamudPluginInterface pluginInterface,
             IClientState clientState,
             IChatGui chatGui,
+            IFramework framework,
             Service.Locator serviceLocator
         )
         {
@@ -39,7 +40,9 @@ namespace Microdancer
             _clientState.Login += Login;
             _clientState.Logout += Logout;
 
-            _ready = _clientState.LocalPlayer != null;
+            framework.RunOnFrameworkThread(() => {
+                _ready = _clientState.LocalPlayer is not null;
+            });
         }
 
         public void Dispose()

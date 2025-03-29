@@ -21,7 +21,7 @@ namespace Microdancer
 
         public const string KeyStateIndexArray = "0F B6 94 33 ?? ?? ?? ?? 84 D2";
 
-        public const string DoPerformAction = "48 89 6C 24 10 48 89 74 24 18 57 48 83 EC ?? 48 83 3D ?? ?? ?? ?? ?? 41 8B E8"; // TODO
+        public const string DoPerformAction = "48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 30 48 ?? ?? ?? ?? ?? ?? ?? 41 8B E8"; // TODO
         public const string PerformanceStructPtr = "48 8B C2 0F B6 15 ?? ?? ?? ?? F6 C2 01"; // TODO
     }
 }
