@@ -48,7 +48,7 @@ jobs:
           HUSKY: 0
         run: |
           $ver = (./scripts/get-version.ps1).Version
-          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net8.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
+          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net9.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
         shell: pwsh
 
       - name: Package
