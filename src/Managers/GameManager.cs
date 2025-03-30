@@ -86,7 +86,7 @@ namespace Microdancer
         }
         public void UseItem(uint id, uint inventoryType = 9999, uint itemSlot = 0, short a5 = 0)
         {
-            agentInventoryContext->UseItem(id, inventoryType, itemSlot, a5);
+            agentInventoryContext->UseItem(id, (InventoryType)inventoryType, itemSlot, a5);
         }
 
         public IntPtr actionCommandRequestTypePtr = IntPtr.Zero;

@@ -1,14 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net8</TargetFramework>
-        <Platforms>x64</Platforms>
+<Project Sdk="Dalamud.NET.SDK/12.0.2">
+	
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Platforms>x64</Platforms>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <AssemblyTitle>Microdancer</AssemblyTitle>
         <Company>LilyVelour</Company>
         <Product>Microdancer</Product>
-        <Copyright>Copyright © 2022</Copyright>
+        <Copyright>Copyright © 2025</Copyright>
         <Version>1.0.0.0</Version>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <FileVersion>1.0.0.0</FileVersion>
@@ -20,14 +21,14 @@
         <WarningsNotAsErrors>612,618</WarningsNotAsErrors>
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     </PropertyGroup>
+	
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugType>full</DebugType>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<OutputPath>../build/</OutputPath>
+	</PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugType>full</DebugType>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <OutputPath>../build/</OutputPath>
-    </PropertyGroup>
-
-    <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <Content Include="../images/icon.png" Link="images/icon.png" CopyToOutputDirectory="Always" Visible="false" />
         <Content Include="./Microdancer.json" CopyToOutputDirectory="Always" Visible="false" />
     </ItemGroup>
@@ -37,52 +38,8 @@
         <OutputPath>../bin/$(Configuration)/</OutputPath>
     </PropertyGroup>
 
-    <PropertyGroup>
-		<DalamudLibPath>../dalamud-distrib/</DalamudLibPath>
-    </PropertyGroup>
-
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.6" />
         <PackageReference Include="IdentityModel" Version="7.0.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="Dalamud">
-            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Dalamud.dll</HintPath>
-            <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/Dalamud.dll</HintPath>
-            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/Dalamud.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-         <Reference Include="Lumina">
-            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Lumina.dll</HintPath>
-            <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/Lumina.dll</HintPath>
-            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Lumina.Excel">
-            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/Lumina.Excel.dll</HintPath>
-            <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/Lumina.Excel.dll</HintPath>
-            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/Lumina.Excel.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="FFXIVClientStructs">
-            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/FFXIVClientStructs.dll</HintPath>
-            <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/FFXIVClientStructs.dll</HintPath>
-            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/FFXIVClientStructs.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="ImGuiNET">
-            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/ImGui.NET.dll</HintPath>
-            <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/ImGui.NET.dll</HintPath>
-            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/ImGui.NET.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="ImGuiScene">
-            <HintPath Condition="Exists('../dalamud-distrib')">../dalamud-distrib/ImGuiScene.dll</HintPath>
-            <HintPath Condition="Exists('../../Dalamud/bin/Debug')">../../Dalamud/bin/Debug/ImGuiScene.dll</HintPath>
-            <HintPath Condition="Exists('$(AppData)/XIVLauncher')">$(AppData)/XIVLauncher/addon/Hooks/dev/ImGuiScene.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
     </ItemGroup>
 
     <!-- set HUSKY to 0 in CI/CD disable this -->
@@ -90,4 +47,5 @@
         <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
         <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../" />
     </Target>
+	
 </Project>
