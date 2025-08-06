@@ -1,6 +1,6 @@
 using System.IO;
 using System.Numerics;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace Microdancer
 {
@@ -19,7 +19,7 @@ namespace Microdancer
             if (!Directory.Exists(Config.LibraryPath))
             {
                 ImGui.TextColored(
-                    new(1.0f, 0.0f, 0.0f, 1.0f),
+                    new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
                     "Please create or select a library before making a template.");
                 return true;
             }
@@ -28,7 +28,7 @@ namespace Microdancer
             if (!File.Exists(templatePath))
             {
                 ImGui.TextColored(
-                    new(1.0f, 1.0f, 0.0f, 1.0f),
+                    new Vector4(1.0f, 1.0f, 0.0f, 1.0f),
                     "A template file has not been created. Create one now?");
                 if (ImGui.Button("Create Default Template"))
                 {

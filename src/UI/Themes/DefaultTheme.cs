@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace Microdancer
 {

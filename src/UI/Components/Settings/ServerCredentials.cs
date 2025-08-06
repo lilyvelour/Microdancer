@@ -3,8 +3,8 @@ using System.IO;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
-using ImGuiNET;
 
 namespace Microdancer
 {
@@ -20,8 +20,8 @@ namespace Microdancer
 
             ImGui.Text("Microdancer can optionally be run with a server backend.");
             ImGui.Text("This lets users quickly share micro files between each other when connected to the same server.");
-            ImGui.TextColored(new(1.0f, 1.0f, 0.0f, 1.0f), "Only connect to Microdancer servers that you trust!");
-            ImGui.TextColored(new(1.0f, 1.0f, 0.0f, 1.0f), "Servers can see your player name, world, party members, nearby players, and your shared micro files.");
+            ImGui.TextColored(new Vector4(1.0f, 1.0f, 0.0f, 1.0f), "Only connect to Microdancer servers that you trust!");
+            ImGui.TextColored(new Vector4(1.0f, 1.0f, 0.0f, 1.0f), "Servers can see your player name, world, party members, nearby players, and your shared micro files.");
             ImGui.Spacing();
             ImGui.Spacing();
 
