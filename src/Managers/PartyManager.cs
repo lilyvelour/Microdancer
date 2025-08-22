@@ -85,7 +85,7 @@ namespace Microdancer
                 //     2: Player is in a cross-world party
                 //     3: Player is in an alliance group
                 //    -1: Player is in none of the above. Trust party maybe?
-                var pList = (AddonPartyList*)_gameGui.GetAddonByName("_PartyList", 1);
+                var pList = (AddonPartyList*)_gameGui.GetAddonByName("_PartyList", 1).Address;
                 var pTypeNode = pList->PartyTypeTextNode;
                 string pType = pTypeNode->NodeText.ToString();
                 switch (pType)

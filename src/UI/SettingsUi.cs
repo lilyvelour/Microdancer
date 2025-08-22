@@ -1,7 +1,7 @@
-﻿using ImGuiNET;
-using System.Numerics;
+﻿using System.Numerics;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
+using Dalamud.Bindings.ImGui;
 
 namespace Microdancer.UI
 {
