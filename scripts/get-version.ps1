@@ -11,9 +11,14 @@ if ( $versionCharCount -eq 2 ) {
     $version += '.0'
 }
 
-$branchCharCount = ($branch.ToCharArray()).Count
-if ( $branchCharCount -ne 0 ) {
-    $branch = '.' + $branch
+if ($branch) {
+    $branchCharCount = ($branch.ToCharArray()).Count
+    if ( $branchCharCount -ne 0 ) {
+        $branch = '.' + $branch
+    }
+}
+else {
+    $branch = ''
 }
 
 New-Object PSObject -Property @{
