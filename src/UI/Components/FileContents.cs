@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
-using ImGuiNET;
 
 namespace Microdancer
 {
@@ -15,7 +15,7 @@ namespace Microdancer
         {
             _info = new MicroInfo(micro);
 
-            ImGui.InvisibleButton($"file-contents-spacer-{micro.Id}", new(-1, 0.0f));
+            ImGui.InvisibleButton($"file-contents-spacer-{micro.Id}", new(-1, 0.01f));
 
             var framePadding = ImGui.GetStyle().FramePadding;
             var fileContentsSize = ImGui.GetContentRegionAvail();

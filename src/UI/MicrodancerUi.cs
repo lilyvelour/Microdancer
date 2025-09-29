@@ -1,11 +1,11 @@
-﻿using ImGuiNET;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
 using System.IO;
+using Dalamud.Bindings.ImGui;
 
 namespace Microdancer.UI
 {
@@ -67,7 +67,7 @@ namespace Microdancer.UI
                 else if (_clientState.LocalPlayer == null)
                 {
                     ImGui.BeginChildFrame(123456, new Vector2(-1, -1), ImGuiWindowFlags.NoBackground);
-                    ImGui.TextColored(new(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
+                    ImGui.TextColored(new Vector4(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
                     ImGui.EndChildFrame();
                 }
                 else
@@ -262,7 +262,7 @@ namespace Microdancer.UI
             ImGui.PushStyleColor(ImGuiCol.TitleBgActive, Vector4.Zero);
             ImGui.PushStyleColor(ImGuiCol.DockingEmptyBg, Vector4.Zero);
 
-            ImGui.DockSpace(439839, new(-1, -1));
+            ImGui.DockSpace(439839, new Vector2(-1, -1));
 
             ImGui.PopStyleColor(3);
 

@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
-using ImGuiNET;
 
 namespace Microdancer
 {
@@ -133,7 +133,7 @@ namespace Microdancer
 
                     ImGuiExt.TextTooltip(region.Name);
 
-                    if (ImGui.BeginPopupContextItem())
+                    if (ImGui.BeginPopupContextItem("###regionBarPopupContext"))
                     {
                         if (ImGui.Selectable($"Copy run command"))
                         {
