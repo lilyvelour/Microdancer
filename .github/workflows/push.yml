@@ -12,20 +12,21 @@ jobs:
       ProgressPreference: "SilentlyContinue"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          submodules: true
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 9.0.202
+          dotnet-version: 10.0.x
 
       - name: Restore dependencies
         env:
           HUSKY: 0
         run: |
-          dotnet restore -p:TargetFramework=net9.0
+          dotnet restore -p:TargetFramework=net10.0
         shell: pwsh
 
       - name: Download Dalamud
@@ -48,7 +49,7 @@ jobs:
           HUSKY: 0
         run: |
           $ver = (./scripts/get-version.ps1).Version
-          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net9.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
+          Invoke-Expression 'dotnet build --no-restore --configuration Release --nologo -p:TargetFramework=net10.0 -p:Version=$ver -p:AssemblyVersion=$ver -p:FileVersion=$ver'
         shell: pwsh
 
       - name: Package

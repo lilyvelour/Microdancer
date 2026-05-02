@@ -25,6 +25,8 @@ namespace Microdancer
         private readonly IClientState _clientState;
         private readonly IFramework _framework;
         private readonly ICondition _condition;
+        private readonly IObjectTable _gameObjects;
+
         private readonly Channel<(string command, byte actionCommandRequestType)> _channel =
             Channel.CreateUnbounded<(string, byte)>();
 
@@ -34,6 +36,7 @@ namespace Microdancer
 
         public GameManager(
             IGameGui gameGui,
+            IObjectTable gameObjects,
             ISigScanner sigScanner,
             IClientState clientState,
             IFramework framework,
@@ -46,6 +49,7 @@ namespace Microdancer
             _clientState = clientState;
             _framework = framework;
             _condition = condition;
+            _gameObjects = gameObjects;
 
             _framework.Update += Update;
 
@@ -57,8 +61,8 @@ namespace Microdancer
         private ProcessChatBoxDelegate? ProcessChatBox;
         private IntPtr uiModule = IntPtr.Zero;
 
-        public string? PlayerName => _clientState.LocalPlayer?.Name?.ToString();
-        public string? PlayerWorld => _clientState.LocalPlayer?.HomeWorld.Value.Name.ExtractText();
+        public string? PlayerName => _gameObjects.LocalPlayer?.Name?.ToString();
+        public string? PlayerWorld => _gameObjects.LocalPlayer?.HomeWorld.Value.Name.ExtractText();
         public bool IsLoggedIn => _clientState.IsLoggedIn;
 
         public bool IsWalking
@@ -289,7 +293,7 @@ namespace Microdancer
                 _heldKeys.Clear();
             }
 
-            if (_clientState.LocalPlayer == null)
+            if (_gameObjects.LocalPlayer == null)
             {
                 return;
             }

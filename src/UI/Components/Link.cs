@@ -28,7 +28,6 @@ namespace Microdancer
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
 
                 using var tooltip = ImRaii.Tooltip();
-                if (tooltip.Success)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1, 1, 1, 1));
                     ImGui.TextUnformatted(link.Tooltip);

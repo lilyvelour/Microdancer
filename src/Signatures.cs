@@ -17,7 +17,7 @@ namespace Microdancer
         // byte
         public const string ActionCommandRequestType = "02 00 00 00 41 8B D7 89";
 
-        public const string KeyStates = "4C 8D 05 ?? ?? ?? ?? 44 8B 0D";
+        public const string KeyStates = "4C 8D 05 ?? ?? ?? ?? 44 8B 0D ?? ?? ?? ?? 48";
 
         public const string KeyStateIndexArray = "0F B6 94 33 ?? ?? ?? ?? 84 D2";
 

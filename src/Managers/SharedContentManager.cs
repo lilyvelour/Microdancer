@@ -65,7 +65,7 @@ namespace Microdancer
                 return;
             }
 
-            if (!_clientState.IsLoggedIn || _clientState.LocalPlayer == null)
+            if (!_clientState.IsLoggedIn || _objectTable.LocalPlayer == null)
             {
                 _playerName = null;
                 _playerWorld = null;
@@ -74,14 +74,14 @@ namespace Microdancer
                 return;
             }
 
-            var player = _clientState.LocalPlayer;
+            var player = _objectTable.LocalPlayer;
             var playerName = player.Name.ToString();
             var playerWorld = _gameManager.PlayerWorld;
 
             _playerName = playerName;
             _playerWorld = playerWorld;
             _nearby = _objectTable
-                .Where(o => o.ObjectKind == ObjectKind.Player)
+                .Where(o => o.ObjectKind == ObjectKind.Pc)
                 .Where(o => o.GameObjectId != player.GameObjectId)
                 .OrderBy(o => Vector3.DistanceSquared(o.Position, player.Position))
                 .Select(o => (IPlayerCharacter)o)
