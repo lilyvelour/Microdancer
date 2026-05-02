@@ -301,7 +301,7 @@ namespace Microdancer
 
             ImGuiExt.TintButton(duration, new(100, 0), new(0, 0, 0, 0));
 
-            ImGui.PopStyleVar(3);
+            ImGui.PopStyleVar(4);
 
             if (!playing)
             {

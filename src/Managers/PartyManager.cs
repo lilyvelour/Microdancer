@@ -42,12 +42,14 @@ namespace Microdancer
         private readonly IDataManager _dataManager;
         private readonly IGameGui _gameGui;
         private readonly IClientState _clientState;
+        private readonly IObjectTable _gameObjects;
         private readonly IPartyList _partyList;
 
         public PartyManager(
             IDataManager dataManager,
             IGameGui gameGui,
             IClientState clientState,
+            IObjectTable gameObjects,
             IPartyList partyList,
             Service.Locator _
         )
@@ -55,6 +57,7 @@ namespace Microdancer
             _dataManager = dataManager;
             _gameGui = gameGui;
             _clientState = clientState;
+            _gameObjects = gameObjects;
             _partyList = partyList;
             _infoProxyCrossRealm = InfoProxyCrossRealm.Instance();
         }
@@ -123,7 +126,7 @@ namespace Microdancer
         private List<PartyMember> GetInfoFromSoloParty()
         {
             var output = new List<PartyMember>();
-            var localPlayer = _clientState.LocalPlayer;
+            var localPlayer = _gameObjects.LocalPlayer;
             if (localPlayer == null)
             {
                 return output;

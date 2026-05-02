@@ -17,6 +17,7 @@ namespace Microdancer
         private bool _ready;
         private readonly IDalamudPluginInterface _pluginInterface;
         private readonly IClientState _clientState;
+        private readonly IObjectTable _gameObjects;
         private readonly IChatGui _chatGui;
         private readonly GameManager _gameManager;
 
@@ -27,6 +28,7 @@ namespace Microdancer
         public MicroManager(
             IDalamudPluginInterface pluginInterface,
             IClientState clientState,
+            IObjectTable gameObjects,
             IChatGui chatGui,
             IFramework framework,
             Service.Locator serviceLocator
@@ -34,13 +36,14 @@ namespace Microdancer
         {
             _pluginInterface = pluginInterface;
             _clientState = clientState;
+            _gameObjects = gameObjects;
             _chatGui = chatGui;
             _gameManager = serviceLocator.Get<GameManager>();
 
             _clientState.Login += Login;
             _clientState.Logout += Logout;
 
-            framework.RunOnFrameworkThread(() => _ready = _clientState.LocalPlayer is not null);
+            framework.RunOnFrameworkThread(() => _ready = _gameObjects.LocalPlayer is not null);
         }
 
         public void Dispose()

@@ -5,6 +5,7 @@ using System.Linq;
 using Microdancer.UI;
 using Dalamud.Plugin.Services;
 using System.Diagnostics.CodeAnalysis;
+using Dalamud.Bindings.ImGui;
 
 namespace Microdancer
 {
@@ -26,7 +27,8 @@ namespace Microdancer
             IPluginLog pluginLog,
             ICommandManager commandManager,
             IChatGui chatGui,
-            IFramework framework
+            IFramework framework, 
+            IObjectTable objectTable
         )
         {
             PluginInterface = pluginInterface;
@@ -35,7 +37,7 @@ namespace Microdancer
             // Dalamud services we have to locate manually go here
             pluginInterface.RegisterService(commandManager, ignoreDisposable: true);
             pluginInterface.RegisterService(chatGui, ignoreDisposable: true);
-            pluginInterface.RegisterService(framework, ignoreDisposable: true);
+            pluginInterface.RegisterService(objectTable, ignoreDisposable: true);
 
             pluginInterface.CreateService<GameManager>();
             pluginInterface.CreateService<PartyManager>();

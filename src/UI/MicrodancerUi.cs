@@ -12,6 +12,7 @@ namespace Microdancer.UI
     public class MicrodancerUi : PluginWindow
     {
         private readonly IClientState _clientState;
+        private readonly IObjectTable _gameObjects;
         private readonly DisplayLibrary _library = new();
         private readonly PlaybackControls _playbackControls = new();
         private readonly RegionBar _regionBar = new();
@@ -22,10 +23,11 @@ namespace Microdancer.UI
         private Guid _focused;
         private readonly Dictionary<Guid, float> _dockReleased = new();
 
-        public MicrodancerUi(IClientState clientState)
+        public MicrodancerUi(IClientState clientState, IObjectTable gameObjects)
             : base()
         {
             _clientState = clientState;
+            _gameObjects = gameObjects;
 
             PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
             _clientState.Logout += Logout;
@@ -64,7 +66,7 @@ namespace Microdancer.UI
                     }
                     ImGui.EndChildFrame();
                 }
-                else if (_clientState.LocalPlayer == null)
+                else if (_gameObjects.LocalPlayer == null)
                 {
                     ImGui.BeginChildFrame(123456, new Vector2(-1, -1), ImGuiWindowFlags.NoBackground);
                     ImGui.TextColored(new Vector4(0.67f, 0.67f, 0.67f, 1.0f), "Please wait....");
